@@ -1,11 +1,13 @@
 import React from 'react';
+import { useTranslation } from '../hooks/useTranslation';
 
 const ProjectShowcase = ({ completedProjects, handleClearShowcase }) => {
+  const { t } = useTranslation();
   if (completedProjects.length === 0) return null; // Eğer biten proje yoksa hiçbir şey gösterme
 
   return (
     <div className="showcase-container">
-      <h3>Proje Vitrini</h3>
+      <h3>{t('showcase.title')}</h3>
       <div className="completed-projects-list">
         {completedProjects.map(p => (
           <div key={p.id} className="completed-project-item">
@@ -14,7 +16,7 @@ const ProjectShowcase = ({ completedProjects, handleClearShowcase }) => {
         ))}
       </div>
       <button onClick={handleClearShowcase} className="btn btn-secondary btn-clear">
-        Vitrini Temizle
+        {t('showcase.clear')}
       </button>
     </div>
   );

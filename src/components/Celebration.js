@@ -1,38 +1,31 @@
-import React, { useEffect } from 'react';
-
-const birdSoundUrl = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/10558/birds.mp3';
+import React, { useEffect, useRef } from 'react';
+import { useTranslation } from '../hooks/useTranslation';
 
 const Celebration = ({ onComplete }) => {
+  const { t } = useTranslation();
+  const onCompleteRef = useRef(onComplete);
+  
+  // onComplete'i ref'e güncelle
   useEffect(() => {
-    // Sesi doğrudan bu bileşen içinde oluşturup çal
-    const audio = new Audio(birdSoundUrl);
-    audio.play().catch(error => {
-      console.warn("Otomatik ses çalma tarayıcı tarafından engellendi. Bu normal bir durum.", error);
-    });
-
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+  
+  useEffect(() => {
     const timer = setTimeout(() => {
-      onComplete();
-    }, 6000); // 6 saniye
+      onCompleteRef.current();
+    }, 3500); // 3.5 saniye
 
     return () => {
       clearTimeout(timer);
-      // Sesi durdur ve kaynakları temizle
-      audio.pause();
-      audio.src = '';
     };
-  }, [onComplete]);
+  }, []); // Sadece mount'ta çalışsın
 
   return (
     <div className="celebration-overlay">
-      <div className="celebration-text">Darlangıç kuşu çağırıyor...</div>
-      
+      <div className="celebration-text">{t('celebration.birdCalling')}</div>
       <div className="bird-container">
-        <div className="bird"></div>
-        <div className="bird"></div>
-        <div className="bird"></div>
-        <div className="bird"></div>
-        <div className="bird"></div>
-        <div className="bird"></div>
+        <div className="bird"></div><div className="bird"></div><div className="bird"></div>
+        <div className="bird"></div><div className="bird"></div><div className="bird"></div>
       </div>
     </div>
   );
