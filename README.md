@@ -1,3 +1,25 @@
+## ✨ Özellikler
+
+-   Kişiselleştirilebilir Pomodoro, kısa ve uzun mola zamanlayıcıları.
+-   Firebase ile güvenli e-posta/şifre ve Google ile üyelik sistemi.
+-   Görevleri farklı projeler altında gruplandırma.
+-   Tamamlanan projeler için "Proje Vitrini".
+-   10+ farklı renk teması seçeneği.
+-   Haftalık odaklanma süresi takibi.
+-   Uygulama arka plandayken çalışan sistem bildirimleri.
+-   Modern ve mobil uyumlu arayüz.
+
+## 🚀 Canlı Site
+
+Uygulamayı canlı olarak [pomofree.one](https://pomofree.one) adresinden deneyebilirsiniz.
+
+## 🛠️ Kullanılan Teknolojiler
+
+-   React
+-   Firebase (Authentication, Firestore, Hosting)
+-   CSS (Modern, Responsive Design)
+-   Progressive Web App (PWA)
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
