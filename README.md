@@ -1,92 +1,219 @@
-## ✨ Özellikler
+# 🍅 Pomofree - Advanced Pomodoro Timer & Productivity App
 
--   Kişiselleştirilebilir Pomodoro, kısa ve uzun mola zamanlayıcıları.
--   Firebase ile güvenli e-posta/şifre ve Google ile üyelik sistemi.
--   Görevleri farklı projeler altında gruplandırma.
--   Tamamlanan projeler için "Proje Vitrini".
--   10+ farklı renk teması seçeneği.
--   Haftalık odaklanma süresi takibi.
--   Uygulama arka plandayken çalışan sistem bildirimleri.
--   Modern ve mobil uyumlu arayüz.
+A comprehensive, feature-rich Pomodoro timer application built with React, featuring real-time collaboration, music integration, achievement system, and extensive customization options.
 
-## 🚀 Canlı Site
+## ✨ Key Features
 
-Uygulamayı canlı olarak [pomofree.one](https://pomofree.one) adresinden deneyebilirsiniz.
+### 🎯 Core Pomodoro Functionality
+- **Smart Timer System**: 25-minute Pomodoro, 5-minute short breaks, 15-minute long breaks
+- **Background Timer**: Continues running even when the browser tab is not active
+- **Visual Progress Ring**: Circular progress indicator with smooth animations
+- **Auto Mode Switching**: Automatically transitions between work and break periods
+- **Page Refresh Protection**: Warns users before refreshing during active timers
 
-## 🛠️ Kullanılan Teknolojiler
+### 🎨 Extensive Theme System
+- **12+ Beautiful Themes**: From classic blue to special themes like Synthwave, Dark Academia, and Gothic Core
+- **Real-time Theme Switching**: Instant theme changes without page reload
+- **Custom Color Schemes**: Each theme includes carefully crafted color palettes
+- **Special Premium Themes**: Exclusive themes with unique visual styles
 
--   React
--   Firebase (Authentication, Firestore, Hosting)
--   CSS (Modern, Responsive Design)
--   Progressive Web App (PWA)
+### 👥 Real-time Study Rooms
+- **Study With Me**: Create or join study rooms for collaborative focus sessions
+- **Synchronized Timers**: All participants share the same timer state
+- **Room Management**: Create private rooms with custom settings
+- **Popout Window**: Dedicated study room interface that can be popped out
+- **Real-time Updates**: Live synchronization of timer states across all participants
 
-# Getting Started with Create React App
+### 🎵 Integrated Music Player
+- **Multiple Playlists**: Jazz, Classical, Ambient, Lo-fi, and Nature sounds
+- **YouTube Integration**: Custom URL support for personal music
+- **Draggable Interface**: Move the music player anywhere on screen
+- **Volume Control**: Adjustable volume with visual slider
+- **Playlist Management**: Switch between different music categories
+- **Minimizable Player**: Collapsible interface to save screen space
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### 🏆 Achievement System
+- **Progress Tracking**: Monitor your productivity milestones
+- **Achievement Notifications**: Celebrate your accomplishments
+- **Multiple Categories**: Focus time, Pomodoro completion, and consistency achievements
+- **Visual Rewards**: Beautiful achievement cards and animations
 
-## Available Scripts
+### 📊 Advanced Analytics & Reports
+- **Weekly Statistics**: Track your focus time and productivity trends
+- **Productivity Dashboard**: Comprehensive overview of your work patterns
+- **Advanced Reports**: Detailed analytics with charts and insights
+- **Goal Setting**: Set and track daily, weekly, and monthly targets
+- **Data Visualization**: Interactive charts and progress indicators
 
-In the project directory, you can run:
+### 🌍 Multi-language Support
+- **Turkish & English**: Full localization for both languages
+- **Dynamic Language Switching**: Change language without page reload
+- **Localized Content**: All UI elements, error messages, and notifications
+- **Date & Time Formatting**: Proper localization for dates and times
 
-### `npm start`
+### 🔐 Secure Authentication
+- **Multiple Login Options**: Email/password, Google, and Twitter (X) authentication
+- **Account Linking**: Seamlessly link accounts from different providers
+- **Firebase Integration**: Secure user management and data storage
+- **Session Management**: Persistent login sessions across browser sessions
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 📱 Responsive Design
+- **Mobile-First**: Optimized for all screen sizes
+- **Touch-Friendly**: Gesture support for mobile devices
+- **Adaptive Layout**: UI elements adjust based on screen size
+- **Cross-Platform**: Works on desktop, tablet, and mobile devices
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 🎯 Task & Project Management
+- **Project Organization**: Create and manage multiple projects
+- **Task Tracking**: Add, complete, and delete tasks within projects
+- **Pomodoro Integration**: Track Pomodoros per task
+- **Project Showcase**: Display completed projects
+- **Task Statistics**: Monitor task completion rates
 
-### `npm test`
+### 🔧 Customization Options
+- **Timer Settings**: Adjustable Pomodoro, short break, and long break durations
+- **User Preferences**: Personalized settings saved to your account
+- **Theme Persistence**: Your chosen theme is saved across sessions
+- **Notification Settings**: Customizable sound and visual notifications
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 🎉 Celebration & Motivation
+- **Completion Celebrations**: Animated celebrations when completing Pomodoros
+- **Progress Milestones**: Special animations for significant achievements
+- **Motivational Elements**: Encouraging messages and visual feedback
+- **Weekly Focus Tracking**: Monitor your weekly productivity goals
 
-### `npm run build`
+### 📄 Legal & Compliance
+- **Terms of Service**: Comprehensive terms and conditions
+- **Privacy Policy**: Detailed privacy policy and data handling
+- **GDPR Compliance**: User data protection and privacy controls
+- **Transparent Policies**: Clear information about data usage
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🚀 Getting Started
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
+- Firebase project (for authentication and data storage)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Installation
 
-### `npm run eject`
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/pomofree.git
+   cd pomofree
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+3. **Set up Firebase**
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com)
+   - Enable Authentication (Email/Password, Google, Twitter)
+   - Create a Firestore database
+   - Copy your Firebase configuration to `src/firebase.js`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+4. **Start the development server**
+   ```bash
+   npm start
+   ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+5. **Open your browser**
+   Navigate to `http://localhost:3000`
 
-## Learn More
+### Firebase Configuration
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Create a `src/firebase.js` file with your Firebase configuration:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```javascript
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
-### Code Splitting
+const firebaseConfig = {
+  // Your Firebase configuration
+  apiKey: "your-api-key",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "your-sender-id",
+  appId: "your-app-id"
+};
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+```
 
-### Analyzing the Bundle Size
+## 🛠️ Available Scripts
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- `npm start` - Runs the app in development mode
+- `npm test` - Launches the test runner
+- `npm run build` - Builds the app for production
+- `npm run eject` - Ejects from Create React App (one-way operation)
 
-### Making a Progressive Web App
+## 🎨 Theme Customization
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+The app includes 12+ pre-built themes. To add a new theme, edit `src/themes.js`:
 
-### Advanced Configuration
+```javascript
+export const themes = {
+  yourTheme: {
+    name: "Your Theme Name",
+    colors: {
+      "--bg-color-pomodoro": "#your-color",
+      "--bg-color-short": "#your-color",
+      "--bg-color-long": "#your-color",
+      // ... other color variables
+    }
+  }
+};
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🌐 Internationalization
 
-### Deployment
+To add a new language, edit `src/translations/index.js`:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```javascript
+export const translations = {
+  yourLanguage: {
+    'timer.pomodoro': 'Your Translation',
+    // ... other translations
+  }
+};
+```
 
-### `npm run build` fails to minify
+## 📱 Progressive Web App
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Pomofree is a PWA (Progressive Web App) that can be installed on mobile devices and desktop computers for a native app experience.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [React](https://reactjs.org/)
+- Styled with [CSS3](https://developer.mozilla.org/en-US/docs/Web/CSS)
+- Backend powered by [Firebase](https://firebase.google.com/)
+- Icons from [Heroicons](https://heroicons.com/)
+- Music integration with [YouTube API](https://developers.google.com/youtube)
+
+## 📞 Support
+
+For support, email support@pomofree.com or join our Discord community.
+
+---
+
+**Made with ❤️ by [Lumi](https://codedbylumi.com)**
+
+*Focus better, achieve more! 🍅*
