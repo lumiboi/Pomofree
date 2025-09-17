@@ -25,7 +25,7 @@ A comprehensive, feature-rich Pomodoro timer application built with React, featu
 - **Real-time Updates**: Live synchronization of timer states across all participants
 
 ### 🎵 Integrated Music Player
-- **Multiple Playlists**: Jazz, Classical, Ambient, Lo-fi, and Nature sounds
+- **Multiple Playlists**: Jazz, Classical, Ambient, Lo-fi music
 - **YouTube Integration**: Custom URL support for personal music
 - **Draggable Interface**: Move the music player anywhere on screen
 - **Volume Control**: Adjustable volume with visual slider
