@@ -1,0 +1,123 @@
+.legal-page {
+  min-height: 100vh;
+  background: var(--bg-color-pomodoro);
+  padding: 2rem 1rem;
+  font-family: var(--font-family);
+  color: var(--text-color);
+}
+
+.legal-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--soft-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+}
+
+.legal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 2rem 1rem 2rem;
+  border-bottom: 1px solid var(--card-border);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.legal-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--primary-accent);
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+}
+
+.legal-content {
+  padding: 2rem;
+  line-height: 1.7;
+}
+
+.last-updated {
+  font-style: italic;
+  opacity: 0.8;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+}
+
+.legal-content section {
+  margin-bottom: 2.5rem;
+}
+
+.legal-content section:last-child {
+  margin-bottom: 0;
+}
+
+.legal-content h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--primary-accent);
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 0.5rem;
+}
+
+.legal-content p {
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.legal-content ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.legal-content li {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .legal-page {
+    padding: 1rem 0.5rem;
+  }
+  
+  .legal-container {
+    border-radius: 12px;
+  }
+  
+  .legal-header {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .legal-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .legal-content {
+    padding: 1.5rem;
+  }
+  
+  .legal-content h2 {
+    font-size: 1.1rem;
+  }
+  
+  .legal-content p,
+  .legal-content li {
+    font-size: 0.9rem;
+  }
+}

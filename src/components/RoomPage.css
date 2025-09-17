@@ -1,0 +1,129 @@
+.room-page {
+    min-height: 100vh;
+    background: var(--bg-color-pomodoro);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.room-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--bg-color-pomodoro);
+    color: var(--text-color);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--primary-color);
+    border-top: 4px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.room-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    width: 100%;
+}
+
+.room-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.room-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.room-info {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.room-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.room-timer-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.room-bottom-section {
+  display: flex;
+  justify-content: center;
+}
+
+.room-tasks-only {
+  max-width: 600px;
+  width: 100%;
+}
+
+/* Audio Controls Styling */
+.audio-controls {
+  width: 100%;
+  max-width: 600px;
+}
+
+.participant-audio-status {
+  width: 100%;
+  max-width: 600px;
+}
+
+@media (max-width: 1024px) {
+    .room-chat-section {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .room-chat-container {
+        height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .room-content {
+        padding: 1rem;
+    }
+    
+    .room-header h1 {
+        font-size: 2rem;
+    }
+    
+    .room-info {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .room-header {
+        margin-bottom: 2rem;
+    }
+}

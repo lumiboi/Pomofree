@@ -1,0 +1,210 @@
+/* =================================
+   PARALLAX FOOTER STYLES
+   ================================= */
+
+/* Move weekly stats up when footer is visible */
+body.footer-visible .weekly-stats-container {
+  transform: translateY(-180px) !important;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.parallax-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-top: 1px solid var(--card-border);
+  padding: 1.5rem 0;
+  z-index: 1000;
+  transform: translateY(100%);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  font-family: var(--font-family);
+  pointer-events: none;
+}
+
+.parallax-footer.visible {
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  position: relative;
+}
+
+/* Add invisible hover area above footer for better stability */
+.footer-content::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: transparent;
+}
+
+.footer-line {
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.footer-line:last-of-type {
+  margin-bottom: 0;
+}
+
+.footer-text {
+  color: #a0a0a0;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.footer-heart {
+  font-size: 1rem;
+  margin: 0 0.2rem;
+}
+
+.footer-author {
+  color: #d4a574;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.footer-author:hover {
+  color: #e6b885;
+  text-decoration: underline;
+}
+
+.footer-copyright {
+  color: #a0a0a0;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.footer-legal-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.footer-legal-link {
+  color: #a0a0a0;
+  text-decoration: none;
+  transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.footer-legal-link:hover {
+  color: var(--primary-accent);
+  text-decoration: underline;
+}
+
+.footer-separator {
+  color: #666;
+  font-size: 0.7rem;
+}
+
+/* Theme-specific adjustments */
+.theme-dark_academia .parallax-footer {
+  background: rgba(30, 25, 21, 0.95);
+  border-top-color: #8b7355;
+}
+
+.theme-dark_academia .footer-author {
+  color: #c9a96e;
+}
+
+.theme-dark_academia .footer-author:hover {
+  color: #d4b876;
+}
+
+.theme-gothic_core .parallax-footer {
+  background: rgba(26, 24, 29, 0.95);
+  border-top-color: #4a4a4a;
+}
+
+.theme-gothic_core .footer-author {
+  color: #b8860b;
+}
+
+.theme-gothic_core .footer-author:hover {
+  color: #daa520;
+}
+
+.theme-synthwave .parallax-footer {
+  background: rgba(26, 16, 60, 0.95);
+  border-top-color: #ff00e5;
+}
+
+.theme-synthwave .footer-author {
+  color: #00c2ff;
+  text-shadow: 0 0 5px #00c2ff;
+}
+
+.theme-synthwave .footer-author:hover {
+  color: #00d4ff;
+  text-shadow: 0 0 8px #00d4ff;
+}
+
+.theme-synthwave .footer-legal-link:hover {
+  color: #ff00e5;
+  text-shadow: 0 0 3px #ff00e5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .parallax-footer {
+    padding: 1rem 0;
+  }
+  
+  .footer-content {
+    padding: 0 1rem;
+  }
+  
+  .footer-text,
+  .footer-author {
+    font-size: 0.8rem;
+  }
+  
+  .footer-copyright {
+    font-size: 0.75rem;
+  }
+  
+  .footer-legal-links {
+    font-size: 0.7rem;
+    margin-top: 0.6rem;
+  }
+  
+  .footer-line {
+    gap: 0.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-line {
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  
+  .footer-legal-links {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  
+  .footer-separator {
+    display: none;
+  }
+}

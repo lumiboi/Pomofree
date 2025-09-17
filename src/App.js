@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import './App.css';
 import { auth, db } from './firebase';
 import { 
@@ -8,7 +9,11 @@ import {
   onAuthStateChanged, 
   updateProfile, 
   GoogleAuthProvider, 
-  signInWithPopup 
+  TwitterAuthProvider,
+  signInWithPopup,
+  linkWithCredential,
+  signInWithCredential,
+  getAdditionalUserInfo
 } from 'firebase/auth';
 import { 
   collection, 
@@ -17,7 +22,6 @@ import {
   getDoc, 
   setDoc, 
   addDoc, 
-  deleteDoc, 
   writeBatch, 
   query, 
   where, 
@@ -27,10 +31,12 @@ import {
 } from 'firebase/firestore';
 import { themes } from './themes';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { StudyRoomProvider } from './contexts/StudyRoomContext';
 import { useTranslation } from './hooks/useTranslation';
 import { useBackgroundTimer } from './hooks/useBackgroundTimer';
 import { useBackgroundAudio } from './hooks/useBackgroundAudio';
 import { useAchievements } from './hooks/useAchievements';
+import { useStudyRoom } from './contexts/StudyRoomContext';
 
 import Header from './components/Header';
 import Timer from './components/Timer';
@@ -44,6 +50,15 @@ import WeeklyStats from './components/WeeklyStats';
 import AdvancedReports from './components/AdvancedReports';
 import ProductivityDashboard from './components/ProductivityDashboard';
 import AchievementNotification from './components/AchievementNotification';
+import StudyWithMeButton from './components/StudyWithMeButton';
+import RoomSetupModal from './components/RoomSetupModal';
+import StudyRoomPopout from './components/StudyRoomPopout';
+import RoomPage from './components/RoomPage';
+import PatreonSupport from './components/PatreonSupport';
+import MusicPlayer from './components/MusicPlayer';
+import TermsOfService from './components/TermsOfService';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import ParallaxFooter from './components/ParallaxFooter';
 
 const SESSION_STORAGE_KEY = 'pomofree_active_session_v2';
 
@@ -112,6 +127,8 @@ function AppContent() {
     // Achievement sistemi
     const { newAchievements } = useAchievements(user, stats, weeklyFocusTime);
     const [showNewAchievements, setShowNewAchievements] = useState([]);
+    const [showRoomSetup, setShowRoomSetup] = useState(false);
+    const { createRoom, joinRoom, isInRoom, syncTimer } = useStudyRoom();
 
     // Yeni achievement'ları göster
     useEffect(() => {
@@ -182,7 +199,85 @@ function AppContent() {
     const handleRegister = async () => { if (!username.trim()) return alert(t('general.enterUsername')); try { const cred = await createUserWithEmailAndPassword(auth, email, password); await updateProfile(cred.user, { displayName: username }); await setDoc(doc(db, 'users', cred.user.uid), { username }, { merge: true }); closeModal(); } catch (error) { alert(error.message); } };
     const handleLogin = async () => { try { await signInWithEmailAndPassword(auth, email, password); closeModal(); } catch (error) { alert(error.message); } };
     const handleLogout = () => { signOut(auth); };
-    const handleGoogleSignIn = async () => { const provider = new GoogleAuthProvider(); try { const result = await signInWithPopup(auth, provider); await setDoc(doc(db, 'users', result.user.uid), { username: result.user.displayName }, { merge: true }); closeModal(); } catch (error) { alert(error.message); } };
+    const handleGoogleSignIn = async () => { 
+        const provider = new GoogleAuthProvider(); 
+        try { 
+            const result = await signInWithPopup(auth, provider); 
+            await setDoc(doc(db, 'users', result.user.uid), { username: result.user.displayName }, { merge: true }); 
+            closeModal(); 
+        } catch (error) { 
+            if (error.code === 'auth/account-exists-with-different-credential') {
+                // Kullanıcıya hesapları bağlama seçeneği sun
+                const shouldLink = window.confirm(
+                    'Bu e-posta adresiyle zaten bir hesabınız var. Hesapları bağlamak ister misiniz?'
+                );
+                if (shouldLink) {
+                    try {
+                        // Mevcut kullanıcıyı bul ve hesapları bağla
+                        const email = error.customData?.email;
+                        if (email) {
+                            // E-posta ile giriş yapmayı dene
+                            const emailProvider = new TwitterAuthProvider();
+                            const existingUser = await signInWithPopup(auth, emailProvider);
+                            
+                            // Google hesabını bağla
+                            const googleCredential = GoogleAuthProvider.credentialFromError(error);
+                            await linkWithCredential(existingUser.user, googleCredential);
+                            
+                            closeModal();
+                        }
+                    } catch (linkError) {
+                        alert('Hesapları bağlarken hata oluştu: ' + linkError.message);
+                    }
+                }
+            } else {
+                alert(error.message); 
+            }
+        } 
+    };
+    const handleTwitterSignIn = async () => { 
+        const provider = new TwitterAuthProvider(); 
+        try { 
+            const result = await signInWithPopup(auth, provider); 
+            await setDoc(doc(db, 'users', result.user.uid), { username: result.user.displayName }, { merge: true }); 
+            closeModal(); 
+        } catch (error) { 
+            console.error('Twitter giriş hatası:', error);
+            if (error.code === 'auth/popup-blocked') {
+                alert(t('auth.popupBlocked', 'Popup blocked! Please disable your browser\'s popup blocker and try again.'));
+            } else if (error.code === 'auth/account-exists-with-different-credential') {
+                const shouldLink = window.confirm(
+                    t('auth.accountExists', 'You already have an account with this email using Google. Would you like to link the accounts?')
+                );
+                if (shouldLink) {
+                    try {
+                        const email = error.customData?.email;
+                        if (email) {
+                            // Google ile giriş yap
+                            const googleProvider = new GoogleAuthProvider();
+                            googleProvider.setCustomParameters({ login_hint: email });
+                            const existingUser = await signInWithPopup(auth, googleProvider);
+                            
+                            // Twitter hesabını bağla
+                            const twitterCredential = TwitterAuthProvider.credentialFromError(error);
+                            await linkWithCredential(existingUser.user, twitterCredential);
+                            
+                            closeModal();
+                        }
+                    } catch (linkError) {
+                        console.error('Hesapları bağlama hatası:', linkError);
+                        if (linkError.code === 'auth/popup-blocked') {
+                            alert(t('auth.popupBlocked', 'Popup blocked! Please disable your browser\'s popup blocker and try again.'));
+                        } else {
+                            alert(t('auth.linkError', 'Error linking accounts: ') + linkError.message);
+                        }
+                    }
+                }
+            } else {
+                alert(t('auth.twitterLoginError', 'Could not sign in with Twitter: ') + error.message); 
+            }
+        } 
+    };
     const handleThemeChange = async (themeKey) => { setActiveTheme(themeKey); if (user) await updateUserDataInDb({ theme: themeKey }); };
     const handleCompleteProject = async (projectIdToComplete) => { if (!user || projects.filter(p => !p.completed).length <= 1) { alert(t('general.cannotCompleteLastProject')); return; } const batch = writeBatch(db); batch.update(doc(db, 'users', user.uid, 'projects', projectIdToComplete), { completed: true, completedAt: new Date() }); tasks.filter(t => t.projectId === projectIdToComplete).forEach(task => batch.delete(doc(db, 'users', user.uid, 'tasks', task.id))); await batch.commit(); const updatedProjects = projects.map(p => p.id === projectIdToComplete ? { ...p, completed: true } : p); setProjects(updatedProjects); setTasks(tasks.filter(t => t.projectId !== projectIdToComplete)); setActiveProjectId(updatedProjects.find(p => !p.completed)?.id || null); setActiveTaskId(null); };
     const handleDeleteProject = async (projectIdToDelete) => { const activeProjects = projects.filter(p => !p.completed); if (!user || activeProjects.length <= 1) { alert(t('general.cannotDeleteLastProject')); return; } if (!window.confirm(t('general.deleteProjectConfirm'))) return; const batch = writeBatch(db); batch.delete(doc(db, 'users', user.uid, 'projects', projectIdToDelete)); tasks.filter(t => t.projectId === projectIdToDelete).forEach(task => batch.delete(doc(db, 'users', user.uid, 'tasks', task.id))); await batch.commit(); const remainingProjects = projects.filter(p => p.id !== projectIdToDelete); setProjects(remainingProjects); setTasks(tasks.filter(t => t.projectId !== projectIdToDelete)); setActiveProjectId(remainingProjects.find(p => !p.completed)?.id || null); setActiveTaskId(null); };
@@ -210,10 +305,50 @@ function AppContent() {
         resetTimer(userSettings[newMode] * 60); 
         setMode(newMode); 
         setActiveTaskId(null);
+        
+        // Sync mode change with room if in a room
+        if (isInRoom) {
+            syncTimer({
+                mode: newMode,
+                timeLeft: userSettings[newMode] * 60,
+                isActive: false,
+                startedAt: null
+            });
+        }
     };
     
     const handleKeyPress = (e) => e.key === 'Enter' && handleAddTask();
     const openModal = (modalName) => { if (modalName === 'settings') { setTempSettings(userSettings); } setModalOpen(modalName); };
+    
+    const handleCreateRoom = () => {
+        if (!user) {
+            alert(t('general.loginRequired'));
+            return;
+        }
+        setShowRoomSetup(true);
+    };
+    
+    const navigate = useNavigate();
+    
+    const handleRoomCreate = async (roomConfig) => {
+        try {
+            const roomId = await createRoom(roomConfig);
+            navigate(`/room/${roomId}`);
+            return roomId;
+        } catch (error) {
+            throw error;
+        }
+    };
+    
+    const handleRoomJoin = async (roomId, password) => {
+        try {
+            const result = await joinRoom(roomId, password);
+            navigate(`/room/${roomId}`);
+            return result;
+        } catch (error) {
+            throw error;
+        }
+    };
     const closeModal = () => { setModalOpen(null); };
     
     const handleSaveSettings = () => { 
@@ -230,19 +365,31 @@ function AppContent() {
         
         // Normal başlat/durdur
         toggleTimerHook();
+        
+        // Sync timer with room if in a room
+        if (isInRoom) {
+            syncTimer({
+                mode,
+                timeLeft: time,
+                isActive: !isTimerActive,
+                startedAt: !isTimerActive ? new Date() : null
+            });
+        }
     };
 
     return (
         <div className={`app-container theme-${activeTheme}`}>
             <Header user={user} openModal={openModal} handleLogout={handleLogout} />
+            <StudyWithMeButton onCreateRoom={handleCreateRoom} activeTheme={activeTheme} />
             {user && <ProjectShowcase completedProjects={projects.filter(p => p.completed)} handleClearShowcase={handleClearShowcase} />}
             <div className="main-content">
                 <Timer mode={mode} time={time} isActive={isTimerActive} switchMode={switchMode} toggleTimer={toggleTimer} formatTime={formatTime} totalTime={userSettings[mode] * 60} />
                 {user && activeProjectId && (<Tasks tasks={tasks} projects={projects} activeProjectId={activeProjectId} setActiveProjectId={setActiveProjectId} handleAddProject={handleAddProject} handleCompleteProject={handleCompleteProject} handleDeleteProject={handleDeleteProject} taskInput={taskInput} setTaskInput={setTaskInput} handleAddTask={handleAddTask} handleDeleteTask={handleDeleteTask} handleKeyPress={handleKeyPress} activeTaskId={activeTaskId} setActiveTaskId={setActiveTaskId} userSettings={userSettings} />)}
             </div>
+            <PatreonSupport />
             {user && <WeeklyStats totalSeconds={weeklyFocusTime} />}
             {modalOpen === 'themes' && <ThemeSelector closeModal={closeModal} handleThemeChange={handleThemeChange} />}
-            {modalOpen === 'login' && <LoginModal closeModal={closeModal} isRegistering={isRegistering} setIsRegistering={setIsRegistering} email={email} setEmail={setEmail} password={password} setPassword={setPassword} username={username} setUsername={setUsername} handleRegister={handleRegister} handleLogin={handleLogin} handleGoogleSignIn={handleGoogleSignIn} />}
+            {modalOpen === 'login' && <LoginModal closeModal={closeModal} isRegistering={isRegistering} setIsRegistering={setIsRegistering} email={email} setEmail={setEmail} password={password} setPassword={setPassword} username={username} setUsername={setUsername} handleRegister={handleRegister} handleLogin={handleLogin} handleGoogleSignIn={handleGoogleSignIn} handleTwitterSignIn={handleTwitterSignIn} />}
             {modalOpen === 'settings' && <SettingsModal closeModal={closeModal} tempSettings={tempSettings} setTempSettings={setTempSettings} handleSaveSettings={handleSaveSettings} />}
             {modalOpen === 'report' && ( <div className="modal-overlay" onClick={closeModal}><div className="modal-content" onClick={(e) => e.stopPropagation()}> <h2>{t('report.title')}</h2> <p>{t('report.completedPomodoros')}</p> <h3 style={{fontSize: '3em', textAlign: 'center', margin: '1rem 0'}}>{stats.completedPomodoros}</h3> <button onClick={closeModal} className="btn btn-secondary">{t('report.close')}</button> </div></div> )}
             {modalOpen === 'advanced-reports' && <AdvancedReports user={user} closeModal={closeModal} />}
@@ -254,15 +401,49 @@ function AppContent() {
                 achievements={showNewAchievements}
                 onClose={() => setShowNewAchievements([])}
             />
+            
+            {/* Room Setup Modal */}
+            {showRoomSetup && (
+                <RoomSetupModal 
+                    closeModal={() => setShowRoomSetup(false)}
+                    onCreateRoom={handleRoomCreate}
+                    onJoinRoom={handleRoomJoin}
+                />
+            )}
+            
+            {/* Study Room Popout */}
+            <StudyRoomPopout 
+                syncedTimer={{
+                    mode,
+                    timeLeft: time,
+                    isActive: isTimerActive
+                }}
+                onTimerSync={syncTimer}
+            />
+            
+            {/* Music Player */}
+            <MusicPlayer />
+            
+            {/* Parallax Footer */}
+            <ParallaxFooter />
         </div>
     );
 }
 
 function App() {
   return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <Router>
+      <LanguageProvider>
+        <StudyRoomProvider>
+          <Routes>
+            <Route path="/" element={<AppContent />} />
+            <Route path="/room/:roomId" element={<RoomPage />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+          </Routes>
+        </StudyRoomProvider>
+      </LanguageProvider>
+    </Router>
   );
 }
 

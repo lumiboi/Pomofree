@@ -1,0 +1,219 @@
+.study-with-me-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+  padding: 0 1rem;
+}
+
+.study-with-me-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  /* text-transform: uppercase; */
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.study-with-me-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.study-with-me-btn:hover::before {
+  left: 100%;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-text {
+  font-family: inherit;
+}
+
+/* Default theme */
+.study-with-me-btn.theme-default {
+  background: linear-gradient(135deg, #4ECDC4, #44A08D);
+  color: white;
+}
+
+.study-with-me-btn.theme-default:hover {
+  background: linear-gradient(135deg, #44A08D, #4ECDC4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+}
+
+/* Forest theme */
+.study-with-me-btn.theme-forest {
+  background: linear-gradient(135deg, #4CAF50, #8BC34A);
+  color: white;
+}
+
+.study-with-me-btn.theme-forest:hover {
+  background: linear-gradient(135deg, #8BC34A, #4CAF50);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+/* Sunset theme */
+.study-with-me-btn.theme-sunset {
+  background: linear-gradient(135deg, #FF9800, #FF5722);
+  color: white;
+}
+
+.study-with-me-btn.theme-sunset:hover {
+  background: linear-gradient(135deg, #FF5722, #FF9800);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+/* Ocean theme */
+.study-with-me-btn.theme-ocean {
+  background: linear-gradient(135deg, #00BCD4, #0096c7);
+  color: white;
+}
+
+.study-with-me-btn.theme-ocean:hover {
+  background: linear-gradient(135deg, #0096c7, #00BCD4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
+}
+
+/* Lavender theme */
+.study-with-me-btn.theme-lavender {
+  background: linear-gradient(135deg, #9C27B0, #E91E63);
+  color: white;
+}
+
+.study-with-me-btn.theme-lavender:hover {
+  background: linear-gradient(135deg, #E91E63, #9C27B0);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(156, 39, 176, 0.4);
+}
+
+/* Coffee theme */
+.study-with-me-btn.theme-coffee {
+  background: linear-gradient(135deg, #8D6E63, #A1887F);
+  color: white;
+}
+
+.study-with-me-btn.theme-coffee:hover {
+  background: linear-gradient(135deg, #A1887F, #8D6E63);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(141, 110, 99, 0.4);
+}
+
+/* Matrix theme */
+.study-with-me-btn.theme-matrix {
+  background: linear-gradient(135deg, #00FF00, #4CAF50);
+  color: #003800;
+}
+
+.study-with-me-btn.theme-matrix:hover {
+  background: linear-gradient(135deg, #4CAF50, #00FF00);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 255, 0, 0.4);
+}
+
+/* Rose theme */
+.study-with-me-btn.theme-rose {
+  background: linear-gradient(135deg, #E91E63, #F06292);
+  color: white;
+}
+
+.study-with-me-btn.theme-rose:hover {
+  background: linear-gradient(135deg, #F06292, #E91E63);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+}
+
+/* Slate theme */
+.study-with-me-btn.theme-slate {
+  background: linear-gradient(135deg, #757575, #9E9E9E);
+  color: white;
+}
+
+.study-with-me-btn.theme-slate:hover {
+  background: linear-gradient(135deg, #9E9E9E, #757575);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(117, 117, 117, 0.4);
+}
+
+/* Sand theme */
+.study-with-me-btn.theme-sand {
+  background: linear-gradient(135deg, #FFC107, #FF9800);
+  color: #8b5a00;
+}
+
+.study-with-me-btn.theme-sand:hover {
+  background: linear-gradient(135deg, #FF9800, #FFC107);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+}
+
+/* Special themes */
+.study-with-me-btn.theme-synthwave {
+  background: linear-gradient(135deg, #00b5d7, #ff00e5);
+  color: #f0d5f7;
+  border: 1px solid rgba(255, 0, 229, 0.4);
+}
+
+.study-with-me-btn.theme-synthwave:hover {
+  background: linear-gradient(135deg, #ff00e5, #00b5d7);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 181, 215, 0.4);
+}
+
+.study-with-me-btn.theme-dark_academia {
+  background: linear-gradient(135deg, #c2a26c, #8b7355);
+  color: #dcd1b8;
+  border: 1px solid rgba(194, 162, 108, 0.5);
+}
+
+.study-with-me-btn.theme-dark_academia:hover {
+  background: linear-gradient(135deg, #8b7355, #c2a26c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(194, 162, 108, 0.4);
+}
+
+.study-with-me-btn.theme-gothic_core {
+  background: linear-gradient(135deg, #a08a99, #8b5a6b);
+  color: #d9d7dd;
+  border: 1px solid #582c51;
+}
+
+.study-with-me-btn.theme-gothic_core:hover {
+  background: linear-gradient(135deg, #8b5a6b, #a08a99);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(160, 138, 153, 0.4);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .study-with-me-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+  
+  .btn-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}

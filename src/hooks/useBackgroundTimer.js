@@ -11,6 +11,16 @@ export const useBackgroundTimer = (initialTime, isActive) => {
     setIsTimerActive(prev => !prev);
   }, []);
 
+  // Timer'ı zorla başlat
+  const startTimer = useCallback(() => {
+    setIsTimerActive(true);
+  }, []);
+
+  // Timer'ı zorla durdur
+  const stopTimer = useCallback(() => {
+    setIsTimerActive(false);
+  }, []);
+
   // Timer'ı sıfırla
   const resetTimer = useCallback((newTime) => {
     setTime(newTime);
@@ -52,6 +62,8 @@ export const useBackgroundTimer = (initialTime, isActive) => {
     time,
     isTimerActive,
     toggleTimer,
+    startTimer,
+    stopTimer,
     resetTimer,
     isFinished: time === 0 && !isTimerActive
   };
