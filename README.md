@@ -200,13 +200,70 @@ Pomofree is a PWA (Progressive Web App) that can be installed on mobile devices 
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🛠️ Technologies Used
+
+### **Frontend Framework & Core**
+- **React 19.1.1** - Main UI framework
+- **React DOM 19.1.1** - DOM rendering
+- **React Router DOM 7.9.1** - Client-side routing
+- **Create React App** - Development environment
+
+### **Backend & Database**
+- **Firebase 12.1.0** - Authentication, Firestore database, hosting
+- **Firebase Auth** - Google, Twitter, Email/Password authentication
+- **Firebase Firestore** - NoSQL database for user data
+
+### **Real-time Communication**
+- **Socket.io-client 4.8.1** - Real-time study room synchronization
+- **Agora RTC SDK 4.24.0** - Video/audio communication for study rooms
+- **Agora React UIKit 1.2.0** - React components for Agora
+- **Simple-peer 9.11.1** - WebRTC peer-to-peer connections
+
+### **Data Visualization & Charts**
+- **Chart.js 4.5.0** - Chart library for analytics
+- **React-chartjs-2 5.3.0** - React wrapper for Chart.js
+
+### **Date & Time Handling**
+- **date-fns 4.1.0** - Date manipulation and formatting
+- **date-fns locales** - Turkish and English localization
+
+### **Utilities & Testing**
+- **UUID 13.0.0** - Unique identifier generation
+- **Web-vitals 2.1.4** - Performance monitoring
+- **@testing-library/react** - Component testing
+- **@testing-library/jest-dom** - Jest DOM matchers
+- **@testing-library/user-event** - User interaction testing
+
+### **External APIs & Services**
+- **Google OAuth** - Google authentication
+- **Twitter OAuth** - Twitter (X) authentication
+- **YouTube API** - Music player integration
+- **Google AdSense** - Advertisement integration
+- **Agora.io** - Video/audio communication
+
+### **Frontend Technologies**
+- **CSS3** - Custom styling with CSS variables
+- **CSS Grid & Flexbox** - Layout system
+- **CSS Animations** - Smooth transitions and effects
+- **Responsive Design** - Mobile-first approach
+- **Progressive Web App (PWA)** - Offline functionality
+
+### **Development Tools**
+- **Webpack** - Module bundling
+- **Babel** - JavaScript transpilation
+- **ESLint** - Code linting
+- **Git** - Version control
+- **Firebase Hosting** - Static site hosting
+
 ## 🙏 Acknowledgments
 
 - Built with [React](https://reactjs.org/)
 - Styled with [CSS3](https://developer.mozilla.org/en-US/docs/Web/CSS)
 - Backend powered by [Firebase](https://firebase.google.com/)
-- Icons from [Heroicons](https://heroicons.com/)
+- Real-time features with [Socket.io](https://socket.io/) and [Agora](https://www.agora.io/)
+- Charts powered by [Chart.js](https://www.chartjs.org/)
 - Music integration with [YouTube API](https://developers.google.com/youtube)
+- Icons from [Heroicons](https://heroicons.com/)
 
 ## 📞 Support
 
