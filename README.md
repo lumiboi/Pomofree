@@ -265,10 +265,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Music integration with [YouTube API](https://developers.google.com/youtube)
 - Icons from [Heroicons](https://heroicons.com/)
 
-## 📞 Support
-
-For support, email support@pomofree.com or join our Discord community.
-
 ---
 
 **Made with ❤️ by [Lumi](https://codedbylumi.com)**
