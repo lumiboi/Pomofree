@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import './RoomSetupModal.css';
 
-const RoomSetupModal = ({ closeModal, onCreateRoom, onJoinRoom }) => {
+const RoomSetupModal = ({ closeModal, onCreateRoom, onJoinRoom, onJoinAnonymousRoom }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('create');
   const [roomName, setRoomName] = useState('');
   const [capacity, setCapacity] = useState(4);
   const [hasPassword, setHasPassword] = useState(false);
   const [password, setPassword] = useState('');
+  const [hideTaskDetails, setHideTaskDetails] = useState(true);
+  const [breakChatOnly, setBreakChatOnly] = useState(true);
+  const [roomType, setRoomType] = useState('private');
   const [joinRoomId, setJoinRoomId] = useState('');
   const [joinPassword, setJoinPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,7 +22,7 @@ const RoomSetupModal = ({ closeModal, onCreateRoom, onJoinRoom }) => {
       return;
     }
 
-    if (hasPassword && !password.trim()) {
+    if (roomType === 'private' && hasPassword && password.trim().length < 6) {
       setError(t('studyRoom.enterPassword'));
       return;
     }
@@ -27,8 +30,11 @@ const RoomSetupModal = ({ closeModal, onCreateRoom, onJoinRoom }) => {
     const roomConfig = {
       name: roomName.trim(),
       capacity: parseInt(capacity),
-      hasPassword,
-      password: hasPassword ? password.trim() : ''
+      hasPassword: roomType === 'private' && hasPassword,
+      password: roomType === 'private' && hasPassword ? password.trim() : '',
+      roomType,
+      hideTaskDetails: roomType === 'anonymous' || hideTaskDetails,
+      breakChatOnly
     };
 
     try {
@@ -107,6 +113,15 @@ const RoomSetupModal = ({ closeModal, onCreateRoom, onJoinRoom }) => {
             </div>
 
             <div className="form-group">
+              <label>{t('studyRoom.roomType')}</label>
+              <select value={roomType} onChange={event => setRoomType(event.target.value)}>
+                <option value="private">{t('studyRoom.privateRoom')}</option>
+                <option value="anonymous">{t('studyRoom.anonymousRoom')}</option>
+              </select>
+              <small>{t(`studyRoom.${roomType}Description`)}</small>
+            </div>
+
+            <div className="form-group">
               <label>{t('studyRoom.capacity')}</label>
               <select 
                 value={capacity} 
@@ -120,7 +135,7 @@ const RoomSetupModal = ({ closeModal, onCreateRoom, onJoinRoom }) => {
               </select>
             </div>
 
-            <div className="form-group checkbox-group">
+            {roomType === 'private' && <div className="form-group checkbox-group">
               <label className="checkbox-label">
                 <input
                   type="checkbox"
@@ -130,9 +145,9 @@ const RoomSetupModal = ({ closeModal, onCreateRoom, onJoinRoom }) => {
                 <span className="checkmark"></span>
                 {t('studyRoom.passwordProtected')}
               </label>
-            </div>
+            </div>}
 
-            {hasPassword && (
+            {roomType === 'private' && hasPassword && (
               <div className="form-group">
                 <label>{t('studyRoom.password')}</label>
                 <input
@@ -142,9 +157,34 @@ const RoomSetupModal = ({ closeModal, onCreateRoom, onJoinRoom }) => {
                   onKeyPress={(e) => handleKeyPress(e, 'create')}
                   placeholder={t('studyRoom.passwordPlaceholder')}
                   maxLength={20}
+                  minLength={6}
                 />
               </div>
             )}
+
+            {roomType === 'private' && <div className="form-group checkbox-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={hideTaskDetails}
+                  onChange={(e) => setHideTaskDetails(e.target.checked)}
+                />
+                <span className="checkmark"></span>
+                {t('studyRoom.hideTaskDetails')}
+              </label>
+            </div>}
+
+            <div className="form-group checkbox-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={breakChatOnly}
+                  onChange={(e) => setBreakChatOnly(e.target.checked)}
+                />
+                <span className="checkmark"></span>
+                {t('studyRoom.breakChatOnly')}
+              </label>
+            </div>
 
             <button className="btn btn-primary create-btn" onClick={handleCreateRoom}>
               {t('studyRoom.createRoom')}
@@ -182,6 +222,22 @@ const RoomSetupModal = ({ closeModal, onCreateRoom, onJoinRoom }) => {
             <button className="btn btn-primary join-btn" onClick={handleJoinRoom}>
               {t('studyRoom.joinRoom')}
             </button>
+            {onJoinAnonymousRoom && (
+              <button
+                className="btn btn-secondary join-btn"
+                onClick={async () => {
+                  try {
+                    setError('');
+                    await onJoinAnonymousRoom();
+                    closeModal();
+                  } catch (anonymousError) {
+                    setError(anonymousError.message);
+                  }
+                }}
+              >
+                {t('studyRoom.quickAnonymous')}
+              </button>
+            )}
           </div>
         )}
       </div>

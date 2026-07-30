@@ -151,6 +151,26 @@
   color: #333;
 }
 
+.participant-status {
+  margin-left: auto;
+  font-size: 0.7rem;
+  opacity: 0.78;
+}
+
+.participant-status::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: #b6bdca;
+}
+
+.participant-status.status-focusing::before { background: #68d7cb; }
+.participant-status.status-break::before { background: #ffbd59; }
+.participant-status.status-paused::before { background: #ff7d8a; }
+
 .audio-status {
   display: flex;
   align-items: center;

@@ -1,5 +1,7 @@
 .room-setup-modal {
-  background: white;
+  background: var(--card-bg, white);
+  color: var(--text-color, inherit);
+  border: 1px solid var(--card-border, #eee);
   border-radius: 12px;
   padding: 0;
   width: 90%;
@@ -26,9 +28,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid #eee;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  border-bottom: 1px solid var(--card-border, #eee);
+  background: linear-gradient(135deg, var(--primary-accent, #667eea) 0%, var(--primary-accent, #764ba2) 100%);
+  color: #ffffff;
   border-radius: 12px 12px 0 0;
 }
 
@@ -60,15 +62,15 @@
 
 .tab-container {
   display: flex;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--card-border, #eee);
 }
 
 .tab-btn {
   flex: 1;
   padding: 1rem;
   border: none;
-  background: #f8f9fa;
-  color: #666;
+  background: var(--card-bg, #f8f9fa);
+  color: var(--text-color, #666);
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s;
@@ -76,14 +78,13 @@
 }
 
 .tab-btn:hover {
-  background: #e9ecef;
-  color: #333;
+  filter: brightness(1.05);
 }
 
 .tab-btn.active {
-  background: white;
-  color: #667eea;
-  border-bottom-color: #667eea;
+  background: transparent;
+  color: var(--primary-accent, #667eea);
+  border-bottom-color: var(--primary-accent, #667eea);
 }
 
 .tab-content {
@@ -98,7 +99,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #333;
+  color: var(--text-color, #333);
   font-size: 0.9rem;
 }
 
@@ -106,17 +107,19 @@
 .form-group select {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e1e5e9;
+  border: 2px solid var(--card-border, #e1e5e9);
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
+  background: var(--card-bg, #ffffff);
+  color: var(--text-color, inherit);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-accent, #667eea);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -129,7 +132,7 @@
   align-items: center;
   cursor: pointer;
   font-weight: 500;
-  color: #333;
+  color: var(--text-color, #333);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -139,7 +142,7 @@
 .checkmark {
   width: 20px;
   height: 20px;
-  border: 2px solid #e1e5e9;
+  border: 2px solid var(--card-border, #e1e5e9);
   border-radius: 4px;
   margin-right: 0.75rem;
   position: relative;
@@ -147,8 +150,8 @@
 }
 
 .checkbox-label input[type="checkbox"]:checked + .checkmark {
-  background-color: #667eea;
-  border-color: #667eea;
+  background-color: var(--primary-accent, #667eea);
+  border-color: var(--primary-accent, #667eea);
 }
 
 .checkbox-label input[type="checkbox"]:checked + .checkmark::after {
@@ -179,8 +182,8 @@
 }
 
 .create-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-accent, #667eea) 0%, var(--primary-accent, #764ba2) 100%);
+  color: #ffffff;
 }
 
 .create-btn:hover {
@@ -189,8 +192,8 @@
 }
 
 .join-btn {
-  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-accent, #4ecdc4) 0%, var(--primary-accent, #44a08d) 100%);
+  color: #ffffff;
 }
 
 .join-btn:hover {
@@ -199,47 +202,21 @@
 }
 
 .error-message {
-  background: #fee;
-  color: #c33;
+  background: rgba(102, 126, 234, 0.08);
+  color: var(--primary-accent, #667eea);
   padding: 0.75rem;
   border-radius: 6px;
   margin: 0 1.5rem 1rem;
-  border: 1px solid #fcc;
+  border: 1px solid var(--primary-accent, #667eea);
   font-size: 0.9rem;
   text-align: center;
 }
 
-/* Dark mode support */
+/* Dark mode support delegates to theme variables */
 @media (prefers-color-scheme: dark) {
   .room-setup-modal {
-    background: #2a2a2a;
-    color: white;
-  }
-  
-  .tab-btn {
-    background: #3a3a3a;
-    color: #ccc;
-  }
-  
-  .tab-btn:hover {
-    background: #4a4a4a;
-    color: white;
-  }
-  
-  .tab-btn.active {
-    background: #2a2a2a;
-  }
-  
-  .form-group input,
-  .form-group select {
-    background: #3a3a3a;
-    border-color: #555;
-    color: white;
-  }
-  
-  .form-group input:focus,
-  .form-group select:focus {
-    border-color: #667eea;
+    background: var(--card-bg, #2a2a2a);
+    color: var(--text-color, #ffffff);
   }
 }
 

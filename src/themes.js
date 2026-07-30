@@ -1,4 +1,42 @@
 export const themes = {
+  whimsy_core: {
+    name: "ÖZEL (Whimsy Core)",
+    isSpecial: true,
+    colors: {
+      "--font-family": "'Lora', serif",
+      "--bg-color-pomodoro": "#eee7ce",
+      "--bg-color-short": "#e4ddbd",
+      "--bg-color-long": "#d8d5b6",
+      "--text-color": "#4a4a2d",
+      "--text-color-dark": "#fffaf0",
+      "--primary-accent": "#758052",
+      "--card-bg": "rgba(255, 250, 232, 0.86)",
+      "--card-border": "rgba(121, 105, 66, 0.5)",
+      "--progress-active-color": "#758052",
+      "--progress-inactive-color": "#bb7c5d",
+      "--progress-bg-color": "rgba(117, 128, 82, 0.2)",
+      "--soft-shadow": "0 12px 30px rgba(83, 68, 38, 0.18)"
+    }
+  },
+  frutiger_aero: {
+    name: "ÖZEL (Frutiger Aero)",
+    isSpecial: true,
+    colors: {
+      "--font-family": "Tahoma, 'Trebuchet MS', 'Segoe UI', sans-serif",
+      "--bg-color-pomodoro": "#9edcff",
+      "--bg-color-short": "#85d8f7",
+      "--bg-color-long": "#a8e8d3",
+      "--text-color": "#07579a",
+      "--text-color-dark": "#084778",
+      "--primary-accent": "#82ce3f",
+      "--card-bg": "rgba(245, 252, 255, 0.62)",
+      "--card-border": "rgba(255, 255, 255, 0.92)",
+      "--progress-active-color": "#17a8dc",
+      "--progress-inactive-color": "#7aca35",
+      "--progress-bg-color": "rgba(23, 168, 220, 0.18)",
+      "--soft-shadow": "0 12px 28px rgba(0, 105, 170, 0.2), inset 0 1px 0 rgba(255,255,255,0.9)"
+    }
+  },
     synthwave: { 
     name: "ÖZEL (Synthwave)", 
     isSpecial: true, // Bu bir özel tema

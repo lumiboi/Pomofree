@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, doc, getDocs, setDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, doc, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useTranslation } from './useTranslation';
 
@@ -105,6 +105,22 @@ export const useAchievements = (user, stats, weeklyFocusTime) => {
       icon: '🗓️',
       condition: (stats) => stats.dailyStreak >= 30,
       unlocked: false
+    },
+    {
+      id: 'social_focus_1',
+      title: t('achievements.socialFirst'),
+      description: t('achievements.socialFirstDesc'),
+      icon: '🤝',
+      condition: (stats) => stats.sharedSessions >= 1,
+      unlocked: false
+    },
+    {
+      id: 'social_focus_10',
+      title: t('achievements.socialTen'),
+      description: t('achievements.socialTenDesc'),
+      icon: '🫶',
+      condition: (stats) => stats.sharedSessions >= 10,
+      unlocked: false
     }
   ];
 
@@ -114,9 +130,8 @@ export const useAchievements = (user, stats, weeklyFocusTime) => {
 
     try {
       // Kullanıcının mevcut achievement'larını al
-      const achievementsRef = collection(db, 'achievements');
-      const q = query(achievementsRef, where('userId', '==', user.uid));
-      const querySnapshot = await getDocs(q);
+      const achievementsRef = collection(db, 'users', user.uid, 'achievements');
+      const querySnapshot = await getDocs(achievementsRef);
       
       const unlockedAchievements = [];
       querySnapshot.forEach((doc) => {
@@ -133,13 +148,13 @@ export const useAchievements = (user, stats, weeklyFocusTime) => {
           if (achievement && !achievement.condition(stats, weeklyFocusTime)) {
             // Yanlış kazanılmış, sil
             console.log(`Yanlış kazanılmış achievement siliniyor: ${achievementId}`);
-            await deleteDoc(doc(db, 'achievements', `${user.uid}_${achievementId}`));
+            await deleteDoc(doc(db, 'users', user.uid, 'achievements', achievementId));
           }
         }
       }
 
       // Achievement'ları yeniden yükle
-      const updatedQuerySnapshot = await getDocs(q);
+      const updatedQuerySnapshot = await getDocs(achievementsRef);
       const updatedUnlockedAchievements = [];
       updatedQuerySnapshot.forEach((doc) => {
         updatedUnlockedAchievements.push(doc.data());
@@ -161,7 +176,7 @@ export const useAchievements = (user, stats, weeklyFocusTime) => {
           };
 
           // Firebase'e kaydet
-          await setDoc(doc(db, 'achievements', `${user.uid}_${achievement.id}`), {
+          await setDoc(doc(db, 'users', user.uid, 'achievements', achievement.id), {
             achievementId: achievement.id,
             userId: user.uid,
             unlockedAt: new Date(),

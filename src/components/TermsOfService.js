@@ -60,7 +60,7 @@ const TermsOfService = () => {
                     </section>
 
                     <section>
-                        <h2>{t('legal.privacy', 'Privacy')}</h2>
+                        <h2>{t('legal.termsPrivacy', 'Privacy')}</h2>
                         <p>
                             {t('legal.privacyText', 'Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the service, to understand our practices.')}
                         </p>
@@ -81,9 +81,9 @@ const TermsOfService = () => {
                     </section>
 
                     <section>
-                        <h2>{t('legal.changes', '8. Changes to Terms')}</h2>
+                        <h2>{t('legal.termsChanges', '8. Changes to Terms')}</h2>
                         <p>
-                            {t('legal.changesText', 'We reserve the right to modify these terms at any time. We will notify users of any material changes by posting the new terms on this page. Your continued use of the service after any such changes constitutes your acceptance of the new terms.')}
+                            {t('legal.termsChangesText', 'We reserve the right to modify these terms at any time. We will notify users of any material changes by posting the new terms on this page. Your continued use of the service after any such changes constitutes your acceptance of the new terms.')}
                         </p>
                     </section>
 

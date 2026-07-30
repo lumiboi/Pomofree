@@ -13,7 +13,7 @@ const Celebration = ({ onComplete }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       onCompleteRef.current();
-    }, 3500); // 3.5 saniye
+    }, 2400);
 
     return () => {
       clearTimeout(timer);

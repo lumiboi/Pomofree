@@ -42,6 +42,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+}
+
+.btn-icon svg {
+  display: block;
+  overflow: visible;
 }
 
 .btn-text {
@@ -203,6 +211,31 @@
   background: linear-gradient(135deg, #8b5a6b, #a08a99);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(160, 138, 153, 0.4);
+}
+
+.study-with-me-btn.theme-whimsy_core {
+  background: linear-gradient(180deg, #929b68, #6f794d);
+  color: #fffaf0;
+  border: 1px solid #5f6841;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.42), 0 5px 0 #56603e;
+}
+
+.study-with-me-btn.theme-whimsy_core:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.42), 0 7px 0 #56603e, 0 10px 20px rgba(76,69,40,0.24);
+}
+
+.study-with-me-btn.theme-frutiger_aero {
+  background: linear-gradient(180deg, #b9f178, #65b72c);
+  color: #07579a;
+  border: 2px solid rgba(255,255,255,0.9);
+  box-shadow: inset 0 2px 3px rgba(255,255,255,0.85), 0 5px 0 #3c8f23, 0 8px 18px rgba(0,92,153,0.24);
+}
+
+.study-with-me-btn.theme-frutiger_aero:hover {
+  transform: translateY(-2px);
+  filter: saturate(1.08);
+  box-shadow: inset 0 2px 3px rgba(255,255,255,0.85), 0 7px 0 #3c8f23, 0 11px 24px rgba(0,92,153,0.28);
 }
 
 /* Responsive design */

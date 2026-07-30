@@ -3,6 +3,8 @@
 
 # Build files
 /build
+/.firebase
+firebase-debug.log
 
 # Log files
 npm-debug.log*

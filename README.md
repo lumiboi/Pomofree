@@ -25,7 +25,7 @@ A comprehensive, feature-rich Pomodoro timer application built with React, featu
 - **Real-time Updates**: Live synchronization of timer states across all participants
 
 ### 🎵 Integrated Music Player
-- **Multiple Playlists**: Jazz, Classical, Ambient, Lo-fi music
+- **Multiple Playlists**: Jazz, Classical, Ambient, Lo-fi, and Nature sounds
 - **YouTube Integration**: Custom URL support for personal music
 - **Draggable Interface**: Move the music player anywhere on screen
 - **Volume Control**: Adjustable volume with visual slider
@@ -264,6 +264,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Charts powered by [Chart.js](https://www.chartjs.org/)
 - Music integration with [YouTube API](https://developers.google.com/youtube)
 - Icons from [Heroicons](https://heroicons.com/)
+
+## 📞 Support
+
+For support, email support@pomofree.com or join our Discord community.
 
 ---
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 
 export const useBackgroundAudio = () => {
   const audioRef = useRef(null);
+  const stopTimerRef = useRef(null);
   const isAudioUnlockedRef = useRef(false);
 
   // Ses kilidini aç
@@ -15,7 +16,7 @@ export const useBackgroundAudio = () => {
   }, []);
 
   // Ses çal
-  const playSound = useCallback((audioUrl) => {
+  const playSound = useCallback((audioUrl, maxDurationMs = 2500) => {
     if (!audioUrl) return;
 
     try {
@@ -24,6 +25,7 @@ export const useBackgroundAudio = () => {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
+      if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
 
       // Yeni ses oluştur
       const audio = new Audio(audioUrl);
@@ -35,6 +37,10 @@ export const useBackgroundAudio = () => {
       
       // Ses çalmayı dene
       const playPromise = audio.play();
+      stopTimerRef.current = setTimeout(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }, maxDurationMs);
       
       if (playPromise !== undefined) {
         playPromise
@@ -52,32 +58,34 @@ export const useBackgroundAudio = () => {
     }
   }, [unlockAudio]);
 
-  // Notification ile ses çal (daha güvenilir)
-  const playNotificationSound = useCallback((audioUrl) => {
-    // Önce normal ses çalmayı dene
-    playSound(audioUrl);
-    
-    // Eğer sayfa arkaplandayken, notification ile de bildir
-    if (document.hidden && 'Notification' in window) {
-      if (Notification.permission === 'granted') {
-        new Notification('Pomofree', {
-          body: 'Timer tamamlandı!',
+  const showDesktopNotification = useCallback((body, tag = 'pomofree-timer') => {
+    if (
+      !document.hidden ||
+      !('Notification' in window) ||
+      Notification.permission !== 'granted'
+    ) return;
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then(registration => registration.showNotification('Pomofree', {
+          body,
           icon: '/logo192.png',
-          tag: 'pomofree-timer'
-        });
-      } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            new Notification('Pomofree', {
-              body: 'Timer tamamlandı!',
-              icon: '/logo192.png',
-              tag: 'pomofree-timer'
-            });
-          }
-        });
-      }
+          tag
+        }))
+        .catch(() => {});
+      return;
     }
-  }, [playSound]);
+    new Notification('Pomofree', { body, icon: '/logo192.png', tag });
+  }, []);
+
+  const playNotificationSound = useCallback((
+    audioUrl,
+    maxDurationMs = 2500,
+    body = 'Pomofree timer completed.'
+  ) => {
+    playSound(audioUrl, maxDurationMs);
+    showDesktopNotification(body);
+  }, [playSound, showDesktopNotification]);
 
   // Cleanup
   useEffect(() => {
@@ -86,12 +94,14 @@ export const useBackgroundAudio = () => {
         audioRef.current.pause();
         audioRef.current.src = '';
       }
+      if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
     };
   }, []);
 
   return {
     playSound,
     playNotificationSound,
+    showDesktopNotification,
     unlockAudio
   };
 };

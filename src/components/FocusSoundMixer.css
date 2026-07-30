@@ -1,0 +1,89 @@
+.focus-sound-mixer {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1200;
+  width: min(330px, calc(100vw - 2rem));
+  padding: 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: var(--bg-color-pomodoro);
+  color: var(--text-color);
+  box-shadow: var(--soft-shadow);
+}
+
+.focus-sound-mixer header,
+.focus-sound-mixer header > div,
+.focus-sound-mixer footer {
+  display: flex;
+}
+
+.focus-sound-mixer header {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.focus-sound-mixer header > div {
+  flex-direction: column;
+}
+
+.focus-sound-mixer header small {
+  opacity: 0.6;
+}
+
+.focus-sound-mixer header button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.focus-sound-list {
+  margin: 0.9rem 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.focus-sound-list label {
+  display: grid;
+  grid-template-columns: 80px 1fr 38px;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.75rem;
+}
+
+.focus-sound-list input {
+  accent-color: var(--primary-accent);
+}
+
+.focus-sound-list output {
+  text-align: right;
+  opacity: 0.7;
+}
+
+.focus-sound-mixer footer {
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--card-border);
+  font-size: 0.68rem;
+}
+
+.focus-sound-mixer footer button {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--card-border);
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .focus-sound-mixer {
+    inset: auto 0.75rem 0.75rem;
+    width: auto;
+  }
+}

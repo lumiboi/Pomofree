@@ -47,11 +47,11 @@ const LoginModal = ({
 
         <div className="form-group">
           <label>{t('login.email')}</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('login.emailPlaceholder', 'E-posta adresiniz')} />
         </div>
         <div className="form-group">
           <label>{t('login.password')}</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('login.passwordPlaceholder', 'Şifre')} />
         </div>
 
         {isRegistering ? (

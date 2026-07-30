@@ -73,7 +73,7 @@ const PrivacyPolicy = () => {
                     <section>
                         <h2>{t('legal.dataStorage', '4. Data Storage and Security')}</h2>
                         <p>
-                            {t('legal.dataStorageText', 'Your data is stored securely using industry-standard encryption and security measures. We use Firebase for data storage, which provides enterprise-grade security. However, no method of transmission over the internet or electronic storage is 100% secure.')}
+                            {t('legal.dataStorageText', 'Your data is stored in your Pomofree account using industry-standard encryption and security measures. However, no method of transmission over the internet or electronic storage is 100% secure.')}
                         </p>
                     </section>
 
@@ -125,9 +125,9 @@ const PrivacyPolicy = () => {
                     </section>
 
                     <section>
-                        <h2>{t('legal.changes', '10. Changes to This Policy')}</h2>
+                        <h2>{t('legal.privacyChanges', '10. Changes to This Policy')}</h2>
                         <p>
-                            {t('legal.changesText', 'We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date. We encourage you to review this Privacy Policy periodically.')}
+                            {t('legal.privacyChangesText', 'We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date. We encourage you to review this Privacy Policy periodically.')}
                         </p>
                     </section>
 

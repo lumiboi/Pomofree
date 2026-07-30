@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import LanguageSelector from './LanguageSelector';
 
-const Header = ({ user, openModal, handleLogout, isRoomPage, onLeaveRoom }) => {
+const Header = ({ user, openModal, handleLogout, isRoomPage, onLeaveRoom, isTodoPage = false }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -21,6 +23,11 @@ const Header = ({ user, openModal, handleLogout, isRoomPage, onLeaveRoom }) => {
     } else {
       alert(t('general.loginRequired'));
     }
+  };
+
+  const handleTodoClick = () => {
+    if (user) navigate('/todo');
+    else alert(t('general.loginRequired'));
   };
 
   useEffect(() => {
@@ -70,11 +77,20 @@ const Header = ({ user, openModal, handleLogout, isRoomPage, onLeaveRoom }) => {
           // Normal page - show all menu items
           <>
             <LanguageSelector />
+            {isTodoPage ? (
+              <button onClick={() => navigate('/')} className="btn btn-secondary">{t('header.home')}</button>
+            ) : (
+              <button onClick={handleTodoClick} className="btn btn-secondary">{t('header.todo')}</button>
+            )}
             <button onClick={() => openModal('themes')} className="btn btn-secondary">{t('header.themes')}</button>
-            <button onClick={handleDashboardClick} className="btn btn-secondary">{t('header.dashboard')}</button>
-            <button onClick={handleAdvancedReportsClick} className="btn btn-secondary">{t('header.advancedReports')}</button>
-            <button onClick={() => openModal('report')} className="btn btn-secondary">{t('header.report')}</button>
-            <button onClick={() => openModal('settings')} className="btn btn-secondary">{t('header.settings')}</button>
+            {!isTodoPage && (
+              <>
+                <button onClick={handleDashboardClick} className="btn btn-secondary">{t('header.dashboard')}</button>
+                <button onClick={handleAdvancedReportsClick} className="btn btn-secondary">{t('header.advancedReports')}</button>
+                <button onClick={() => openModal('report')} className="btn btn-secondary">{t('header.report')}</button>
+                <button onClick={() => openModal('settings')} className="btn btn-secondary">{t('header.settings')}</button>
+              </>
+            )}
             
             {user ? (
               <div className="user-menu" ref={dropdownRef}>

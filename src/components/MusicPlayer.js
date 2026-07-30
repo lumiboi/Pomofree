@@ -153,7 +153,7 @@ const MusicPlayer = () => {
     }
 
     window.onYouTubeIframeAPIReady = () => {
-      const ytPlayer = new window.YT.Player('youtube-player', {
+      new window.YT.Player('youtube-player', {
         height: '0',
         width: '0',
         playerVars: {
@@ -171,7 +171,7 @@ const MusicPlayer = () => {
         events: {
           onReady: (event) => {
             setPlayer(event.target);
-            event.target.setVolume(volume);
+            event.target.setVolume(50);
           },
           onStateChange: (event) => {
             if (event.data === window.YT.PlayerState.PLAYING) {
@@ -186,9 +186,8 @@ const MusicPlayer = () => {
             const videoDuration = event.target.getDuration();
             setDuration(videoDuration);
             
-            // Eğer playlist'ten çalıyorsa, track süresini kaydet
-            if (currentTrack >= 0 && currentTracks[currentTrack]) {
-              const trackId = currentTracks[currentTrack].youtubeId;
+            const trackId = event.target.getVideoData?.().video_id;
+            if (trackId) {
               setTrackDurations(prev => ({
                 ...prev,
                 [trackId]: videoDuration
@@ -354,8 +353,9 @@ const MusicPlayer = () => {
   };
 
   // Sürükleme fonksiyonları
-  const handleMouseDown = (e) => {
+  const handlePointerDown = (e) => {
     if (e.target.closest('.header-controls')) return; // Butonlara tıklanırsa sürükleme
+    e.preventDefault();
     setIsDragging(true);
     setDragStart({
       x: e.clientX - position.x,
@@ -363,11 +363,12 @@ const MusicPlayer = () => {
     });
   };
 
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    
-    // RequestAnimationFrame ile smooth hareket
-    requestAnimationFrame(() => {
+  useEffect(() => {
+    if (!isDragging) return undefined;
+    let animationFrame = null;
+    const handlePointerMove = e => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(() => {
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
       
@@ -379,24 +380,17 @@ const MusicPlayer = () => {
         x: Math.max(0, Math.min(newX, maxX)),
         y: Math.max(0, Math.min(newY, maxY))
       });
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  // Mouse event'leri ekle
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, dragStart]);
+      });
+    };
+    const handlePointerUp = () => setIsDragging(false);
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      document.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [isDragging, dragStart, isMinimized]);
 
   if (!isVisible) return null;
 
@@ -409,9 +403,8 @@ const MusicPlayer = () => {
         top: `${position.y}px`,
         zIndex: 1000
       }}
-      onMouseDown={handleMouseDown}
     >
-      <div className="music-player-header">
+      <div className="music-player-header" onPointerDown={handlePointerDown}>
         <div className="music-player-title">
           <span className="winamp-icon">♪</span>
           <span>{t('musicPlayer.title')}</span>

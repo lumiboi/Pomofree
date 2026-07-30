@@ -1,0 +1,346 @@
+.focus-tools {
+  max-width: 1200px;
+  margin: 1rem auto;
+  padding: 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: var(--card-bg);
+  box-shadow: var(--soft-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.focus-tools > header,
+.focus-tools > header > div {
+  display: flex;
+  align-items: center;
+}
+
+.focus-tools > header {
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.focus-tools > header > div {
+  gap: 0.5rem;
+}
+
+.focus-tools > header small {
+  opacity: 0.65;
+}
+
+.focus-live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.focus-live-dot.active {
+  background: var(--progress-active-color);
+  box-shadow: 0 0 0 4px var(--progress-bg-color);
+}
+
+.focus-tool-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.focus-tool-actions > button {
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--card-border);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.12);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.focus-tool-actions kbd {
+  margin-left: auto;
+}
+
+.focus-tools kbd {
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.18);
+  font: 600 0.68rem var(--font-family);
+}
+
+.focus-inline-form,
+.focus-interruption-form {
+  margin-top: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.focus-inline-form label,
+.focus-interruption-form label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.focus-inline-form > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.focus-inline-form input,
+.focus-interruption-form input,
+.review-note textarea,
+.command-palette input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  outline: 0;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-color);
+  font: inherit;
+}
+
+.focus-inline-form button {
+  padding: 0.5rem 0.9rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--primary-accent);
+  color: var(--text-color-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.focus-interruption-form > div {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.focus-interruption-form button {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.focus-note-list {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.35rem;
+  list-style: none;
+}
+
+.focus-note-list li {
+  padding: 0.5rem 0.6rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.78rem;
+}
+
+.focus-note-list li.completed > span {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.focus-note-list button {
+  border: 0;
+  background: transparent;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.focus-note-check {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 50%;
+}
+
+.break-coach {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.break-coach > span {
+  font-size: 1.8rem;
+}
+
+.break-coach p {
+  margin-top: 0.15rem;
+  font-size: 0.82rem;
+  opacity: 0.75;
+}
+
+.session-review {
+  max-width: 620px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.session-review > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.session-review > header small {
+  opacity: 0.65;
+}
+
+.session-review > header button {
+  border: 0;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.review-choice {
+  margin-top: 1rem;
+  border: 0;
+}
+
+.review-choice legend,
+.review-note > span {
+  margin-bottom: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.review-choice > div {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.review-choice button,
+.emergency-next button {
+  flex: 1;
+  padding: 0.55rem 0.45rem;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.review-choice button.active {
+  border-color: var(--primary-accent);
+  background: var(--primary-accent);
+  color: var(--text-color-dark);
+}
+
+.review-note {
+  margin-top: 1rem;
+  display: grid;
+}
+
+.review-note textarea {
+  min-height: 75px;
+  resize: vertical;
+}
+
+.session-review footer {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.emergency-next {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.emergency-next > div {
+  margin-top: 0.55rem;
+  display: flex;
+  gap: 0.45rem;
+}
+
+.command-overlay {
+  align-items: flex-start;
+  padding-top: 12vh;
+}
+
+.command-palette {
+  width: min(560px, 92vw);
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: var(--bg-color-pomodoro);
+  box-shadow: var(--soft-shadow);
+}
+
+.command-palette > input {
+  border: 0;
+  border-bottom: 1px solid var(--card-border);
+  border-radius: 0;
+  padding: 1rem;
+}
+
+.command-palette > div {
+  max-height: 50vh;
+  padding: 0.5rem;
+  overflow-y: auto;
+}
+
+.command-palette button {
+  width: 100%;
+  padding: 0.7rem;
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-color);
+  text-align: left;
+  cursor: pointer;
+}
+
+.command-palette button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 640px) {
+  .focus-tool-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .focus-note-list li {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .focus-note-list li button:nth-last-child(2) {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .review-choice > div {
+    flex-wrap: wrap;
+  }
+
+  .review-choice button {
+    min-width: 45%;
+  }
+}

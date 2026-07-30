@@ -12,14 +12,36 @@ import {
   query,
   orderBy,
   serverTimestamp,
-  arrayUnion,
   arrayRemove,
+  getDocs,
   where,
-  getDocs
+  limit
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 
 const StudyRoomContext = createContext();
+
+const bytesToHex = bytes => [...bytes]
+  .map(byte => byte.toString(16).padStart(2, '0'))
+  .join('');
+
+const hashPassword = async (password, salt) => {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits({
+    name: 'PBKDF2',
+    salt: encoder.encode(salt),
+    iterations: 100000,
+    hash: 'SHA-256'
+  }, key, 256);
+  return bytesToHex(new Uint8Array(bits));
+};
 
 export const useStudyRoom = () => {
   const context = useContext(StudyRoomContext);
@@ -58,20 +80,34 @@ export const StudyRoomProvider = ({ children }) => {
 
     const roomId = generateRoomId();
     const currentUser = auth.currentUser;
+    const roomType = roomConfig.roomType === 'anonymous' ? 'anonymous' : 'private';
+    const passwordSalt = roomConfig.hasPassword
+      ? bytesToHex(crypto.getRandomValues(new Uint8Array(16)))
+      : '';
     
     const roomData = {
       id: roomId,
       name: roomConfig.name,
+      roomType,
       capacity: parseInt(roomConfig.capacity),
       hasPassword: roomConfig.hasPassword,
-      password: roomConfig.hasPassword ? roomConfig.password : '',
+      passwordSalt,
+      passwordHash: roomConfig.hasPassword
+        ? await hashPassword(roomConfig.password, passwordSalt)
+        : '',
+      hideTaskDetails: roomConfig.hideTaskDetails !== false,
+      breakChatOnly: roomConfig.breakChatOnly !== false,
       createdAt: new Date(),
       createdBy: currentUser.uid,
+      participantIds: [currentUser.uid],
       participants: [{
         uid: currentUser.uid,
-        displayName: currentUser.displayName || currentUser.email.split('@')[0],
+        displayName: roomType === 'anonymous'
+          ? `Odak Arkadaşı ${currentUser.uid.slice(-4).toUpperCase()}`
+          : currentUser.displayName || currentUser.email.split('@')[0],
         joinedAt: new Date(),
-        isOnline: true
+        isOnline: true,
+        status: 'preparing'
       }],
       timer: {
         mode: 'pomodoro',
@@ -84,13 +120,9 @@ export const StudyRoomProvider = ({ children }) => {
     };
 
     try {
-      console.log('Creating room with data:', roomData);
-      
       // Try to create room in global studyRooms collection for cross-user access
       const globalRoomRef = doc(db, 'studyRooms', roomId);
       await setDoc(globalRoomRef, roomData);
-      
-      console.log('Room created successfully in global collection');
       
       // Set up real-time listener for the room
       setupRoomListener(roomId, currentUser.uid);
@@ -109,15 +141,13 @@ export const StudyRoomProvider = ({ children }) => {
         localRooms[roomId] = roomData;
         localStorage.setItem('studyRooms', JSON.stringify(localRooms));
         
-        console.log('Room created in localStorage as fallback');
-        
         setCurrentRoom(roomData);
         setIsInRoom(true);
         
         return roomId;
       } catch (localError) {
         console.error('Fallback localStorage also failed:', localError);
-        throw new Error('Oda oluşturulamadı - hem Firebase hem localStorage başarısız');
+        throw new Error('Oda Pomofree hesabında oluşturulamadı. Lütfen tekrar deneyin.');
       }
     }
   };
@@ -199,11 +229,30 @@ export const StudyRoomProvider = ({ children }) => {
         throw new Error('Oda bulunamadı');
       }
       
-      if (roomData.hasPassword && roomData.password !== password) {
-        throw new Error('Yanlış şifre');
+      if (roomData.hasPassword) {
+        const isLegacyPassword = !roomData.passwordHash || !roomData.passwordSalt;
+        const matchesHash = isLegacyPassword
+          ? roomData.password === password
+          : await hashPassword(password, roomData.passwordSalt) === roomData.passwordHash;
+        if (!matchesHash) throw new Error('Yanlış şifre');
+        if (isLegacyPassword) {
+          roomData.passwordSalt = bytesToHex(crypto.getRandomValues(new Uint8Array(16)));
+          roomData.passwordHash = await hashPassword(password, roomData.passwordSalt);
+          delete roomData.password;
+          try {
+            await setDoc(doc(db, 'studyRooms', roomId), roomData);
+          } catch {
+            const localRooms = JSON.parse(localStorage.getItem('studyRooms') || '{}');
+            localRooms[roomId] = roomData;
+            localStorage.setItem('studyRooms', JSON.stringify(localRooms));
+          }
+        }
       }
 
       // Check if user is already in the room
+      roomData.participantIds = Array.isArray(roomData.participantIds)
+        ? roomData.participantIds
+        : roomData.participants.map(participant => participant.uid);
       const isAlreadyParticipant = roomData.participants.some(p => p.uid === currentUser.uid);
       
       if (!isAlreadyParticipant) {
@@ -213,13 +262,17 @@ export const StudyRoomProvider = ({ children }) => {
 
         const newParticipant = {
           uid: currentUser.uid,
-          displayName: currentUser.displayName || currentUser.email.split('@')[0],
+          displayName: roomData.roomType === 'anonymous'
+            ? `Odak Arkadaşı ${currentUser.uid.slice(-4).toUpperCase()}`
+            : currentUser.displayName || currentUser.email.split('@')[0],
           joinedAt: new Date(),
-          isOnline: true
+          isOnline: true,
+          status: 'preparing'
         };
 
         // Add user to participants
         roomData.participants.push(newParticipant);
+        roomData.participantIds.push(currentUser.uid);
         
         // Try to update room data
         try {
@@ -248,29 +301,56 @@ export const StudyRoomProvider = ({ children }) => {
     }
   };
 
+  const findAnonymousRoom = async (defaultName = 'Open Focus') => {
+    if (!auth.currentUser) throw new Error('Giriş yapmalısınız');
+    const snapshot = await getDocs(query(
+      collection(db, 'studyRooms'),
+      where('roomType', '==', 'anonymous'),
+      limit(10)
+    ));
+    const available = snapshot.docs.find(item => {
+      const data = item.data();
+      return data.roomType === 'anonymous' &&
+        (data.participants?.length || 0) < Number(data.capacity || 4);
+    });
+    if (available) {
+      await joinRoom(available.id);
+      return available.id;
+    }
+    return createRoom({
+      name: defaultName,
+      capacity: 4,
+      hasPassword: false,
+      password: '',
+      roomType: 'anonymous',
+      hideTaskDetails: true,
+      breakChatOnly: true
+    });
+  };
+
   const leaveRoom = async () => {
     if (!currentRoom || !auth.currentUser) return;
 
     try {
       const roomRef = doc(db, 'studyRooms', currentRoom.id);
       const currentUser = auth.currentUser;
-      
-      // Remove user from participants
       const participantToRemove = roomParticipants.find(p => p.uid === currentUser.uid);
-      if (participantToRemove) {
+      const messagesSnapshot = await getDocs(
+        collection(db, 'studyRooms', currentRoom.id, 'messages')
+      );
+      const roomWillBeEmpty = roomParticipants.length <= 1;
+      await Promise.all(messagesSnapshot.docs
+        .filter(message => roomWillBeEmpty || message.data().senderUid === currentUser.uid)
+        .map(message => deleteDoc(message.ref)));
+
+      if (participantToRemove && !roomWillBeEmpty) {
         await updateDoc(roomRef, {
-          participants: arrayRemove(participantToRemove)
+          participants: arrayRemove(participantToRemove),
+          participantIds: arrayRemove(currentUser.uid)
         });
       }
-
-      // Check if room is empty and delete if so
-      const roomSnap = await getDoc(roomRef);
-      if (roomSnap.exists()) {
-        const roomData = roomSnap.data();
-        if (roomData.participants.length <= 1) {
-          await deleteDoc(roomRef);
-        }
-      }
+      if (roomWillBeEmpty) await deleteDoc(roomRef);
+      localStorage.removeItem(`chatMessages_${currentRoom.id}`);
 
       // Cleanup listeners
       if (roomListener) roomListener();
@@ -290,6 +370,9 @@ export const StudyRoomProvider = ({ children }) => {
 
   const sendMessage = async (message) => {
     if (!currentRoom || !auth.currentUser) return;
+    if (currentRoom.breakChatOnly && syncedTimer?.mode === 'pomodoro' && syncedTimer?.isActive) {
+      return;
+    }
 
     try {
       const currentUser = auth.currentUser;
@@ -323,12 +406,21 @@ export const StudyRoomProvider = ({ children }) => {
       const currentUser = auth.currentUser;
       const updatedTimer = {
         ...timerState,
+        endsAt: timerState.isActive
+          ? new Date(Date.now() + Math.max(0, Number(timerState.timeLeft) || 0) * 1000).toISOString()
+          : null,
         lastUpdatedBy: currentUser.uid,
         lastUpdatedAt: serverTimestamp(),
         syncTimestamp: Date.now() // Add precise timestamp for sync
       };
-
-      console.log('🔄 CONTEXT: Syncing timer state:', updatedTimer);
+      const participantStatus = timerState.isActive
+        ? timerState.mode === 'pomodoro' ? 'focusing' : 'break'
+        : 'paused';
+      const participants = roomParticipants.map(participant => (
+        participant.uid === currentUser.uid
+          ? { ...participant, status: participantStatus, isOnline: true }
+          : participant
+      ));
 
       // DO NOT update local state here - let Firebase listener handle it
       // This prevents sync loops and ensures single source of truth
@@ -336,10 +428,8 @@ export const StudyRoomProvider = ({ children }) => {
       try {
         // Try Firebase first - use global studyRooms collection
         const roomRef = doc(db, 'studyRooms', currentRoom.id);
-        await updateDoc(roomRef, { timer: updatedTimer });
-        console.log('✅ Timer synced to Firebase successfully');
+        await updateDoc(roomRef, { timer: updatedTimer, participants });
       } catch (fbError) {
-        console.log('❌ Firebase sync failed, using localStorage:', fbError);
         // Fallback to localStorage
         const localRooms = JSON.parse(localStorage.getItem('studyRooms') || '{}');
         if (localRooms[currentRoom.id]) {
@@ -348,8 +438,8 @@ export const StudyRoomProvider = ({ children }) => {
             lastUpdatedAt: new Date(),
             syncTimestamp: Date.now()
           };
+          localRooms[currentRoom.id].participants = participants;
           localStorage.setItem('studyRooms', JSON.stringify(localRooms));
-          console.log('💾 Timer synced to localStorage');
           
           // Only update local state for localStorage fallback
           setSyncedTimer(updatedTimer);
@@ -367,13 +457,11 @@ export const StudyRoomProvider = ({ children }) => {
       const unsubscribe = onSnapshot(roomRef, (doc) => {
         if (doc.exists()) {
           const roomData = doc.data();
-          console.log('Room data received from Firebase:', roomData.timer);
           setCurrentRoom({ ...roomData, id: roomId });
           setRoomParticipants(roomData.participants || []);
           
           // FORCE update timer from Firebase - no conditions
           if (roomData.timer) {
-            console.log('🔥 FIREBASE TIMER UPDATE:', roomData.timer);
             setSyncedTimer({...roomData.timer, forceUpdate: Date.now()});
           }
         }
@@ -391,7 +479,6 @@ export const StudyRoomProvider = ({ children }) => {
           
           // FORCE update timer from localStorage - no conditions
           if (roomData.timer) {
-            console.log('💾 LOCALSTORAGE TIMER UPDATE:', roomData.timer);
             setSyncedTimer({...roomData.timer, forceUpdate: Date.now()});
           }
         }
@@ -442,6 +529,7 @@ export const StudyRoomProvider = ({ children }) => {
     generateRoomId,
     createRoom,
     joinRoom,
+    findAnonymousRoom,
     checkRoomExists,
     leaveRoom,
     sendMessage,

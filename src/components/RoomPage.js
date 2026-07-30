@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStudyRoom } from '../contexts/StudyRoomContext';
 import { useTranslation } from '../hooks/useTranslation';
@@ -14,7 +14,6 @@ import {
   collection, 
   updateDoc, 
   increment,
-  Timestamp,
   getDocs
 } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
@@ -22,9 +21,9 @@ import StudyRoomPopout from './StudyRoomPopout';
 import RoomTimer from './RoomTimer';
 import Header from './Header';
 import Tasks from './Tasks';
-import WeeklyStats from './WeeklyStats';
 import Celebration from './Celebration';
 import AchievementNotification from './AchievementNotification';
+import { createFocusSession, DEFAULT_FOCUS_SETTINGS } from '../focusModel';
 import './RoomPage.css';
 
 function RoomPage() {
@@ -44,7 +43,7 @@ function RoomPage() {
 
     // Main app state (copied from App.js)
     const [user, setUser] = useState(null);
-    const [userSettings, setUserSettings] = useState({ pomodoro: 25, short: 5, long: 15 });
+    const [userSettings, setUserSettings] = useState(DEFAULT_FOCUS_SETTINGS);
     const [mode, setMode] = useState('pomodoro');
     const [activeTaskId, setActiveTaskId] = useState(null);
     const [tasks, setTasks] = useState([]);
@@ -55,7 +54,8 @@ function RoomPage() {
     const [activeTheme, setActiveTheme] = useState('default');
     const [showCelebration, setShowCelebration] = useState(false);
     const [weeklyFocusTime, setWeeklyFocusTime] = useState(0);
-    const [activeModal, setActiveModal] = useState(null);
+    const finishedHandledRef = useRef(false);
+    const roomTimerStorageKey = `pomofree_room_${roomId || 'pending'}_timer`;
 
     // Initial time helper function
     const getInitialTime = (mode) => {
@@ -70,22 +70,18 @@ function RoomPage() {
     // Timer hook'unu kullan
     const { 
         time, 
+        totalTime,
         isTimerActive, 
         toggleTimer: toggleTimerHook, 
         startTimer,
         stopTimer,
         resetTimer, 
         isFinished 
-    } = useBackgroundTimer(getInitialTime(mode), false);
+    } = useBackgroundTimer(getInitialTime(mode), false, roomTimerStorageKey);
 
     // Achievement sistemi
     const { newAchievements } = useAchievements(user, stats, weeklyFocusTime);
     const [showNewAchievements, setShowNewAchievements] = useState([]);
-
-    // Celebration handler'ı useCallback ile optimize et
-    const handleCelebrationComplete = useCallback(() => {
-        setShowCelebration(false);
-    }, []);
 
     // Auth state listener
     useEffect(() => {
@@ -99,6 +95,8 @@ function RoomPage() {
             }
         });
         return () => unsubscribe();
+    // Authentication subscription is intentionally installed once per route.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [navigate]);
 
     // Room joining logic - only after auth is confirmed
@@ -132,25 +130,26 @@ function RoomPage() {
         };
 
         tryJoinRoom();
-    }, [roomId, isInRoom, joinRoom, navigate, user]);
+    // Room actions are provider methods; rerun only when route/auth state changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [roomId, isInRoom, navigate, user]);
 
     // Copy all helper functions from App.js
 
-    const getStartOfWeek = () => { 
-        const now = new Date(); 
-        const day = now.getDay(); 
-        const diff = now.getDate() - day + (day === 0 ? -6 : 1); 
-        const startOfWeek = new Date(now.setDate(diff)); 
-        startOfWeek.setHours(0, 0, 0, 0); 
-        return startOfWeek; 
-    };
-
     const logFocusSession = async () => { 
         if (!user) return; 
-        const durationInSeconds = userSettings.pomodoro * 60; 
-        const session = { duration: durationInSeconds, completedAt: Timestamp.now() }; 
+        const endedAt = new Date();
+        const session = createFocusSession({
+            type: 'shared',
+            plannedDurationSeconds: totalTime,
+            actualDurationSeconds: totalTime,
+            taskId: activeTaskId,
+            projectId: activeProjectId,
+            startedAt: new Date(endedAt.getTime() - totalTime * 1000),
+            endedAt
+        }, endedAt);
         await addDoc(collection(db, 'users', user.uid, 'focusSessions'), session); 
-        setWeeklyFocusTime(prevTime => prevTime + durationInSeconds); 
+        setWeeklyFocusTime(prevTime => prevTime + session.duration); 
     };
 
     const fetchUserData = async (uid) => { 
@@ -158,10 +157,12 @@ function RoomPage() {
         const docSnap = await getDoc(userDocRef); 
         if (docSnap.exists()) { 
             const data = docSnap.data(); 
-            const settings = data.settings || { pomodoro: 25, short: 5, long: 15 }; 
+            const settings = { ...DEFAULT_FOCUS_SETTINGS, ...(data.settings || {}) }; 
             setUserSettings(settings); 
             setStats(data.stats || { completedPomodoros: 0 }); 
-            resetTimer(settings.pomodoro * 60); 
+            if (!localStorage.getItem(roomTimerStorageKey)) {
+                resetTimer(settings.pomodoro * 60);
+            }
             setMode('pomodoro'); 
             setActiveTheme(data.theme || 'default'); 
         } 
@@ -225,9 +226,6 @@ function RoomPage() {
         setTasks(tasks.filter(t => t.id !== taskId)); 
     };
 
-    const openModal = (modalName) => { setActiveModal(modalName); };
-    const closeModal = () => { setActiveModal(null); };
-
     const handleLogout = async () => {
         try {
             await signOut(auth);
@@ -275,113 +273,57 @@ function RoomPage() {
     // REAL-TIME SYNC - Force update from other users
     useEffect(() => {
         if (syncedTimer && isInRoom && user) {
-            console.log('🔄 SYNC RECEIVED:', syncedTimer);
-            console.log('📊 Current local state:', { mode, time, isTimerActive });
-            console.log('👤 Updated by:', syncedTimer.lastUpdatedBy, 'Current user:', user.uid);
-            
             // Skip if this update came from current user to prevent loops
-            if (syncedTimer.lastUpdatedBy === user.uid) {
-                console.log('⏭️ Skipping own update');
-                return;
-            }
-            
-            // Always force sync mode and time
+            if (syncedTimer.lastUpdatedBy === user.uid) return;
+
+            const remoteTime = syncedTimer.isActive && syncedTimer.endsAt
+                ? Math.max(0, Math.ceil((new Date(syncedTimer.endsAt).getTime() - Date.now()) / 1000))
+                : syncedTimer.timeLeft;
             setMode(syncedTimer.mode);
-            resetTimer(syncedTimer.timeLeft);
-            
-            // CRITICAL: Force timer active state to match exactly
-            console.log(`🎯 Timer state sync: remote=${syncedTimer.isActive}, local=${isTimerActive}`);
-            
-            // Force timer state to match remote without conditions
+            resetTimer(remoteTime);
             if (syncedTimer.isActive && !isTimerActive) {
-                console.log('▶️ Starting timer to match remote');
                 startTimer();
             } else if (!syncedTimer.isActive && isTimerActive) {
-                console.log('⏸️ Stopping timer to match remote');
                 stopTimer();
-            } else {
-                console.log('✅ Timer states already match');
             }
         }
-    }, [syncedTimer]);
+    }, [syncedTimer, isInRoom, user, isTimerActive, resetTimer, startTimer, stopTimer]);
 
     // Timer effects and handlers
     useEffect(() => {
-        if (isFinished) {
-            if (mode === 'pomodoro') {
-                setShowCelebration(true);
-                const newStats = { completedPomodoros: stats.completedPomodoros + 1 };
-                setStats(newStats);
-                
-                const birdSoundUrl = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/10558/birds.mp3';
-                playNotificationSound(birdSoundUrl);
-                
-                if (user) { 
-                    updateUserDataInDb({ stats: newStats }); 
-                    logFocusSession(); 
-                    if (activeTaskId) { 
-                        incrementTaskPomodoro(activeTaskId); 
-                    } 
-                }
-            } else {
-                alert(t('general.breakFinished'));
-            }
+        if (!isFinished) {
+            finishedHandledRef.current = false;
+            return;
         }
-    }, [isFinished, mode, stats.completedPomodoros, user, activeTaskId, playNotificationSound, t]);
-
-    // New achievements effect
-    useEffect(() => {
-        if (newAchievements.length > 0) {
-            setShowNewAchievements(newAchievements);
-        }
-    }, [newAchievements]);
-
-    // Timer effects and handlers
-    useEffect(() => {
-        if (isFinished) {
-            if (mode === 'pomodoro') {
-                setShowCelebration(true);
-                const newStats = { completedPomodoros: stats.completedPomodoros + 1 };
-                setStats(newStats);
-                
-                const birdSoundUrl = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/10558/birds.mp3';
-                playNotificationSound(birdSoundUrl);
-                
-                if (user) { 
-                    updateUserDataInDb({ stats: newStats }); 
-                    logFocusSession(); 
-                    if (activeTaskId) { 
-                        incrementTaskPomodoro(activeTaskId); 
-                    } 
-                }
-            } else {
-                alert(t('general.breakFinished'));
-            }
-        }
-    }, [isFinished, mode, stats.completedPomodoros, user, activeTaskId, playNotificationSound, t]);
-
-    // New achievements effect
-    useEffect(() => {
-        if (newAchievements.length > 0) {
-            setShowNewAchievements(newAchievements);
-        }
-    }, [newAchievements]);
-
-    // Timer sync function - force immediate sync
-    const syncTimerToRoom = useCallback(() => {
-        if (isInRoom && syncTimer && user) {
-            const timerState = {
-                mode,
-                timeLeft: time,
-                isActive: isTimerActive,
-                startedAt: isTimerActive ? Date.now() - ((userSettings[mode] * 60 - time) * 1000) : null,
-                lastUpdatedBy: user.uid,
-                syncTimestamp: Date.now()
+        if (finishedHandledRef.current) return;
+        finishedHandledRef.current = true;
+        if (mode === 'pomodoro') {
+            setShowCelebration(true);
+            const newStats = {
+                ...stats,
+                completedPomodoros: stats.completedPomodoros + 1,
+                sharedSessions: (stats.sharedSessions || 0) + 1
             };
-            console.log('Forcing timer sync:', timerState);
-            syncTimer(timerState);
+            setStats(newStats);
+            const birdSoundUrl = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/10558/birds.mp3';
+            playNotificationSound(birdSoundUrl, 2200, t('notifications.sessionEnded'));
+            if (user) {
+                updateUserDataInDb({ stats: newStats });
+                logFocusSession();
+                if (activeTaskId) incrementTaskPomodoro(activeTaskId);
+            }
+        } else {
+            alert(t('general.breakFinished'));
         }
-    }, [isInRoom, syncTimer, mode, time, isTimerActive, userSettings, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isFinished, mode, stats.completedPomodoros, user, activeTaskId, playNotificationSound, t]);
+
+    // New achievements effect
+    useEffect(() => {
+        if (newAchievements.length > 0) {
+            setShowNewAchievements(newAchievements);
+        }
+    }, [newAchievements]);
 
     const updateUserDataInDb = async (dataToUpdate) => { 
         if (!user) return; 
@@ -403,7 +345,6 @@ function RoomPage() {
                 startedAt: null
             };
             syncTimer(timerState);
-            console.log('Mode switched and synced:', timerState);
         }
     };
 
@@ -412,8 +353,6 @@ function RoomPage() {
         
         // Calculate new state BEFORE toggling
         const newActiveState = !isTimerActive;
-        console.log(`🎮 TOGGLE TIMER: ${isTimerActive} → ${newActiveState}`);
-        
         // Sync FIRST with calculated state
         if (isInRoom && syncTimer && user) {
             const timerState = {
@@ -424,7 +363,6 @@ function RoomPage() {
                 lastUpdatedBy: user.uid,
                 syncTimestamp: Date.now()
             };
-            console.log('🚀 SYNCING BEFORE LOCAL TOGGLE:', timerState);
             syncTimer(timerState);
         }
         
@@ -462,7 +400,7 @@ function RoomPage() {
         <div className={`room-page theme-${activeTheme}`}>
             <Header 
                 user={user} 
-                openModal={openModal} 
+                openModal={() => {}} 
                 handleLogout={handleLogout} 
                 isRoomPage={true}
                 onLeaveRoom={handleLeaveRoom}

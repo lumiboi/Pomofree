@@ -1,20 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from '../hooks/useTranslation';
-import { 
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ArcElement,
   BarElement,
-  Title,
-  Tooltip,
+  CategoryScale,
+  Chart as ChartJS,
   Legend,
-  ArcElement
+  LinearScale,
+  LineElement,
+  PointElement,
+  Tooltip
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
-import { tr, enUS } from 'date-fns/locale';
+import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import {
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  startOfMonth,
+  startOfWeek
+} from 'date-fns';
+import { enUS, tr } from 'date-fns/locale';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
+import { buildDataExports, calculateReportInsights } from '../focusModel';
+import { useTranslation } from '../hooks/useTranslation';
 
 ChartJS.register(
   CategoryScale,
@@ -22,370 +32,251 @@ ChartJS.register(
   PointElement,
   LineElement,
   BarElement,
-  Title,
   Tooltip,
   Legend,
   ArcElement
 );
 
+const emptyReport = {
+  dailyStats: [],
+  projectStats: [],
+  productivityTrends: [],
+  bestHours: [],
+  streaks: { current: 0, longest: 0, total: 0 },
+  totalFocusTime: 0,
+  completedPomodoros: 0,
+  averageSessionLength: 0,
+  insights: {
+    successRate: null,
+    bestHour: null,
+    interruptionStats: [],
+    estimateAccuracy: null,
+    socialSessions: 0,
+    suggestion: 'insufficient'
+  }
+};
+
+const asDate = value => {
+  const date = value?.toDate?.() || (value ? new Date(value) : null);
+  return date && !Number.isNaN(date.getTime()) ? date : null;
+};
+
+const secondsOf = session => Math.max(
+  0,
+  Number(session.actualDurationSeconds ?? session.duration ?? 0) || 0
+);
+
+const calculateStreaks = sessions => {
+  const dates = [...new Set(
+    sessions
+      .map(session => asDate(session.completedAt))
+      .filter(Boolean)
+      .map(date => format(date, 'yyyy-MM-dd'))
+  )].sort();
+  if (!dates.length) return { current: 0, longest: 0, total: 0 };
+
+  let run = 1;
+  let longest = 1;
+  let total = 1;
+  for (let index = 1; index < dates.length; index += 1) {
+    const previous = new Date(`${dates[index - 1]}T12:00:00`);
+    const current = new Date(`${dates[index]}T12:00:00`);
+    if (Math.round((current - previous) / 86400000) === 1) {
+      run += 1;
+      longest = Math.max(longest, run);
+    } else {
+      run = 1;
+      total += 1;
+    }
+  }
+  return { current: run, longest, total };
+};
+
+const download = (content, type, extension) => {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `pomofree-report-${format(new Date(), 'yyyy-MM-dd')}.${extension}`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+};
+
 const AdvancedReports = ({ user, closeModal }) => {
   const { t, language } = useTranslation();
-  const [reportData, setReportData] = useState({
-    dailyStats: [],
-    weeklyStats: [],
-    monthlyStats: [],
-    projectStats: [],
-    productivityTrends: [],
-    bestHours: [],
-    streaks: {},
-    totalFocusTime: 0,
-    completedPomodoros: 0,
-    averageSessionLength: 0
-  });
+  const locale = language === 'tr' ? tr : enUS;
   const [selectedPeriod, setSelectedPeriod] = useState('week');
+  const [selectedProject, setSelectedProject] = useState('all');
+  const [selectedTask, setSelectedTask] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [source, setSource] = useState({ sessions: [], projects: [], tasks: [] });
   const [isLoading, setIsLoading] = useState(true);
 
-  const dateLocale = language === 'tr' ? tr : enUS;
-
   useEffect(() => {
-    if (user) {
-      fetchAdvancedReportData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, selectedPeriod]);
-
-  const fetchAdvancedReportData = async () => {
+    if (!user) return;
+    let active = true;
     setIsLoading(true);
-    try {
-      const data = await fetchRealReportData();
-      setReportData(data);
-    } catch (error) {
-      console.error('Rapor verisi yüklenirken hata:', error);
-      // Hata durumunda boş veri döndür
-      setReportData({
-        dailyStats: [],
-        weeklyStats: [],
-        monthlyStats: [],
-        projectStats: [],
-        productivityTrends: [],
-        bestHours: [],
-        streaks: { current: 0, longest: 0, total: 0 },
-        totalFocusTime: 0,
-        completedPomodoros: 0,
-        averageSessionLength: 0
+    Promise.all([
+      getDocs(collection(db, 'users', user.uid, 'focusSessions')),
+      getDocs(collection(db, 'users', user.uid, 'projects')),
+      getDocs(collection(db, 'users', user.uid, 'tasks'))
+    ]).then(([sessionSnapshot, projectSnapshot, taskSnapshot]) => {
+      if (!active) return;
+      setSource({
+        sessions: sessionSnapshot.docs.map(item => ({ id: item.id, ...item.data() })),
+        projects: projectSnapshot.docs.map(item => ({ id: item.id, ...item.data() })),
+        tasks: taskSnapshot.docs.map(item => ({ id: item.id, ...item.data() }))
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Firebase'den gerçek veri çekme
-  const fetchRealReportData = async () => {
-    const { collection, query, where, getDocs } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    
-    const now = new Date();
-    const startDate = selectedPeriod === 'week' 
-      ? startOfWeek(now) 
-      : selectedPeriod === 'month' 
-      ? startOfMonth(now) 
-      : new Date(now.getFullYear(), 0, 1);
-
-    const endDate = selectedPeriod === 'week' 
-      ? endOfWeek(now) 
-      : selectedPeriod === 'month' 
-      ? endOfMonth(now) 
-      : now;
-
-    // Tarihleri Timestamp'e çevir (şu an kullanılmıyor ama gelecekte gerekebilir)
-    // const startTimestamp = Timestamp.fromDate(startDate);
-    // const endTimestamp = Timestamp.fromDate(endDate);
-
-    // Focus sessions'ları çek (gerçek veri kaynağı)
-    const focusSessionsQuery = query(
-      collection(db, 'users', user.uid, 'focusSessions')
-    );
-    
-    const focusSessionsSnapshot = await getDocs(focusSessionsQuery);
-    const allFocusSessions = focusSessionsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      completedAt: doc.data().completedAt?.toDate()
-    }));
-
-    // Tarihe göre filtrele
-    const pomodoros = allFocusSessions.filter(s => {
-      if (!s.completedAt) return false;
-      const sessionDate = new Date(s.completedAt);
-      return sessionDate >= startDate && sessionDate <= endDate;
+    }).catch(error => {
+      console.error('Rapor verisi yüklenirken hata:', error);
+      if (active) setSource({ sessions: [], projects: [], tasks: [] });
+    }).finally(() => {
+      if (active) setIsLoading(false);
     });
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
-    // Kullanıcının projelerini çek
-    const projectsQuery = query(
-      collection(db, 'projects'),
-      where('userId', '==', user.uid)
-    );
-    
-    const projectsSnapshot = await getDocs(projectsQuery);
-    const projects = projectsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    // Günlük istatistikleri hesapla
+  const reportData = useMemo(() => {
+    const now = new Date();
+    const startDate = selectedPeriod === 'week'
+      ? startOfWeek(now, { weekStartsOn: 1 })
+      : selectedPeriod === 'month'
+        ? startOfMonth(now)
+        : new Date(now.getFullYear(), 0, 1);
+    const endDate = selectedPeriod === 'week'
+      ? endOfWeek(now, { weekStartsOn: 1 })
+      : selectedPeriod === 'month'
+        ? endOfMonth(now)
+        : now;
+    const sessions = source.sessions.filter(session => {
+      const date = asDate(session.completedAt);
+      return date &&
+        date >= startDate &&
+        date <= endDate &&
+        (selectedProject === 'all' || session.projectId === selectedProject) &&
+        (selectedTask === 'all' || session.taskId === selectedTask) &&
+        (selectedType === 'all' || session.type === selectedType);
+    });
+    const relevantTasks = source.tasks.filter(task => (
+      selectedProject === 'all' || task.projectId === selectedProject
+    ));
     const days = eachDayOfInterval({ start: startDate, end: endDate });
-    const dailyStats = days.map(day => {
-      const dayPomodoros = pomodoros.filter(p => 
-        p.completedAt && isSameDay(p.completedAt, day)
-      );
-      
-      const focusTime = dayPomodoros.reduce((total, p) => total + (p.duration || 25), 0) / 60; // Saniyeyi dakikaya çevir
-      const pomodorosCount = dayPomodoros.length;
-      
+    const dailyStats = days.map(date => {
+      const daySessions = sessions.filter(session => isSameDay(asDate(session.completedAt), date));
+      const completed = daySessions.filter(session => (
+        !session.completionStatus || session.completionStatus === 'completed'
+      )).length;
       return {
-        date: day,
-        focusTime,
-        pomodoros: pomodorosCount,
-        tasks: 0 // Bu bilgiyi tasks koleksiyonundan çekebiliriz
+        date,
+        focusTime: Math.round(daySessions.reduce((sum, session) => sum + secondsOf(session), 0) / 60),
+        pomodoros: daySessions.length,
+        productivity: daySessions.length ? Math.round((completed / daySessions.length) * 100) : 0
       };
     });
-
-    // Proje istatistikleri hesapla
-    const projectStats = projects.map(project => {
-      const projectPomodoros = pomodoros.filter(p => p.projectId === project.id);
-      const totalTime = projectPomodoros.reduce((total, p) => total + (p.duration || 25), 0) / 60; // Saniyeyi dakikaya çevir
-      
+    const projectStats = source.projects.map(project => {
+      const projectSessions = sessions.filter(session => session.projectId === project.id);
       return {
         name: project.name,
-        time: totalTime,
-        pomodoros: projectPomodoros.length,
-        color: project.color || '#FF6B6B'
+        time: Math.round(projectSessions.reduce((sum, session) => sum + secondsOf(session), 0) / 60),
+        color: project.color || '#6c7ff2'
       };
-    }).filter(p => p.time > 0);
-
-    // Toplam istatistikler
-    const totalFocusTime = pomodoros.reduce((total, p) => total + (p.duration || 25), 0) / 60; // Saniyeyi dakikaya çevir
-    const completedPomodoros = pomodoros.length;
-    const averageSessionLength = completedPomodoros > 0 ? totalFocusTime / completedPomodoros : 0;
-
-    // Streak hesaplama (basit versiyon)
-    const streaks = calculateStreaks(pomodoros);
+    }).filter(project => project.time > 0);
+    const totalMinutes = Math.round(sessions.reduce((sum, session) => sum + secondsOf(session), 0) / 60);
+    const insights = calculateReportInsights(sessions, relevantTasks);
 
     return {
+      ...emptyReport,
       dailyStats,
-      weeklyStats: [],
-      monthlyStats: [],
       projectStats,
-      productivityTrends: [],
-      bestHours: [],
-      streaks,
-      totalFocusTime,
-      completedPomodoros,
-      averageSessionLength: Math.round(averageSessionLength)
+      productivityTrends: dailyStats,
+      bestHours: insights.hourly
+        .map((focusTime, hour) => ({ hour, focusTime }))
+        .filter(item => item.focusTime > 0),
+      streaks: calculateStreaks(sessions),
+      totalFocusTime: totalMinutes,
+      completedPomodoros: insights.successfulSessions,
+      totalSessions: sessions.length,
+      averageSessionLength: sessions.length ? Math.round(totalMinutes / sessions.length) : 0,
+      insights,
+      sessions,
+      relevantTasks
     };
-  };
+  }, [selectedPeriod, selectedProject, selectedTask, selectedType, source]);
 
-  // Streak hesaplama fonksiyonu
-  const calculateStreaks = (pomodoros) => {
-    if (pomodoros.length === 0) {
-      return { current: 0, longest: 0, total: 0 };
-    }
-
-    // Tarihleri sırala
-    const sortedDates = pomodoros
-      .map(p => p.completedAt)
-      .filter(date => date)
-      .sort((a, b) => a - b);
-
-    if (sortedDates.length === 0) {
-      return { current: 0, longest: 0, total: 0 };
-    }
-
-    // Günlük streak hesapla
-    const dailyStreaks = [];
-    let currentStreak = 1;
-    let longestStreak = 1;
-
-    for (let i = 1; i < sortedDates.length; i++) {
-      const prevDate = sortedDates[i - 1];
-      const currDate = sortedDates[i];
-      const diffDays = Math.floor((currDate - prevDate) / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 1) {
-        currentStreak++;
-      } else if (diffDays > 1) {
-        dailyStreaks.push(currentStreak);
-        longestStreak = Math.max(longestStreak, currentStreak);
-        currentStreak = 1;
-      }
-    }
-
-    dailyStreaks.push(currentStreak);
-    longestStreak = Math.max(longestStreak, currentStreak);
-
-    return {
-      current: currentStreak,
-      longest: longestStreak,
-      total: dailyStreaks.length
-    };
-  };
-
-  const exportToCSV = () => {
-    const csvData = reportData.dailyStats.map(day => ({
-      Date: format(day.date, 'yyyy-MM-dd', { locale: dateLocale }),
-      'Focus Time (minutes)': day.focusTime,
-      'Pomodoros': day.pomodoros,
-      'Tasks Completed': day.tasks
-    }));
-
-    const csvContent = [
-      Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pomofree-report-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+  const exportReport = extension => {
+    const exports = buildDataExports({
+      sessions: reportData.sessions,
+      tasks: reportData.relevantTasks,
+      projects: source.projects
+    });
+    download(
+      exports[extension],
+      extension === 'csv' ? 'text/csv;charset=utf-8' : 'application/json',
+      extension
+    );
   };
 
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: false
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true
-      }
-    }
+    plugins: { legend: { position: 'bottom' } },
+    scales: { y: { beginAtZero: true } }
   };
-
-  const donutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom',
-      },
-      title: {
-        display: false
-      }
-    }
-  };
-
   const dailyChartData = {
-    labels: reportData.dailyStats.length > 0 
-      ? reportData.dailyStats.map(day => format(day.date, 'MMM dd', { locale: dateLocale }))
-      : [],
-    datasets: [
-      {
-        label: t('reports.focusTime'),
-        data: reportData.dailyStats.length > 0 
-          ? reportData.dailyStats.map(day => day.focusTime)
-          : [],
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.1
-      },
-      {
-        label: t('reports.pomodoros'),
-        data: reportData.dailyStats.length > 0 
-          ? reportData.dailyStats.map(day => day.pomodoros)
-          : [],
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        tension: 0.1
-      }
-    ]
-  };
-
-  const projectChartData = {
-    labels: reportData.projectStats.length > 0 
-      ? reportData.projectStats.map(project => project.name)
-      : [],
-    datasets: [{
-      data: reportData.projectStats.length > 0 
-        ? reportData.projectStats.map(project => project.time)
-        : [],
-      backgroundColor: reportData.projectStats.length > 0 
-        ? reportData.projectStats.map(project => project.color)
-        : [],
-      borderWidth: 2
-    }]
-  };
-
-  const productivityChartData = {
-    labels: reportData.productivityTrends.length > 0 
-      ? reportData.productivityTrends.map(trend => `D${trend.day}`)
-      : [],
-    datasets: [{
-      label: t('reports.productivity'),
-      data: reportData.productivityTrends.length > 0 
-        ? reportData.productivityTrends.map(trend => trend.productivity)
-        : [],
-      borderColor: 'rgb(54, 162, 235)',
-      backgroundColor: 'rgba(54, 162, 235, 0.2)',
-      tension: 0.1
-    }]
-  };
-
-  const productivityOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: false
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 100
-      },
-      x: {
-        ticks: {
-          maxRotation: 45,
-          minRotation: 45,
-          maxTicksLimit: 10
-        }
-      }
-    }
-  };
-
-  const bestHoursData = {
-    labels: reportData.bestHours.length > 0 
-      ? reportData.bestHours.map(hour => `${hour.hour}:00`)
-      : [],
+    labels: reportData.dailyStats.map(day => format(day.date, 'dd MMM', { locale })),
     datasets: [{
       label: t('reports.focusTime'),
-      data: reportData.bestHours.length > 0 
-        ? reportData.bestHours.map(hour => hour.focusTime)
-        : [],
-      backgroundColor: 'rgba(153, 102, 255, 0.6)',
-      borderColor: 'rgba(153, 102, 255, 1)',
-      borderWidth: 1
+      data: reportData.dailyStats.map(day => day.focusTime),
+      borderColor: '#68d7cb',
+      backgroundColor: 'rgba(104, 215, 203, .18)',
+      tension: .25
     }]
   };
+  const projectChartData = {
+    labels: reportData.projectStats.map(project => project.name),
+    datasets: [{
+      data: reportData.projectStats.map(project => project.time),
+      backgroundColor: reportData.projectStats.map(project => project.color),
+      borderWidth: 0
+    }]
+  };
+  const productivityData = {
+    labels: reportData.productivityTrends.map(day => format(day.date, 'dd MMM', { locale })),
+    datasets: [{
+      label: t('reports.productivity'),
+      data: reportData.productivityTrends.map(day => day.productivity),
+      borderColor: '#ffbd59',
+      backgroundColor: 'rgba(255, 189, 89, .18)',
+      tension: .25
+    }]
+  };
+  const bestHoursData = {
+    labels: reportData.bestHours.map(item => `${String(item.hour).padStart(2, '0')}:00`),
+    datasets: [{
+      label: t('reports.pomodoros'),
+      data: reportData.bestHours.map(item => item.focusTime),
+      backgroundColor: '#8a9cff'
+    }]
+  };
+  const sessionOrderData = {
+    labels: reportData.insights.sessionOrder?.map(item => `${item.order}.`) || [],
+    datasets: [{
+      label: t('reports.successRate'),
+      data: reportData.insights.sessionOrder?.map(item => item.successRate) || [],
+      borderColor: '#f18bc3',
+      backgroundColor: 'rgba(241, 139, 195, .18)',
+      tension: .25
+    }]
+  };
+  const insightText = t(`reports.insight.${reportData.insights.suggestion}`);
 
   if (isLoading) {
     return (
       <div className="modal-overlay" onClick={closeModal}>
-        <div className="modal-content advanced-reports" onClick={(e) => e.stopPropagation()}>
-          <div className="loading-spinner">
-            <div className="spinner"></div>
+        <div className="modal-content advanced-reports" onClick={event => event.stopPropagation()}>
+          <div className="loading-spinner" role="status">
+            <div className="spinner" />
             <p>{t('reports.loading')}</p>
           </div>
         </div>
@@ -395,122 +286,107 @@ const AdvancedReports = ({ user, closeModal }) => {
 
   return (
     <div className="modal-overlay" onClick={closeModal}>
-      <div className="modal-content advanced-reports" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-content advanced-reports"
+        onClick={event => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="advanced-reports-title"
+      >
         <div className="reports-header">
-          <h2>{t('report.advancedTitle')}</h2>
+          <h2 id="advanced-reports-title">{t('report.advancedTitle')}</h2>
           <div className="reports-controls">
-            <select 
-              value={selectedPeriod} 
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="period-selector"
-            >
+            <select value={selectedPeriod} onChange={event => setSelectedPeriod(event.target.value)} aria-label={t('reports.period')}>
               <option value="week">{t('reports.thisWeek')}</option>
               <option value="month">{t('reports.thisMonth')}</option>
               <option value="year">{t('reports.thisYear')}</option>
             </select>
-            <button onClick={exportToCSV} className="btn btn-secondary">
-              {t('reports.exportCSV')}
-            </button>
-            <button onClick={closeModal} className="btn btn-secondary">
-              {t('reports.close')}
-            </button>
+            <select value={selectedProject} onChange={event => setSelectedProject(event.target.value)} aria-label={t('reports.projectFilter')}>
+              <option value="all">{t('reports.allProjects')}</option>
+              {source.projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
+            </select>
+            <select value={selectedTask} onChange={event => setSelectedTask(event.target.value)} aria-label={t('reports.taskFilter')}>
+              <option value="all">{t('reports.allTasks')}</option>
+              {source.tasks.map(task => <option key={task.id} value={task.id}>{task.text}</option>)}
+            </select>
+            <select value={selectedType} onChange={event => setSelectedType(event.target.value)} aria-label={t('reports.typeFilter')}>
+              <option value="all">{t('reports.allTypes')}</option>
+              <option value="pomodoro">Pomodoro</option>
+              <option value="short-start">{t('focus.shortStart')}</option>
+              <option value="shared">{t('reports.social')}</option>
+            </select>
+            <button onClick={() => exportReport('csv')} className="btn btn-secondary">{t('reports.exportCSV')}</button>
+            <button onClick={() => exportReport('json')} className="btn btn-secondary">{t('reports.exportJSON')}</button>
+            <button onClick={closeModal} className="btn btn-secondary" aria-label={t('reports.close')}>×</button>
           </div>
         </div>
 
         <div className="reports-grid">
-          {/* Özet Kartları */}
           <div className="summary-cards">
-            <div className="summary-card">
-              <h3>{t('reports.totalFocusTime')}</h3>
-              <div className="big-number">{Math.floor(reportData.totalFocusTime / 60)}h {reportData.totalFocusTime % 60}m</div>
-            </div>
-            <div className="summary-card">
-              <h3>{t('reports.completedPomodoros')}</h3>
-              <div className="big-number">{reportData.completedPomodoros}</div>
-            </div>
-            <div className="summary-card">
-              <h3>{t('reports.currentStreak')}</h3>
-              <div className="big-number">{reportData.streaks.current} {t('reports.days')}</div>
-            </div>
-            <div className="summary-card">
-              <h3>{t('reports.averageSession')}</h3>
-              <div className="big-number">{reportData.averageSessionLength}m</div>
+            <div className="summary-card"><h3>{t('reports.totalFocusTime')}</h3><div className="big-number">{Math.floor(reportData.totalFocusTime / 60)}s {reportData.totalFocusTime % 60}d</div></div>
+            <div className="summary-card"><h3>{t('reports.completedPomodoros')}</h3><div className="big-number">{reportData.completedPomodoros}/{reportData.totalSessions || 0}</div></div>
+            <div className="summary-card"><h3>{t('reports.successRate')}</h3><div className="big-number">{reportData.insights.successRate ?? 0}%</div></div>
+            <div className="summary-card"><h3>{t('reports.averageSession')}</h3><div className="big-number">{reportData.averageSessionLength}d</div></div>
+            <div className="summary-card"><h3>{t('reports.estimateAccuracy')}</h3><div className="big-number">{reportData.insights.estimateAccuracy ?? '—'}{reportData.insights.estimateAccuracy === null ? '' : '%'}</div></div>
+            <div className="summary-card"><h3>{t('reports.socialSessions')}</h3><div className="big-number">{reportData.insights.socialSessions}</div></div>
+            <div className="summary-card"><h3>{t('reports.completedTasks')}</h3><div className="big-number">{reportData.insights.completedTasks}</div></div>
+            <div className="summary-card"><h3>{t('reports.abandonedSessions')}</h3><div className="big-number">{reportData.insights.abandonedSessions}</div></div>
+            <div className="summary-card"><h3>{t('reports.focusScore')}</h3><div className="big-number">{reportData.insights.averageFocusScore ?? '—'}/3</div></div>
+          </div>
+
+          <div className="report-insight" role="status">
+            <strong>{t('reports.insightTitle')}</strong>
+            <span>{insightText}</span>
+            {reportData.insights.topInterruption && (
+              <small>{t('reports.topInterruption')}: {reportData.insights.topInterruption}</small>
+            )}
+            <div className="report-evidence">
+              <span>{t('reports.sample')}: {reportData.totalSessions || 0}</span>
+              {reportData.insights.bestHour !== null && <span>{t('reports.bestHourEvidence')}: {String(reportData.insights.bestHour).padStart(2, '0')}:00</span>}
+              {reportData.insights.bestDuration && <span>{t('reports.bestDuration')}: {reportData.insights.bestDuration} {t('stats.minutes')}</span>}
+              {reportData.insights.averageFatigueOrder && <span>{t('reports.fatigueOrder')}: {reportData.insights.averageFatigueOrder}</span>}
+              {reportData.insights.daySuccessRate !== null && <span>{t('reports.dayNight')}: %{reportData.insights.daySuccessRate} / %{reportData.insights.nightSuccessRate ?? 0}</span>}
+              {reportData.insights.socialSuccessRate !== null && <span>{t('reports.socialSolo')}: %{reportData.insights.socialSuccessRate} / %{reportData.insights.soloSuccessRate ?? 0}</span>}
             </div>
           </div>
 
-          {/* Günlük Trend Grafiği */}
           <div className="chart-container">
             <h3>{t('reports.dailyTrend')}</h3>
-            <div style={{ height: '300px' }}>
-              {reportData.dailyStats.length > 0 ? (
-                <Line data={dailyChartData} options={chartOptions} />
-              ) : (
-                <div className="no-data-message">
-                  <p>Bu dönemde veri bulunmuyor. Pomodoro tamamlayarak veri oluşturun.</p>
-                </div>
-              )}
-            </div>
+            <div className="report-chart">{reportData.totalSessions ? <Line data={dailyChartData} options={chartOptions} /> : <p className="no-data-message">{t('reports.noData')}</p>}</div>
           </div>
-
-          {/* Proje Dağılımı */}
           <div className="chart-container">
             <h3>{t('reports.projectDistribution')}</h3>
-            <div style={{ height: '300px' }}>
-              {reportData.projectStats.length > 0 ? (
-                <Doughnut data={projectChartData} options={donutOptions} />
-              ) : (
-                <div className="no-data-message">
-                  <p>Proje verisi bulunmuyor. Projeler oluşturup Pomodoro tamamlayın.</p>
-                </div>
-              )}
-            </div>
+            <div className="report-chart">{reportData.projectStats.length ? <Doughnut data={projectChartData} options={chartOptions} /> : <p className="no-data-message">{t('reports.noProjectData')}</p>}</div>
           </div>
-
-          {/* Verimlilik Trendi */}
           <div className="chart-container">
             <h3>{t('reports.productivityTrend')}</h3>
-            <div style={{ height: '300px' }}>
-              {reportData.productivityTrends.length > 0 ? (
-                <Line data={productivityChartData} options={productivityOptions} />
-              ) : (
-                <div className="no-data-message">
-                  <p>Verimlilik verisi bulunmuyor. Daha fazla Pomodoro tamamlayın.</p>
-                </div>
-              )}
-            </div>
+            <div className="report-chart">{reportData.totalSessions ? <Line data={productivityData} options={{ ...chartOptions, scales: { y: { beginAtZero: true, max: 100 } } }} /> : <p className="no-data-message">{t('reports.noData')}</p>}</div>
           </div>
-
-          {/* En Verimli Saatler */}
           <div className="chart-container">
             <h3>{t('reports.bestHours')}</h3>
-            <div style={{ height: '300px' }}>
-              {reportData.bestHours.length > 0 ? (
-                <Bar data={bestHoursData} options={chartOptions} />
-              ) : (
-                <div className="no-data-message">
-                  <p>Saatlik veri bulunmuyor. Farklı saatlerde Pomodoro tamamlayın.</p>
-                </div>
-              )}
-            </div>
+            <div className="report-chart">{reportData.bestHours.length ? <Bar data={bestHoursData} options={chartOptions} /> : <p className="no-data-message">{t('reports.noData')}</p>}</div>
+          </div>
+          <div className="chart-container">
+            <h3>{t('reports.sessionOrder')}</h3>
+            <div className="report-chart">{reportData.insights.sessionOrder?.length ? <Line data={sessionOrderData} options={{ ...chartOptions, scales: { y: { beginAtZero: true, max: 100 } } }} /> : <p className="no-data-message">{t('reports.noData')}</p>}</div>
           </div>
 
-          {/* Streak Bilgileri */}
           <div className="streak-info">
             <h3>{t('reports.streakStats')}</h3>
             <div className="streak-cards">
-              <div className="streak-card">
-                <span className="streak-label">{t('reports.currentStreak')}</span>
-                <span className="streak-value">{reportData.streaks.current} {t('reports.days')}</span>
-              </div>
-              <div className="streak-card">
-                <span className="streak-label">{t('reports.longestStreak')}</span>
-                <span className="streak-value">{reportData.streaks.longest} {t('reports.days')}</span>
-              </div>
-              <div className="streak-card">
-                <span className="streak-label">{t('reports.totalStreaks')}</span>
-                <span className="streak-value">{reportData.streaks.total}</span>
-              </div>
+              <div className="streak-card"><span className="streak-label">{t('reports.currentStreak')}</span><span className="streak-value">{reportData.streaks.current} {t('reports.days')}</span></div>
+              <div className="streak-card"><span className="streak-label">{t('reports.longestStreak')}</span><span className="streak-value">{reportData.streaks.longest} {t('reports.days')}</span></div>
+              <div className="streak-card"><span className="streak-label">{t('reports.totalStreaks')}</span><span className="streak-value">{reportData.streaks.total}</span></div>
             </div>
+          </div>
+
+          <div className="streak-info">
+            <h3>{t('reports.interruptions')}</h3>
+            {reportData.insights.interruptionStats.length ? (
+              <ul className="report-interruptions">
+                {reportData.insights.interruptionStats.map(item => <li key={item.type}><span>{item.type}</span><strong>{item.count}</strong></li>)}
+              </ul>
+            ) : <p className="no-data-message">{t('reports.noInterruptions')}</p>}
           </div>
         </div>
       </div>

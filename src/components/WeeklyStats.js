@@ -1,8 +1,7 @@
 import React from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 
-const formatFocusTime = (totalSeconds, t) => {
-  // YENİ: Süre sıfır ise "0 dakika" yaz
+export const formatFocusTime = (totalSeconds, t) => {
   if (totalSeconds === 0) return `0 ${t('stats.minutes')}`;
   
   if (totalSeconds < 60) return `1 ${t('stats.minutes')} ${t('stats.less')}`;
@@ -21,11 +20,34 @@ const formatFocusTime = (totalSeconds, t) => {
   return result.trim();
 };
 
-const WeeklyStats = ({ totalSeconds }) => {
+export const sumFocusSessions = (sessions, startOfToday) => sessions.reduce(
+  (totals, session) => {
+    const duration = Number(session.duration) || 0;
+    const completedAt = session.completedAt?.toDate
+      ? session.completedAt.toDate()
+      : new Date(session.completedAt);
+
+    totals.totalSeconds += duration;
+    if (!Number.isNaN(completedAt.getTime()) && completedAt >= startOfToday) {
+      totals.todaySeconds += duration;
+    }
+    return totals;
+  },
+  { totalSeconds: 0, todaySeconds: 0 }
+);
+
+const WeeklyStats = ({ todaySeconds = 0, totalSeconds = 0 }) => {
   const { t } = useTranslation();
   return (
-    <div className="weekly-stats-container">
-      {t('stats.thisWeek')} <strong>{formatFocusTime(totalSeconds, t)}</strong> {t('stats.focused')}
+    <div className="focus-stats-container" aria-label={t('stats.focusSummary')}>
+      <div>
+        <span>{t('stats.today')}</span>
+        <strong>{formatFocusTime(todaySeconds, t)}</strong>
+      </div>
+      <div>
+        <span>{t('stats.thisWeek')}</span>
+        <strong>{formatFocusTime(totalSeconds, t)}</strong>
+      </div>
     </div>
   );
 };

@@ -1,0 +1,71 @@
+{
+  "expo": {
+    "name": "Pomofree - Pomodoro Timer",
+    "slug": "pomofree-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a2e"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": ["background-fetch", "background-processing"],
+        "BGTaskSchedulerPermittedIdentifiers": ["background-fetch"]
+      },
+      "bundleIdentifier": "com.pomofree.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a1a2e"
+      },
+      "permissions": [
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_EXACT_ALARM"
+      ],
+      "package": "com.pomofree.mobile"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#FF6B6B",
+      "iosDisplayInForeground": true,
+      "androidMode": "default",
+      "androidCollapsedTitle": "Pomofree Timer"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#FF6B6B",
+          "defaultChannel": "pomodoro-timer"
+        }
+      ],
+      [
+        "expo-background-fetch",
+        {
+          "backgroundInterval": 1
+        }
+      ],
+      [
+        "expo-task-manager"
+      ]
+    ]
+  }
+}
+
+

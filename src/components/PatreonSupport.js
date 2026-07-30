@@ -10,6 +10,10 @@ const PatreonSupport = () => {
     window.open('https://www.patreon.com/c/lumiboi/membership', '_blank');
   };
 
+  const handleKreosusClick = () => {
+    window.open('https://kreosus.com/lumi', '_blank');
+  };
+
   const handleClose = () => {
     setIsVisible(false);
   };
@@ -30,6 +34,13 @@ const PatreonSupport = () => {
           title={t('patreon.buttonTitle')}
         >
           {t('patreon.supportButton')}
+        </button>
+        <button 
+          className="patreon-button"
+          onClick={handleKreosusClick}
+          title={t('patreon.kreosusTitle', 'Visit our Kreosus page')}
+        >
+          {t('patreon.kreosusButton', 'Support on Kreosus')}
         </button>
         <button 
           className="patreon-close"

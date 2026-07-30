@@ -4,11 +4,12 @@ import { useTranslation } from '../hooks/useTranslation';
 const Tasks = ({ 
   tasks, projects, activeProjectId, setActiveProjectId,
   handleAddProject, handleCompleteProject, handleDeleteProject,
-  taskInput, setTaskInput, handleAddTask, handleDeleteTask, handleKeyPress,
+  taskInput, setTaskInput, handleAddTask, handleDeleteTask,
   activeTaskId, setActiveTaskId, userSettings
 }) => {
   const { t } = useTranslation();
   const [newProjectName, setNewProjectName] = useState('');
+  const [estimatedPomodoros, setEstimatedPomodoros] = useState(1);
 
   const onAddProject = () => {
     if (newProjectName.trim()) {
@@ -16,14 +17,20 @@ const Tasks = ({
       setNewProjectName('');
     }
   };
+
+  const onAddTask = () => {
+    if (!taskInput.trim()) return;
+    handleAddTask(estimatedPomodoros);
+    setEstimatedPomodoros(1);
+  };
   
-  const activeProjects = projects.filter(p => !p.completed);
-  const filteredTasks = tasks.filter(task => task.projectId === activeProjectId);
+  const activeProjects = projects.filter(p => !p.completed && !p.archived);
+  const filteredTasks = tasks.filter(task => task.projectId === activeProjectId && !task.completed);
 
   return (
     <div className="card tasks-container">
       <div className="project-selector">
-        <select value={activeProjectId || ''} onChange={(e) => {
+        <select id="project-select" value={activeProjectId || ''} onChange={(e) => {
           setActiveProjectId(e.target.value);
           setActiveTaskId(null);
         }}>
@@ -37,6 +44,8 @@ const Tasks = ({
       <div className="task-list">
         {filteredTasks.map((task) => {
             const pomodorosDone = task.pomodorosCompleted || 0;
+            const estimate = task.estimatedPomodoros || 1;
+            const remaining = Math.max(0, estimate - pomodorosDone);
             const totalMinutes = pomodorosDone * userSettings.pomodoro;
 
             return (
@@ -44,6 +53,15 @@ const Tasks = ({
                 key={task.id} 
                 className={`task-item ${task.id === activeTaskId ? 'active-task' : ''}`}
                 onClick={() => setActiveTaskId(task.id)}
+                role="button"
+                tabIndex="0"
+                aria-pressed={task.id === activeTaskId}
+                onKeyDown={event => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setActiveTaskId(task.id);
+                  }
+                }}
               >
                 <div className="task-selector-tick">
                     <span className="tick-icon">✔</span>
@@ -52,7 +70,8 @@ const Tasks = ({
                 <div className="task-meta">
                   <div className="task-pomodoro-info">
                       <span className="count">{pomodorosDone}</span>
-                      <span className="label"> {t('tasks.pomodoro')} ({totalMinutes} {t('tasks.minutes')})</span>
+                      <span className="label"> / {estimate} {t('tasks.pomodoro')} ({remaining} {t('tasks.remaining')})</span>
+                      <span className="task-actual-time">{totalMinutes} {t('tasks.minutes')}</span>
                   </div>
                   <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} className="btn-task-delete">🗑️</button>
                 </div>
@@ -63,8 +82,18 @@ const Tasks = ({
       </div>
 
       <div className="add-task-form">
-        <input type="text" placeholder={t('tasks.addTask')} value={taskInput} onChange={(e) => setTaskInput(e.target.value)} onKeyPress={handleKeyPress} />
-        <button onClick={handleAddTask} className="btn btn-primary">+</button>
+        <input id="task-input" type="text" placeholder={t('tasks.addTask')} value={taskInput} onChange={(e) => setTaskInput(e.target.value)} onKeyDown={(event) => event.key === 'Enter' && onAddTask()} />
+        <label className="task-estimate-input">
+          <span>{t('tasks.estimate')}</span>
+          <input
+            type="number"
+            min="1"
+            max="99"
+            value={estimatedPomodoros}
+            onChange={event => setEstimatedPomodoros(Math.min(99, Math.max(1, Number(event.target.value) || 1)))}
+          />
+        </label>
+        <button onClick={onAddTask} className="btn btn-primary">+</button>
       </div>
 
       <div className="add-project-form">

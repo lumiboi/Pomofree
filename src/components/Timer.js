@@ -1,7 +1,22 @@
 import React from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 
-const Timer = ({ mode, time, isActive, switchMode, toggleTimer, formatTime, totalTime }) => {
+const Timer = ({
+  mode,
+  time,
+  isActive,
+  switchMode,
+  toggleTimer,
+  formatTime,
+  totalTime,
+  sessionGoal = '',
+  setSessionGoal,
+  goalRequired = false,
+  onEmergencyStart,
+  adaptiveSuggestion,
+  onAcceptSuggestion,
+  onRejectSuggestion
+}) => {
   const { t } = useTranslation();
   
   // Progress hesaplama (0-100 arası)
@@ -26,10 +41,49 @@ const Timer = ({ mode, time, isActive, switchMode, toggleTimer, formatTime, tota
   return (
     <div className="card timer-card">
       <div className="timer-modes">
-        <button onClick={() => handleModeChange('pomodoro')} className={`btn mode-btn ${mode === 'pomodoro' ? 'active' : ''}`}>{t('timer.pomodoro')}</button>
-        <button onClick={() => handleModeChange('short')} className={`btn mode-btn ${mode === 'short' ? 'active' : ''}`}>{t('timer.shortBreak')}</button>
-        <button onClick={() => handleModeChange('long')} className={`btn mode-btn ${mode === 'long' ? 'active' : ''}`}>{t('timer.longBreak')}</button>
+        <button aria-pressed={mode === 'pomodoro'} onClick={() => handleModeChange('pomodoro')} className={`btn mode-btn ${mode === 'pomodoro' ? 'active' : ''}`}>{t('timer.pomodoro')}</button>
+        <button aria-pressed={mode === 'short'} onClick={() => handleModeChange('short')} className={`btn mode-btn ${mode === 'short' ? 'active' : ''}`}>{t('timer.shortBreak')}</button>
+        <button aria-pressed={mode === 'long'} onClick={() => handleModeChange('long')} className={`btn mode-btn ${mode === 'long' ? 'active' : ''}`}>{t('timer.longBreak')}</button>
       </div>
+
+      {mode === 'pomodoro' && setSessionGoal && (
+        <label className={`timer-session-goal ${isActive ? 'active' : ''}`}>
+          <span>{t('timer.sessionGoal')}{goalRequired ? ' *' : ''}</span>
+          {isActive ? (
+            <strong>{sessionGoal || t('timer.noGoal')}</strong>
+          ) : (
+            <input
+              value={sessionGoal}
+              onChange={event => setSessionGoal(event.target.value)}
+              maxLength={300}
+              placeholder={t('timer.sessionGoalPlaceholder')}
+              required={goalRequired}
+            />
+          )}
+        </label>
+      )}
+
+      {mode === 'pomodoro' && !isActive && adaptiveSuggestion && (
+        <div className="timer-adaptive-tip">
+          <div>
+            <strong>{t('timer.adaptiveTitle')}</strong>
+            <span>
+              {adaptiveSuggestion.sampleSize} {t('timer.sessionsBased')} · {adaptiveSuggestion.completionRate}% {t('timer.completion')}
+            </span>
+            <span>
+              {t(`timer.scope.${adaptiveSuggestion.scope}`)} · {t('timer.averageDuration')} {adaptiveSuggestion.averageMinutes} {t('stats.minutes')}
+            </span>
+          </div>
+          <div className="timer-adaptive-actions">
+            <button type="button" onClick={() => onAcceptSuggestion(adaptiveSuggestion)}>
+              {adaptiveSuggestion.recommendedMinutes} {t('stats.minutes')} {t('timer.try')}
+            </button>
+            <button type="button" className="btn-link" onClick={() => onRejectSuggestion(adaptiveSuggestion)}>
+              {t('timer.notNow')}
+            </button>
+          </div>
+        </div>
+      )}
       
       <div className="timer-display">
         <div className="circular-progress">
@@ -61,15 +115,22 @@ const Timer = ({ mode, time, isActive, switchMode, toggleTimer, formatTime, tota
               cy={radius}
             />
           </svg>
-          <div className="timer-text">
+          <div className="timer-text" aria-live="off" aria-label={formatTime(time)}>
             <h2>{formatTime(time)}</h2>
           </div>
         </div>
       </div>
       
-      <button onClick={handleTimerToggle} className="btn btn-start">
-        {isActive ? t('timer.stop') : t('timer.start')}
-      </button>
+      <div className={`timer-primary-actions ${mode === 'pomodoro' && !isActive && onEmergencyStart ? 'has-emergency' : ''}`}>
+        <button onClick={handleTimerToggle} className="btn btn-start">
+          {isActive ? t('timer.stop') : t('timer.start')}
+        </button>
+        {mode === 'pomodoro' && !isActive && onEmergencyStart && (
+          <button type="button" className="timer-emergency-start" onClick={onEmergencyStart}>
+            {t('timer.emergencyStart')}
+          </button>
+        )}
+      </div>
     </div>
   );
 };

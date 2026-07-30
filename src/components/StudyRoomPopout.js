@@ -21,6 +21,9 @@ const StudyRoomPopout = ({ syncedTimer, onTimerSync }) => {
 
   const [message, setMessage] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const chatLocked = currentRoom?.breakChatOnly &&
+    syncedTimer?.mode === 'pomodoro' &&
+    syncedTimer?.isActive;
   
   const messagesEndRef = useRef(null);
 
@@ -34,7 +37,7 @@ const StudyRoomPopout = ({ syncedTimer, onTimerSync }) => {
   // Jitsi Voice Chat kullanıyoruz, WebRTC gerekmiyor
 
   const handleSendMessage = () => {
-    if (message.trim()) {
+    if (!chatLocked && message.trim()) {
       sendMessage(message.trim());
       setMessage('');
     }
@@ -139,6 +142,9 @@ const StudyRoomPopout = ({ syncedTimer, onTimerSync }) => {
                   <span className="participant-name">
                     {participant.displayName || 'Anonim'}
                   </span>
+                  <span className={`participant-status status-${participant.status || 'preparing'}`}>
+                    {t(`studyRoom.status.${participant.status || 'preparing'}`)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -170,11 +176,12 @@ const StudyRoomPopout = ({ syncedTimer, onTimerSync }) => {
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={t('studyRoom.typeMessage')}
+                onKeyDown={handleKeyPress}
+                placeholder={chatLocked ? t('studyRoom.chatLocked') : t('studyRoom.typeMessage')}
                 maxLength={200}
+                disabled={chatLocked}
               />
-              <button onClick={handleSendMessage} disabled={!message.trim()}>
+              <button onClick={handleSendMessage} disabled={chatLocked || !message.trim()} aria-label={t('studyRoom.typeMessage')}>
                 📤
               </button>
             </div>

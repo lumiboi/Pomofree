@@ -12,8 +12,21 @@ const StudyWithMeButton = ({ onCreateRoom, activeTheme }) => {
         onClick={onCreateRoom}
       >
         <div className="btn-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01 1l-2.99 4 1.6 1.2L15.99 11H17v11h3zm-12.5 0v-6.5H9L7.1 6.63C6.8 5.55 5.85 5 4.82 5H4c-.8 0-1.54.37-2.01 1L-.01 10l1.6 1.2L3.99 8H5v14h2.5z"/>
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="8" cy="7" r="3" />
+            <circle cx="17" cy="8" r="2.5" />
+            <path d="M2.75 20v-2.25A4.75 4.75 0 0 1 7.5 13h1A4.75 4.75 0 0 1 13 17.75V20" />
+            <path d="M14.25 13.8A4.25 4.25 0 0 1 21.25 17v3" />
           </svg>
         </div>
         <span className="btn-text">{t('studyRoom.studyWithMe')}</span>
