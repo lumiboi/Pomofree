@@ -4,6 +4,82 @@ Pomofree is a Pomodoro timer built with React. It combines a customizable focus 
 
 The app works on desktop and mobile, and can also be installed as a Progressive Web App.
 
+## Tech Stack
+
+```mermaid
+flowchart LR
+    APP["Pomofree"]
+
+    subgraph Frontend
+        REACT["React"]
+        ROUTER["React Router"]
+        CSS["CSS / Responsive UI"]
+        PWA["Progressive Web App"]
+    end
+
+    subgraph Backend
+        FIREBASE["Firebase"]
+        AUTH["Firebase Auth"]
+        FIRESTORE["Cloud Firestore"]
+        HOSTING["Firebase Hosting"]
+    end
+
+    subgraph Realtime["Real-time Features"]
+        SOCKET["Socket.io"]
+        AGORA["Agora RTC"]
+        WEBRTC["WebRTC / Simple Peer"]
+    end
+
+    subgraph Data["Data & Utilities"]
+        CHART["Chart.js"]
+        DATE["date-fns"]
+        UUID["UUID"]
+    end
+
+    subgraph Testing
+        RTL["React Testing Library"]
+        JEST["Jest DOM"]
+        USER["User Event"]
+    end
+
+    APP --> REACT
+    APP --> FIREBASE
+    APP --> SOCKET
+    APP --> CHART
+
+    REACT --> ROUTER
+    REACT --> CSS
+    CSS --> PWA
+
+    FIREBASE --> AUTH
+    FIREBASE --> FIRESTORE
+    FIREBASE --> HOSTING
+
+    SOCKET --> AGORA
+    AGORA --> WEBRTC
+
+    CHART --> DATE
+    DATE --> UUID
+
+    REACT --> RTL
+    RTL --> JEST
+    RTL --> USER
+
+    classDef main fill:#ef4444,color:#fff,stroke:#b91c1c,stroke-width:2px;
+    classDef frontend fill:#dbeafe,color:#1e3a8a,stroke:#60a5fa;
+    classDef backend fill:#fef3c7,color:#78350f,stroke:#f59e0b;
+    classDef realtime fill:#ede9fe,color:#4c1d95,stroke:#8b5cf6;
+    classDef data fill:#dcfce7,color:#14532d,stroke:#4ade80;
+    classDef testing fill:#f3f4f6,color:#111827,stroke:#9ca3af;
+
+    class APP main;
+    class REACT,ROUTER,CSS,PWA frontend;
+    class FIREBASE,AUTH,FIRESTORE,HOSTING backend;
+    class SOCKET,AGORA,WEBRTC realtime;
+    class CHART,DATE,UUID data;
+    class RTL,JEST,USER testing;
+```
+
 ## Features
 
 ### Pomodoro timer
