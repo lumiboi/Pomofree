@@ -5,6 +5,7 @@ import WeeklyStats, { formatFocusTime, sumFocusSessions } from './WeeklyStats';
 import {
   createTodo,
   filterTodos,
+  isFocusTask,
   sanitizeProjectPatch,
   sanitizeTodoPatch
 } from '../todoModel';
@@ -46,6 +47,7 @@ test('Todo Firestore verisini sınırlar ve tamamlanma zamanını yönetir', () 
     dueDate: null,
     estimatedPomodoros: 1,
     pomodorosCompleted: 0,
+    focusActive: false,
     createdAt: now
   });
   expect(sanitizeTodoPatch({ completed: true, note: '  Kısa not  ' }, now)).toEqual({
@@ -59,6 +61,14 @@ test('Todo Firestore verisini sınırlar ve tamamlanma zamanını yönetir', () 
   });
   expect(() => sanitizeTodoPatch({ text: '   ' }, now)).toThrow('Görev adı boş olamaz');
   expect(() => sanitizeTodoPatch({ dueDate: '30/07/2026' }, now)).toThrow('Geçersiz son tarih');
+});
+
+test('Todo görevleri yalnız kullanıcı gönderince aktif görevlere katılır', () => {
+  const todo = createTodo('Yeni görev', 'work');
+
+  expect(isFocusTask(todo)).toBe(false);
+  expect(isFocusTask({ text: 'Eski görev' })).toBe(true);
+  expect(sanitizeTodoPatch({ focusActive: true })).toEqual({ focusActive: true });
 });
 
 test('bugünkü ve haftalık odak süresini birlikte gösterir', () => {
@@ -106,9 +116,12 @@ test('proje ayrıntıları sınırlandırılır ve arşiv durumu doğrulanır', 
   expect(() => sanitizeProjectPatch({ priority: 'urgent' })).toThrow('Geçersiz öncelik');
 });
 
-test('Whimsy Core ve Frutiger Aero özel temaları kullanılabilir', () => {
+test('Cottagecore, Frutiger Aero ve Wired özel temaları kullanılabilir', () => {
   expect(themes.whimsy_core?.isSpecial).toBe(true);
   expect(themes.frutiger_aero?.isSpecial).toBe(true);
+  expect(themes.wired?.isSpecial).toBe(true);
+  expect(themes.whimsy_core.name).toBe('ÖZEL (Cottagecore)');
   expect(themes.whimsy_core.colors['--text-color']).toBeTruthy();
   expect(themes.frutiger_aero.colors['--card-bg']).toBeTruthy();
+  expect(themes.wired.colors['--font-family']).toContain('Share Tech Mono');
 });

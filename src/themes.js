@@ -1,6 +1,6 @@
 export const themes = {
   whimsy_core: {
-    name: "ÖZEL (Whimsy Core)",
+    name: "ÖZEL (Cottagecore)",
     isSpecial: true,
     colors: {
       "--font-family": "'Lora', serif",
@@ -35,6 +35,25 @@ export const themes = {
       "--progress-inactive-color": "#7aca35",
       "--progress-bg-color": "rgba(23, 168, 220, 0.18)",
       "--soft-shadow": "0 12px 28px rgba(0, 105, 170, 0.2), inset 0 1px 0 rgba(255,255,255,0.9)"
+    }
+  },
+  wired: {
+    name: "ÖZEL (Wired)",
+    isSpecial: true,
+    colors: {
+      "--font-family": "'Share Tech Mono', 'Courier New', monospace",
+      "--bg-color-pomodoro": "#09080a",
+      "--bg-color-short": "#100c10",
+      "--bg-color-long": "#151015",
+      "--text-color": "#c5aaa7",
+      "--text-color-dark": "#120d10",
+      "--primary-accent": "#b4667b",
+      "--card-bg": "rgba(8, 7, 9, 0.76)",
+      "--card-border": "rgba(180, 102, 123, 0.48)",
+      "--progress-active-color": "#c9788d",
+      "--progress-inactive-color": "#78505a",
+      "--progress-bg-color": "rgba(180, 102, 123, 0.18)",
+      "--soft-shadow": "0 0 0 1px rgba(180, 102, 123, 0.08), 0 18px 48px rgba(0, 0, 0, 0.55)"
     }
   },
     synthwave: { 

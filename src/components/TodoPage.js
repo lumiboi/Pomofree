@@ -15,7 +15,7 @@ import {
 import { auth, db } from '../firebase';
 import { themes } from '../themes';
 import { useTranslation } from '../hooks/useTranslation';
-import { createTodo, filterTodos, sanitizeTodoPatch, toDateKey } from '../todoModel';
+import { createTodo, filterTodos, isFocusTask, sanitizeTodoPatch, toDateKey } from '../todoModel';
 import { sanitizeProjectPatch } from '../todoModel';
 import { getProjectForecast } from '../focusModel';
 import Header from './Header';
@@ -568,6 +568,16 @@ const TodoPage = () => {
             >
               <span aria-hidden="true">☀</span>
               {selectedTodo.myDay ? t('todo.removeFromMyDay') : t('todo.addToMyDay')}
+            </button>
+
+            <button
+              type="button"
+              className={`todo-detail-action ${isFocusTask(selectedTodo) ? 'active' : ''}`}
+              disabled={isFocusTask(selectedTodo) || selectedTodo.completed}
+              onClick={() => updateTodo(selectedTodo.id, { focusActive: true })}
+            >
+              <span aria-hidden="true">↗</span>
+              {isFocusTask(selectedTodo) ? t('todo.inActiveTasks') : t('todo.sendToActiveTasks')}
             </button>
 
             <label className="todo-detail-field">

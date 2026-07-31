@@ -72,6 +72,8 @@ export const translations = {
     'todo.list': 'Liste',
     'todo.addToMyDay': 'Günüm listesine ekle',
     'todo.removeFromMyDay': 'Günüm listesinden çıkar',
+    'todo.sendToActiveTasks': 'Aktif görevlere gönder',
+    'todo.inActiveTasks': 'Aktif görevlerde',
     'todo.markImportant': 'Önemli olarak işaretle',
     'todo.removeImportant': 'Önem işaretini kaldır',
     'todo.deleteTask': 'Görevi sil',
@@ -244,8 +246,9 @@ export const translations = {
     
     // Themes
     'themes.selectTheme': 'Tema Seç',
-    'themes.whimsy_core': 'ÖZEL (Whimsy Core)',
+    'themes.whimsy_core': 'ÖZEL (Cottagecore)',
     'themes.frutiger_aero': 'ÖZEL (Frutiger Aero)',
+    'themes.wired': 'ÖZEL (Wired)',
     'themes.synthwave': 'ÖZEL (Synthwave)',
     'themes.dark_academia': 'ÖZEL (Dark Academia)',
     'themes.gothic_core': 'ÖZEL (Gothic Core)',
@@ -727,6 +730,8 @@ export const translations = {
     'todo.list': 'List',
     'todo.addToMyDay': 'Add to My Day',
     'todo.removeFromMyDay': 'Remove from My Day',
+    'todo.sendToActiveTasks': 'Send to active tasks',
+    'todo.inActiveTasks': 'In active tasks',
     'todo.markImportant': 'Mark as important',
     'todo.removeImportant': 'Remove importance',
     'todo.deleteTask': 'Delete task',
@@ -899,8 +904,9 @@ export const translations = {
     
     // Themes
     'themes.selectTheme': 'Select Theme',
-    'themes.whimsy_core': 'SPECIAL (Whimsy Core)',
+    'themes.whimsy_core': 'SPECIAL (Cottagecore)',
     'themes.frutiger_aero': 'SPECIAL (Frutiger Aero)',
+    'themes.wired': 'SPECIAL (Wired)',
     'themes.synthwave': 'SPECIAL (Synthwave)',
     'themes.dark_academia': 'SPECIAL (Dark Academia)',
     'themes.gothic_core': 'SPECIAL (Gothic Core)',

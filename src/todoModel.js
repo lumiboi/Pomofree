@@ -54,6 +54,8 @@ export const filterTodos = (
     : filtered;
 };
 
+export const isFocusTask = todo => todo.focusActive !== false;
+
 export const createTodo = (text, projectId, options = {}, now = new Date()) => {
   const title = cleanText(text, TITLE_LIMIT);
   const list = cleanText(projectId, LIST_ID_LIMIT);
@@ -71,6 +73,7 @@ export const createTodo = (text, projectId, options = {}, now = new Date()) => {
     dueDate: cleanDate(options.dueDate),
     estimatedPomodoros: cleanPomodoroCount(options.estimatedPomodoros, 1) || 1,
     pomodorosCompleted: 0,
+    focusActive: false,
     createdAt: now
   };
 };
@@ -90,6 +93,7 @@ export const sanitizeTodoPatch = (patch, now = new Date()) => {
   if ('dueDate' in patch) safe.dueDate = cleanDate(patch.dueDate);
   if ('important' in patch) safe.important = Boolean(patch.important);
   if ('myDay' in patch) safe.myDay = Boolean(patch.myDay);
+  if ('focusActive' in patch) safe.focusActive = Boolean(patch.focusActive);
   if ('estimatedPomodoros' in patch) {
     safe.estimatedPomodoros = cleanPomodoroCount(patch.estimatedPomodoros, 1) || 1;
   }

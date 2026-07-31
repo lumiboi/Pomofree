@@ -13,7 +13,10 @@ const SOUND_TYPES = [
   ['nature', 'focusSound.nature', 'bandpass']
 ];
 const STORAGE_KEY = 'pomofree_sound_profiles_v1';
-const RAIN_SOUND_URL = `${process.env.PUBLIC_URL}/sounds/gentle-rain.mp3`;
+const SAMPLE_URLS = {
+  rain: `${process.env.PUBLIC_URL}/sounds/gentle-rain.mp3`,
+  keyboard: `${process.env.PUBLIC_URL}/sounds/chill-keyboard.mp3`
+};
 const EMPTY_LEVELS = {
   rain: 0,
   cafe: 0,
@@ -37,18 +40,18 @@ const readProfile = projectId => {
 const FocusSoundMixer = ({ isOpen, onClose, projectId, isFocusActive }) => {
   const { t } = useTranslation();
   const [levels, setLevels] = useState(() => readProfile(projectId));
-  const audioRef = useRef({ context: null, master: null, gains: {}, rain: null });
+  const audioRef = useRef({ context: null, master: null, gains: {}, samples: {} });
 
   useEffect(() => setLevels(readProfile(projectId)), [projectId]);
 
-  const ensureRain = () => {
-    if (!audioRef.current.rain) {
-      const rain = new Audio(RAIN_SOUND_URL);
-      rain.loop = true;
-      rain.preload = 'auto';
-      audioRef.current.rain = rain;
+  const ensureSample = id => {
+    if (!audioRef.current.samples[id]) {
+      const sample = new Audio(SAMPLE_URLS[id]);
+      sample.loop = true;
+      sample.preload = 'auto';
+      audioRef.current.samples[id] = sample;
     }
-    return audioRef.current.rain;
+    return audioRef.current.samples[id];
   };
 
   const ensureAudio = () => {
@@ -66,7 +69,7 @@ const FocusSoundMixer = ({ isOpen, onClose, projectId, isFocusActive }) => {
     const gains = {};
 
     SOUND_TYPES.forEach(([id, , filterType], soundIndex) => {
-      if (id === 'rain') return;
+      if (SAMPLE_URLS[id]) return;
       const length = context.sampleRate * 3;
       const buffer = context.createBuffer(1, length, context.sampleRate);
       const data = buffer.getChannelData(0);
@@ -107,32 +110,32 @@ const FocusSoundMixer = ({ isOpen, onClose, projectId, isFocusActive }) => {
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio.rain) {
-      audio.rain.volume = (levels.rain / 100) * (isFocusActive ? 1 : 0.25);
-    }
+    Object.entries(audio.samples).forEach(([id, sample]) => {
+      sample.volume = (levels[id] / 100) * (isFocusActive ? 1 : 0.25);
+    });
     if (audio.context && audio.master) {
       const now = audio.context.currentTime;
       audio.master.gain.cancelScheduledValues(now);
       audio.master.gain.linearRampToValueAtTime(isFocusActive ? 1 : 0.25, now + 1.2);
     }
-  }, [isFocusActive, levels.rain]);
+  }, [isFocusActive, levels]);
 
   useEffect(() => () => {
     audioRef.current.context?.close();
-    audioRef.current.rain?.pause();
+    Object.values(audioRef.current.samples).forEach(sample => sample.pause());
   }, []);
 
   const setLevel = (id, value) => {
     const safeValue = Math.min(100, Math.max(0, Number(value) || 0));
     const next = { ...levels, [id]: safeValue };
     setLevels(next);
-    if (id === 'rain') {
-      const rain = ensureRain();
-      rain.volume = (safeValue / 100) * (isFocusActive ? 1 : 0.25);
+    if (SAMPLE_URLS[id]) {
+      const sample = ensureSample(id);
+      sample.volume = (safeValue / 100) * (isFocusActive ? 1 : 0.25);
       if (safeValue > 0) {
-        rain.play().catch(() => {});
+        sample.play().catch(() => {});
       } else {
-        rain.pause();
+        sample.pause();
       }
     } else {
       const audio = ensureAudio();
@@ -153,10 +156,10 @@ const FocusSoundMixer = ({ isOpen, onClose, projectId, isFocusActive }) => {
     const next = { ...EMPTY_LEVELS };
     setLevels(next);
     const audio = audioRef.current;
-    if (audio.rain) {
-      audio.rain.volume = 0;
-      audio.rain.pause();
-    }
+    Object.values(audio.samples).forEach(sample => {
+      sample.volume = 0;
+      sample.pause();
+    });
     Object.values(audio.gains).forEach(gain => {
       gain.gain.setTargetAtTime(0, audio.context.currentTime, 0.04);
     });

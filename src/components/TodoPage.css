@@ -777,6 +777,11 @@
   border-color: var(--primary-accent);
 }
 
+.todo-detail-action:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
 .todo-detail-field {
   display: grid;
   gap: 0.35rem;

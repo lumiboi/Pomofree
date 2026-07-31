@@ -38,3 +38,31 @@ test('yağmur seviyesi yerel ve döngülü yağmur kaydını çalar', () => {
   expect(rain).toMatchObject({ loop: true, preload: 'auto', volume: 0.1 });
   expect(rain.play).toHaveBeenCalled();
 });
+
+test('klavye seviyesi chill ve döngülü klavye kaydını çalar', () => {
+  const keyboard = {
+    loop: false,
+    preload: '',
+    volume: 0,
+    play: jest.fn().mockResolvedValue(),
+    pause: jest.fn()
+  };
+  window.Audio = jest.fn(() => keyboard);
+
+  render(
+    <FocusSoundMixer
+      isOpen
+      onClose={() => {}}
+      projectId="test"
+      isFocusActive
+    />
+  );
+
+  fireEvent.change(screen.getByRole('slider', { name: /^focusSound\.keyboard/ }), {
+    target: { value: '35' }
+  });
+
+  expect(window.Audio).toHaveBeenCalledWith('/sounds/chill-keyboard.mp3');
+  expect(keyboard).toMatchObject({ loop: true, preload: 'auto', volume: 0.35 });
+  expect(keyboard.play).toHaveBeenCalled();
+});

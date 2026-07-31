@@ -3,6 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:wght@400;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
 :root {
   --font-family: 'Poppins', sans-serif;
@@ -833,6 +834,438 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
 .bird:nth-child(4) { top: 80%; animation-delay: -4s; transform: scale(0.9); }
 .bird:nth-child(5) { top: 45%; animation-delay: -5.5s; transform: scale(1.1); }
 .bird:nth-child(6) { top: 60%; animation-delay: -6.5s; transform: scale(0.7); }
+
+/* Wired */
+.theme-wired,
+.theme-wired.todo-page {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(rgba(7, 6, 8, 0.34), rgba(7, 6, 8, 0.64)),
+    #09080a url('../public/theme-wired.png') center / cover fixed no-repeat;
+  color: #c5aaa7;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  letter-spacing: 0.035em;
+  text-shadow: 0 0 7px rgba(180, 102, 123, 0.2);
+}
+
+.theme-wired::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(190, 109, 130, 0.055) 3px 4px),
+    linear-gradient(90deg, rgba(255, 0, 70, 0.018), transparent 35%, rgba(0, 174, 255, 0.018));
+  box-shadow: inset 0 0 110px rgba(0, 0, 0, 0.78);
+}
+
+.theme-wired .header-container {
+  max-width: 1600px;
+  padding: 1rem 1.5rem;
+  border: 1px solid rgba(180, 102, 123, 0.58);
+  border-radius: 0;
+  background: rgba(6, 6, 7, 0.7);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.72);
+}
+
+.theme-wired .header-container h1 {
+  position: relative;
+  padding-left: 3rem;
+  color: #c8748a;
+  font: 400 clamp(1.55rem, 2.4vw, 2rem) 'Share Tech Mono', monospace;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.theme-wired .header-container h1::before {
+  content: '▦';
+  position: absolute;
+  left: 0;
+  top: -0.25rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(180, 102, 123, 0.7);
+  color: #b4667b;
+  background: rgba(180, 102, 123, 0.12);
+}
+
+.theme-wired .header-container h1::after {
+  content: 'v2.1.0';
+  display: block;
+  margin-top: 0.45rem;
+  color: rgba(197, 170, 167, 0.58);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+}
+
+.theme-wired .header-buttons {
+  gap: 0.25rem;
+}
+
+.theme-wired .btn,
+.theme-wired .header-buttons button {
+  border-radius: 0;
+  color: #c5aaa7;
+  font-family: inherit;
+  letter-spacing: 0.07em;
+}
+
+.theme-wired .header-buttons .btn {
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.theme-wired .header-buttons .btn:hover,
+.theme-wired .header-buttons .btn-primary {
+  border-bottom-color: #b4667b;
+  color: #d27f94;
+  background: rgba(180, 102, 123, 0.08);
+  transform: none;
+}
+
+.theme-wired .card,
+.theme-wired .focus-tools,
+.theme-wired .focus-stats-container,
+.theme-wired .patreon-support,
+.theme-wired .focus-sound-mixer,
+.theme-wired .modal-content,
+.theme-wired .todo-shell {
+  position: relative;
+  border: 1px solid rgba(180, 102, 123, 0.42);
+  border-radius: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 4px),
+    rgba(8, 7, 9, 0.78);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5), 0 18px 45px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.theme-wired .card::before,
+.theme-wired .focus-tools::before,
+.theme-wired .todo-shell::before {
+  content: '+';
+  position: absolute;
+  top: -0.8rem;
+  left: -0.45rem;
+  color: #b4667b;
+  font-size: 0.85rem;
+}
+
+.theme-wired .main-content {
+  max-width: 1320px;
+  align-items: stretch;
+}
+
+.theme-wired h2,
+.theme-wired h3,
+.theme-wired h4 {
+  color: #c6788c;
+  font-family: inherit;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.theme-wired .timer-modes {
+  border-bottom: 1px solid rgba(180, 102, 123, 0.26);
+}
+
+.theme-wired .mode-btn {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  box-shadow: none;
+  opacity: 0.72;
+}
+
+.theme-wired .mode-btn.active {
+  border-bottom-color: #c8748a;
+  background: transparent;
+  color: #d38196;
+  opacity: 1;
+}
+
+.theme-wired input,
+.theme-wired select,
+.theme-wired textarea {
+  border: 1px solid rgba(180, 102, 123, 0.42) !important;
+  border-radius: 0 !important;
+  background: rgba(4, 4, 5, 0.72) !important;
+  color: #c5aaa7 !important;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.65) !important;
+  font-family: inherit !important;
+}
+
+.theme-wired input::placeholder,
+.theme-wired textarea::placeholder {
+  color: rgba(197, 170, 167, 0.52);
+}
+
+.theme-wired .circular-progress {
+  width: 210px;
+  height: 210px;
+}
+
+.theme-wired .progress-ring {
+  width: 210px;
+  height: 210px;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+
+.theme-wired .progress-ring-circle-bg,
+.theme-wired .progress-ring-circle {
+  transform: translate(25px, 25px);
+  transform-origin: center;
+  stroke-dasharray: 3 6;
+  stroke-linecap: butt;
+}
+
+.theme-wired .timer-text h2 {
+  color: #c8748a;
+  font: 400 clamp(3.8rem, 7vw, 5.6rem) 'Share Tech Mono', monospace;
+  letter-spacing: 0.01em;
+  text-shadow: 2px 0 rgba(255, 120, 145, 0.24), -2px 0 rgba(70, 170, 200, 0.12);
+}
+
+.theme-wired .btn-start {
+  min-width: 230px;
+  border: 1px solid #d18699;
+  border-radius: 0;
+  background: linear-gradient(90deg, #b8647b, #c87b8f);
+  color: #130d10;
+  box-shadow: inset 0 1px rgba(255, 210, 220, 0.35), 5px 5px 0 rgba(60, 31, 40, 0.55);
+  text-transform: uppercase;
+}
+
+.theme-wired .btn-start::before {
+  content: '▶';
+  margin-right: 0.65rem;
+}
+
+.theme-wired .timer-emergency-start,
+.theme-wired .btn-secondary,
+.theme-wired .btn-primary,
+.theme-wired .focus-tool-actions > button,
+.theme-wired .focus-sound-mixer button {
+  border: 1px solid rgba(180, 102, 123, 0.45);
+  border-radius: 0;
+  background: rgba(20, 14, 17, 0.72);
+  color: #c5aaa7;
+  box-shadow: none;
+}
+
+.theme-wired .task-item {
+  border: 1px solid rgba(180, 102, 123, 0.2);
+  border-radius: 0;
+  background: rgba(180, 102, 123, 0.05);
+}
+
+.theme-wired .task-item:hover,
+.theme-wired .task-item.active-task {
+  border-color: rgba(200, 116, 138, 0.58);
+  background: rgba(180, 102, 123, 0.12);
+}
+
+.theme-wired .task-selector-tick {
+  border-color: #9f5e70;
+  border-radius: 0;
+}
+
+.theme-wired .task-pomodoro-info {
+  border-radius: 0;
+  background: rgba(180, 102, 123, 0.08);
+}
+
+.theme-wired .no-tasks-message,
+.theme-wired .btn-task-delete,
+.theme-wired .btn-icon,
+.theme-wired .focus-tool-actions kbd {
+  color: #c5aaa7;
+}
+
+.theme-wired .focus-tools,
+.theme-wired .focus-stats-container {
+  max-width: 1320px;
+}
+
+.theme-wired .focus-tool-actions > button,
+.theme-wired .focus-tool-actions kbd,
+.theme-wired .focus-inline-form,
+.theme-wired .focus-interruption-form,
+.theme-wired .focus-note-list li {
+  border-radius: 0;
+  background: rgba(180, 102, 123, 0.055);
+}
+
+.theme-wired .focus-live-dot {
+  border-radius: 0;
+  background: #6b3e49;
+}
+
+.theme-wired .focus-live-dot.active {
+  background: #c8748a;
+  box-shadow: 0 0 8px rgba(200, 116, 138, 0.65);
+}
+
+.theme-wired .focus-sound-mixer {
+  color: #c5aaa7;
+}
+
+.theme-wired .focus-sound-list input {
+  accent-color: #c8748a;
+}
+
+.theme-wired .music-player {
+  border: 1px solid rgba(180, 102, 123, 0.5);
+  background: rgba(7, 6, 8, 0.9);
+  color: #c5aaa7;
+  box-shadow: 8px 10px 24px rgba(0, 0, 0, 0.55);
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.theme-wired .music-player-header {
+  border-bottom-color: rgba(180, 102, 123, 0.45);
+  background: rgba(180, 102, 123, 0.13);
+  color: #c8748a !important;
+  font-family: inherit;
+}
+
+.theme-wired .music-player-body,
+.theme-wired .track-info,
+.theme-wired .playlist-tracks {
+  background: rgba(8, 7, 9, 0.9);
+  color: #c5aaa7 !important;
+}
+
+.theme-wired .track-title,
+.theme-wired .track-artist {
+  color: #c5aaa7 !important;
+}
+
+.theme-wired .progress-fill {
+  background: #b4667b !important;
+}
+
+.theme-wired .study-with-me-btn {
+  border: 1px solid rgba(200, 116, 138, 0.72);
+  border-radius: 0;
+  background: rgba(10, 8, 10, 0.78);
+  color: #c8748a;
+  box-shadow: inset 0 0 18px rgba(180, 102, 123, 0.1);
+  text-transform: uppercase;
+}
+
+.theme-wired .study-with-me-btn:hover {
+  background: rgba(180, 102, 123, 0.13);
+  transform: none;
+}
+
+.theme-wired .parallax-footer {
+  border-top-color: rgba(180, 102, 123, 0.5);
+  background: rgba(6, 6, 7, 0.96);
+}
+
+.theme-wired .footer-author,
+.theme-wired .footer-legal-link:hover {
+  color: #c8748a;
+}
+
+.theme-wired.todo-page .todo-shell {
+  border-radius: 0;
+  background: rgba(7, 6, 8, 0.82);
+}
+
+.theme-wired .todo-sidebar,
+.theme-wired .todo-details {
+  background: rgba(10, 8, 11, 0.82);
+}
+
+.theme-wired .todo-brand-mark,
+.theme-wired .todo-check.checked,
+.theme-wired .todo-view-toggle button.active {
+  border-radius: 0;
+  background: #b4667b;
+  color: #120d10;
+}
+
+.theme-wired .todo-nav button,
+.theme-wired .todo-search,
+.theme-wired .todo-new-list,
+.theme-wired .todo-view-toggle,
+.theme-wired .todo-quick-add,
+.theme-wired .todo-task-card,
+.theme-wired .todo-board-column,
+.theme-wired .todo-detail-action,
+.theme-wired .todo-pomodoro-count {
+  border-radius: 0;
+}
+
+.theme-wired .todo-nav button:hover,
+.theme-wired .todo-nav button.active,
+.theme-wired .todo-task-card:hover,
+.theme-wired .todo-task-card.selected,
+.theme-wired .todo-detail-action.active {
+  border-color: rgba(200, 116, 138, 0.58);
+  background: rgba(180, 102, 123, 0.1);
+}
+
+.theme-wired .todo-content-header {
+  background: linear-gradient(90deg, rgba(180, 102, 123, 0.1), transparent 68%);
+}
+
+.theme-wired .todo-empty > span {
+  border-radius: 0;
+  color: #c8748a;
+}
+
+.theme-wired .dropdown-menu {
+  border-radius: 0;
+  background: #0b090b;
+}
+
+@media (min-width: 992px) {
+  .theme-wired .main-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.85fr);
+  }
+
+  .theme-wired .tasks-container {
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .theme-wired,
+  .theme-wired.todo-page {
+    background-position: 62% center;
+  }
+
+  .theme-wired .header-container {
+    padding: 0.8rem;
+  }
+
+  .theme-wired .circular-progress,
+  .theme-wired .progress-ring {
+    width: 180px;
+    height: 180px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-wired *,
+  .theme-wired *::before,
+  .theme-wired *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 
 /* Whimsy Core */
 .theme-whimsy_core,

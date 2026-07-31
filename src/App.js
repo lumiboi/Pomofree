@@ -67,6 +67,7 @@ import {
   getAdaptiveSuggestion,
   getBreakTip
 } from './focusModel';
+import { isFocusTask } from './todoModel';
 
 const SESSION_STORAGE_KEY = 'pomofree_active_session_v2';
 const FOCUS_FLOW_STORAGE_KEY = 'pomofree_focus_flow_v1';
@@ -441,7 +442,9 @@ function AppContent() {
         const tasksSnapshot = await getDocs(collection(db, 'users', uid, 'tasks'));
         const taskList = tasksSnapshot.docs.map(item => ({ id: item.id, ...item.data() }));
         setTasks(taskList);
-        const restoredTask = taskList.find(task => task.id === restoredFlow.activeTaskId && !task.completed);
+        const restoredTask = taskList.find(task => (
+            task.id === restoredFlow.activeTaskId && !task.completed && isFocusTask(task)
+        ));
         setActiveTaskId(restoredTask?.id || null);
 
         const startOfWeek = getStartOfWeek();
@@ -610,6 +613,7 @@ function AppContent() {
             completed: false,
             estimatedPomodoros: Math.min(99, Math.max(1, Number(estimatedPomodoros) || 1)),
             pomodorosCompleted: 0,
+            focusActive: true,
             createdAt: new Date()
         };
         const newDocRef = await addDoc(collection(db, 'users', user.uid, 'tasks'), newTask);
@@ -933,7 +937,7 @@ function AppContent() {
                     onAcceptSuggestion={handleAdaptiveSuggestion}
                     onRejectSuggestion={handleRejectAdaptiveSuggestion}
                 />
-                {user && activeProjectId && (<Tasks tasks={tasks} projects={projects} activeProjectId={activeProjectId} setActiveProjectId={setActiveProjectId} handleAddProject={handleAddProject} handleCompleteProject={handleCompleteProject} handleDeleteProject={handleDeleteProject} taskInput={taskInput} setTaskInput={setTaskInput} handleAddTask={handleAddTask} handleDeleteTask={handleDeleteTask} activeTaskId={activeTaskId} setActiveTaskId={setActiveTaskId} userSettings={userSettings} />)}
+                {user && activeProjectId && (<Tasks tasks={tasks.filter(isFocusTask)} projects={projects} activeProjectId={activeProjectId} setActiveProjectId={setActiveProjectId} handleAddProject={handleAddProject} handleCompleteProject={handleCompleteProject} handleDeleteProject={handleDeleteProject} taskInput={taskInput} setTaskInput={setTaskInput} handleAddTask={handleAddTask} handleDeleteTask={handleDeleteTask} activeTaskId={activeTaskId} setActiveTaskId={setActiveTaskId} userSettings={userSettings} />)}
             </div>
             {user && (
                 <FocusTools
