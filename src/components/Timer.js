@@ -122,7 +122,8 @@ const Timer = ({
       </div>
       
       <div className={`timer-primary-actions ${mode === 'pomodoro' && !isActive && onEmergencyStart ? 'has-emergency' : ''}`}>
-        <button onClick={handleTimerToggle} className="btn btn-start">
+        <button onClick={handleTimerToggle} className="btn btn-start" aria-pressed={isActive}>
+          <span className="timer-toggle-icon" aria-hidden="true">{isActive ? '■' : '▶'}</span>
           {isActive ? t('timer.stop') : t('timer.start')}
         </button>
         {mode === 'pomodoro' && !isActive && onEmergencyStart && (

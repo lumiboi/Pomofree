@@ -695,6 +695,7 @@ input::placeholder { color: rgba(255,255,255,0.5); }
 .mode-btn.active { opacity: 1; background-color: rgba(0,0,0,0.2); }
 .btn-start { font-size: 1.2rem; padding: 0.8rem 2.5rem; background-color: var(--primary-accent); color: var(--bg-color-pomodoro); box-shadow: 0 6px 0px 0px rgba(0,0,0,0.2); }
 .btn-start:active { transform: translateY(2px); box-shadow: 0 4px 0px 0px rgba(0,0,0,0.2); }
+.timer-toggle-icon { display: none; }
 .timer-session-goal { width: 100%; margin-top: 1rem; display: grid; gap: 0.35rem; text-align: left; }
 .timer-session-goal > span { font-size: 0.75rem; font-weight: 600; opacity: 0.72; }
 .timer-session-goal input { width: 100%; padding: 0.7rem 0.8rem; border: 1px solid var(--card-border); border-radius: 9px; outline: 0; background: rgba(0,0,0,0.18); color: var(--text-color); font: inherit; }
@@ -856,15 +857,10 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   z-index: 1600;
   pointer-events: none;
   background:
-    linear-gradient(90deg, transparent, rgba(200, 116, 138, 0.2), transparent) -60vw 18% / 52vw 1px no-repeat,
-    linear-gradient(90deg, transparent, rgba(200, 116, 138, 0.16), transparent) -80vw 66% / 42vw 1px no-repeat,
     repeating-linear-gradient(0deg, transparent 0 3px, rgba(190, 109, 130, 0.055) 3px 4px),
-    linear-gradient(rgba(200, 116, 138, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200, 116, 138, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 0, 70, 0.018), transparent 35%, rgba(0, 174, 255, 0.018)),
     radial-gradient(ellipse at center, transparent 48%, rgba(0, 0, 0, 0.76) 100%);
-  background-size: 52vw 1px, 42vw 1px, auto, 28px 28px, 28px 28px, auto;
   box-shadow: inset 0 0 110px rgba(0, 0, 0, 0.78);
-  animation: wired-data-sweep 7s linear infinite;
 }
 
 .theme-wired::after {
@@ -878,12 +874,6 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   mix-blend-mode: screen;
   opacity: 0.055;
   animation: wired-noise 0.18s steps(2, end) infinite;
-}
-
-@keyframes wired-data-sweep {
-  to {
-    background-position: 120vw 18%, 105vw 66%, 0 0, 0 14px, 14px 0, 0 0;
-  }
 }
 
 @keyframes wired-noise {
@@ -916,16 +906,11 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   content: '';
   position: absolute;
   left: 0;
-  top: -0.35rem;
-  width: 2.2rem;
-  height: 2.2rem;
-  border: 1px solid rgba(180, 102, 123, 0.7);
-  background:
-    rgba(180, 102, 123, 0.08)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' shape-rendering='crispEdges'%3E%3Cpath fill='%23b4667b' d='M9 4h14v2h3v18h-3v4H9v-3H6V8h3z'/%3E%3Cpath fill='%23261820' d='M9 4h14v3h3v8h-3v-3h-3V9h-3v4h-3V9h-2v7H9v9H6V8h3zm4 14h4v2h-4zm7-1h3v2h-3zM12 24h10v2H12z'/%3E%3Cpath fill='%23e08090' d='M14 18h2v1h-2zm7-1h1v1h-1z'/%3E%3Cpath fill='none' stroke='%23b4667b' d='M26 10h3v7h-2v9h3'/%3E%3C/svg%3E")
-    center / 92% 92% no-repeat;
+  top: -0.55rem;
+  width: 2.6rem;
+  height: 2.6rem;
+  background: url('../public/lain-wired.gif') center / contain no-repeat;
   image-rendering: pixelated;
-  box-shadow: 0 0 12px rgba(200, 116, 138, 0.16);
 }
 
 .theme-wired .header-container h1::after {
@@ -1079,9 +1064,17 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   text-transform: uppercase;
 }
 
-.theme-wired .btn-start::before {
-  content: '▶';
+.theme-wired .timer-toggle-icon {
+  display: inline-block;
   margin-right: 0.65rem;
+}
+
+.theme-wired .timer-primary-actions.has-emergency {
+  gap: 1.25rem;
+}
+
+.theme-wired .timer-primary-actions.has-emergency .btn-start {
+  min-width: 0;
 }
 
 .theme-wired .timer-emergency-start,
@@ -1159,6 +1152,11 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
 }
 
 .theme-wired .focus-sound-mixer {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  left: auto;
+  top: auto;
   color: #c5aaa7;
 }
 
@@ -1303,6 +1301,11 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
     width: min(100%, 420px);
     max-width: 420px;
     margin: 1rem auto;
+  }
+
+  .theme-wired .focus-sound-mixer {
+    inset: auto 0.75rem 0.75rem;
+    width: auto;
   }
 
   .theme-wired .circular-progress,
