@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import {
@@ -10,6 +10,7 @@ import {
   getDoc,
   getDocs,
   limit,
+  onSnapshot,
   orderBy,
   query,
   serverTimestamp,
@@ -37,7 +38,7 @@ import './SocialPage.css';
 
 const moodIcons = {
   progress: '↗',
-  victory: '✦',
+  victory: '✓',
   question: '?',
   break: '☕'
 };
@@ -50,52 +51,27 @@ const reactionIcons = {
 
 const displayNameFor = user => cleanSocialText(user?.displayName, 50) || 'Pomofree Kullanıcısı';
 
-const readPosts = async () => {
-  const snapshot = await getDocs(query(
-    collection(db, 'socialPosts'),
-    orderBy('createdAt', 'desc'),
-    limit(SOCIAL_LIMITS.posts)
-  ));
-  return snapshot.docs.map(item => ({
-    id: item.id,
-    ...item.data(),
-    reactions: item.data().reactions || {}
-  }));
-};
-
 const loadCommunity = async currentUser => {
-  const weekStart = getWeekStart();
   const [userSnapshot, sessionsSnapshot] = await Promise.all([
     getDoc(doc(db, 'users', currentUser.uid)),
     getDocs(query(
       collection(db, 'users', currentUser.uid, 'focusSessions'),
-      where('completedAt', '>=', Timestamp.fromDate(weekStart)),
+      where('completedAt', '>=', Timestamp.fromDate(getWeekStart())),
       limit(200)
     ))
   ]);
-  const ownProfile = buildWeeklyProfile({
+  const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+  const profile = buildWeeklyProfile({
     sessions: sessionsSnapshot.docs.map(item => item.data()),
-    user: currentUser
+    user: { uid: currentUser.uid, displayName: currentUser.displayName || userData.username }
   });
+
   await setDoc(doc(db, 'socialProfiles', currentUser.uid), {
-    ...ownProfile,
+    ...profile,
     updatedAt: serverTimestamp()
   });
 
-  const [profilesSnapshot, posts] = await Promise.all([
-    getDocs(query(
-      collection(db, 'socialProfiles'),
-      where('weekKey', '==', getWeekKey()),
-      limit(SOCIAL_LIMITS.profiles)
-    )),
-    readPosts()
-  ]);
-
-  return {
-    theme: userSnapshot.exists() ? userSnapshot.data().theme || 'default' : 'default',
-    profiles: profilesSnapshot.docs.map(item => ({ id: item.id, ...item.data() })),
-    posts
-  };
+  return userData.theme || 'default';
 };
 
 const SocialPage = () => {
@@ -110,10 +86,14 @@ const SocialPage = () => {
   const [postText, setPostText] = useState('');
   const [commentText, setCommentText] = useState('');
   const [mood, setMood] = useState('progress');
+  const [activeBoard, setActiveBoard] = useState('weeklyMinutes');
   const [modalOpen, setModalOpen] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profilesReady, setProfilesReady] = useState(false);
+  const [postsReady, setPostsReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const loadErrorMessage = t('social.loadError');
 
   useEffect(() => {
     let active = true;
@@ -121,17 +101,17 @@ const SocialPage = () => {
       if (!currentUser) {
         if (active) {
           setUser(null);
+          setProfilesReady(true);
+          setPostsReady(true);
           setLoading(false);
         }
         return;
       }
+
       setUser(currentUser);
       try {
-        const community = await loadCommunity(currentUser);
-        if (!active) return;
-        setActiveTheme(community.theme);
-        setProfiles(community.profiles);
-        setPosts(community.posts);
+        const theme = await loadCommunity(currentUser);
+        if (active) setActiveTheme(theme);
       } catch (loadError) {
         console.error('Sosyal alan yüklenemedi:', loadError);
         if (active) setError(t('social.loadError'));
@@ -139,6 +119,7 @@ const SocialPage = () => {
         if (active) setLoading(false);
       }
     });
+
     return () => {
       active = false;
       unsubscribe();
@@ -146,6 +127,63 @@ const SocialPage = () => {
   // Authentication is subscribed once; language changes do not require another read.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
+
+  useEffect(() => {
+    if (!user) {
+      setProfiles([]);
+      setPosts([]);
+      return undefined;
+    }
+
+    const handleError = snapshotError => {
+      console.error('Sosyal akış senkronize edilemedi:', snapshotError);
+      setProfilesReady(true);
+      setPostsReady(true);
+      setError(loadErrorMessage);
+    };
+    const unsubscribeProfiles = onSnapshot(query(
+      collection(db, 'socialProfiles'),
+      where('weekKey', '==', getWeekKey()),
+      limit(SOCIAL_LIMITS.profiles)
+    ), snapshot => {
+      setProfiles(snapshot.docs
+        .map(item => ({ id: item.id, ...item.data() }))
+        .filter(profile => profile.weeklyMinutes > 0 || profile.completedSessions > 0));
+      setProfilesReady(true);
+    }, handleError);
+    const unsubscribePosts = onSnapshot(query(
+      collection(db, 'socialPosts'),
+      orderBy('createdAt', 'desc'),
+      limit(SOCIAL_LIMITS.posts)
+    ), snapshot => {
+      setPosts(snapshot.docs.map(item => ({
+        id: item.id,
+        ...item.data(),
+        reactions: item.data().reactions || {}
+      })));
+      setPostsReady(true);
+    }, handleError);
+
+    return () => {
+      unsubscribeProfiles();
+      unsubscribePosts();
+    };
+  }, [loadErrorMessage, user]);
+
+  useEffect(() => {
+    if (!user || !openPostId) return undefined;
+    return onSnapshot(query(
+      collection(db, 'socialPosts', openPostId, 'comments'),
+      orderBy('createdAt', 'asc'),
+      limit(SOCIAL_LIMITS.comments)
+    ), snapshot => setComments(current => ({
+      ...current,
+      [openPostId]: snapshot.docs.map(item => ({ id: item.id, ...item.data() }))
+    })), commentError => {
+      console.error('Yorumlar senkronize edilemedi:', commentError);
+      setError(loadErrorMessage);
+    });
+  }, [loadErrorMessage, openPostId, user]);
 
   useEffect(() => {
     const theme = themes[activeTheme] || themes.default;
@@ -165,9 +203,7 @@ const SocialPage = () => {
     setSaving(true);
     setError('');
     try {
-      const community = await loadCommunity(user);
-      setProfiles(community.profiles);
-      setPosts(community.posts);
+      await loadCommunity(user);
     } catch (refreshError) {
       console.error('Sosyal alan yenilenemedi:', refreshError);
       setError(t('social.loadError'));
@@ -196,7 +232,6 @@ const SocialPage = () => {
         reactions: {}
       });
       setPostText('');
-      setPosts(await readPosts());
     } catch (saveError) {
       console.error('Sosyal not kaydedilemedi:', saveError);
       setError(t('social.saveError'));
@@ -208,50 +243,19 @@ const SocialPage = () => {
   const reactToPost = async (post, type) => {
     if (!user || !SOCIAL_REACTIONS.includes(type)) return;
     const previous = post.reactions?.[user.uid];
-    const nextValue = previous === type ? deleteField() : type;
     try {
       await updateDoc(doc(db, 'socialPosts', post.id), {
-        [`reactions.${user.uid}`]: nextValue
+        [`reactions.${user.uid}`]: previous === type ? deleteField() : type
       });
-      setPosts(current => current.map(item => {
-        if (item.id !== post.id) return item;
-        const reactions = { ...(item.reactions || {}) };
-        if (previous === type) delete reactions[user.uid];
-        else reactions[user.uid] = type;
-        return { ...item, reactions };
-      }));
     } catch (reactionError) {
       console.error('Tepki kaydedilemedi:', reactionError);
       setError(t('social.saveError'));
     }
   };
 
-  const loadComments = async postId => {
-    const snapshot = await getDocs(query(
-      collection(db, 'socialPosts', postId, 'comments'),
-      orderBy('createdAt', 'asc'),
-      limit(SOCIAL_LIMITS.comments)
-    ));
-    setComments(current => ({
-      ...current,
-      [postId]: snapshot.docs.map(item => ({ id: item.id, ...item.data() }))
-    }));
-  };
-
-  const toggleComments = async postId => {
-    if (openPostId === postId) {
-      setOpenPostId(null);
-      setCommentText('');
-      return;
-    }
-    setOpenPostId(postId);
+  const toggleComments = postId => {
+    setOpenPostId(current => current === postId ? null : postId);
     setCommentText('');
-    try {
-      await loadComments(postId);
-    } catch (commentError) {
-      console.error('Yorumlar yüklenemedi:', commentError);
-      setError(t('social.loadError'));
-    }
   };
 
   const saveComment = async event => {
@@ -267,7 +271,6 @@ const SocialPage = () => {
         createdAt: serverTimestamp()
       });
       setCommentText('');
-      await loadComments(openPostId);
     } catch (commentError) {
       console.error('Yorum kaydedilemedi:', commentError);
       setError(t('social.saveError'));
@@ -280,7 +283,6 @@ const SocialPage = () => {
     if (!user || post.authorId !== user.uid || !window.confirm(t('social.deleteConfirm'))) return;
     try {
       await deleteDoc(doc(db, 'socialPosts', post.id));
-      setPosts(current => current.filter(item => item.id !== post.id));
       if (openPostId === post.id) setOpenPostId(null);
     } catch (deleteError) {
       console.error('Sosyal not silinemedi:', deleteError);
@@ -292,26 +294,23 @@ const SocialPage = () => {
     if (!user || comment.authorId !== user.uid) return;
     try {
       await deleteDoc(doc(db, 'socialPosts', postId, 'comments', comment.id));
-      setComments(current => ({
-        ...current,
-        [postId]: (current[postId] || []).filter(item => item.id !== comment.id)
-      }));
     } catch (deleteError) {
       console.error('Yorum silinemedi:', deleteError);
       setError(t('social.saveError'));
     }
   };
 
-  const leaderboards = useMemo(() => ([
-    { metric: 'weeklyMinutes', icon: '◷', title: t('social.focusChampions'), unit: t('social.minutes') },
-    { metric: 'completedSessions', icon: '✓', title: t('social.finishers'), unit: t('social.sessions') },
-    { metric: 'projectCount', icon: '◇', title: t('social.versatile'), unit: t('social.projects') }
+  const boards = useMemo(() => ([
+    { metric: 'weeklyMinutes', title: t('social.focusChampions'), unit: t('social.minutes') },
+    { metric: 'completedSessions', title: t('social.finishers'), unit: t('social.sessions') },
+    { metric: 'activeDays', title: t('social.activeDays'), unit: t('social.days') }
   ]), [t]);
+  const selectedBoard = boards.find(board => board.metric === activeBoard) || boards[0];
+  const ownProfile = profiles.find(profile => profile.userId === user?.uid);
   const totalMinutes = profiles.reduce((total, profile) => total + (profile.weeklyMinutes || 0), 0);
 
-  if (loading) {
-    return <div className="social-loading" role="status">{t('social.loading')}</div>;
-  }
+  if (loading) return <SocialLoading t={t} />;
+
   return (
     <div className={`app-container social-page theme-${activeTheme}`}>
       <Header
@@ -332,95 +331,58 @@ const SocialPage = () => {
       )}
 
       <main className="social-shell">
-        <section className="social-hero">
-          <SocialConstellation profileCount={profiles.length} themeKey={activeTheme} />
-          <div className="social-hero-copy">
-            <p>{t('social.heroEyebrow')}</p>
-            <h1>{t('social.heroTitle')}</h1>
-            <span>{t('social.heroText')}</span>
+        <header className="social-intro">
+          <div>
+            <h1>{t('social.title')}</h1>
+            <p>{t('social.heroText')}</p>
           </div>
-          <div className="social-pulse">
-            <div><strong>{profiles.length}</strong><span>{t('social.activePeople')}</span></div>
-            <div><strong>{totalMinutes}</strong><span>{t('social.weeklyMinutes')}</span></div>
-            <button type="button" onClick={refresh} disabled={saving || !user}>↻ {t('social.refresh')}</button>
+          <div className="social-live" aria-live="polite">
+            <span aria-hidden="true" />
+            {t('social.liveData')}
           </div>
+        </header>
+
+        <section className="social-community-strip" aria-label={t('social.weekLabel')}>
+          <p><strong>{profilesReady ? profiles.length : '…'}</strong> {t('social.activePeople')}</p>
+          <p><strong>{profilesReady ? totalMinutes.toLocaleString(language === 'tr' ? 'tr-TR' : 'en-US') : '…'}</strong> {t('social.weeklyMinutes')}</p>
+          <span>{t('social.syncHint')}</span>
         </section>
 
         {!user && (
           <section className="social-guest" role="status">
-            <div><strong>{t('social.guestTitle')}</strong><span>{t('social.guestText')}</span></div>
+            <div>
+              <h2>{t('social.guestTitle')}</h2>
+              <p>{t('social.guestText')}</p>
+            </div>
             <button type="button" onClick={() => navigate('/')}>{t('social.guestButton')}</button>
           </section>
         )}
 
-        <section className="social-leaders" aria-labelledby="social-leaders-title">
-          <header>
-            <div>
-              <p>{t('social.weekLabel')}</p>
-              <h2 id="social-leaders-title">{t('social.leadersTitle')}</h2>
-            </div>
-            <span>{t('social.leadersText')}</span>
-          </header>
-          <div className="social-leader-grid">
-            {leaderboards.map(board => (
-              <LeaderboardCard key={board.metric} {...board} profiles={profiles} t={t} />
-            ))}
-          </div>
-        </section>
-
-        <section className="social-community-grid">
-          <aside className="social-community-note">
-            <span className="social-orbit" aria-hidden="true">◎</span>
-            <p>{t('social.communityEyebrow')}</p>
-            <h2>{t('social.communityTitle')}</h2>
-            <span>{t('social.communityText')}</span>
-            <small>{t('social.syncHint')}</small>
-          </aside>
-
-          <div className="social-feed">
-            <header className="social-feed-heading">
+        <div className="social-layout">
+          <section className="social-feed" aria-labelledby="social-feed-title">
+            <header className="social-section-heading">
               <div>
-                <p>{t('social.feedEyebrow')}</p>
-                <h2>{t('social.feedTitle')}</h2>
+                <h2 id="social-feed-title">{t('social.feedTitle')}</h2>
+                <p>{t('social.feedText')}</p>
               </div>
-              <span>{t('social.feedText')}</span>
+              <span>{postsReady ? posts.length : '…'}</span>
             </header>
 
-            <form className="social-composer" onSubmit={sharePost}>
-              <div className="social-avatar" aria-hidden="true">{displayNameFor(user).slice(0, 1).toUpperCase()}</div>
-              <div>
-                <textarea
-                  value={postText}
-                  onChange={event => setPostText(event.target.value)}
-                  placeholder={t(user ? 'social.sharePlaceholder' : 'social.guestSharePlaceholder')}
-                  maxLength={SOCIAL_LIMITS.postLength}
-                  aria-label={t(user ? 'social.sharePlaceholder' : 'social.guestSharePlaceholder')}
-                  disabled={!user}
-                />
-                <div className="social-composer-footer">
-                  <div className="social-moods" aria-label={t('social.mood')}>
-                    {SOCIAL_MOODS.map(item => (
-                      <button
-                        type="button"
-                        key={item}
-                        className={mood === item ? 'active' : ''}
-                        onClick={() => setMood(item)}
-                        title={t(`social.mood.${item}`)}
-                        aria-label={t(`social.mood.${item}`)}
-                      >
-                        {moodIcons[item]}
-                      </button>
-                    ))}
-                  </div>
-                  <span>{postText.length}/{SOCIAL_LIMITS.postLength}</span>
-                  <button type="submit" disabled={!user || !postText.trim() || saving}>{t('social.share')}</button>
-                </div>
-              </div>
-            </form>
+            <Composer
+              user={user}
+              postText={postText}
+              mood={mood}
+              saving={saving}
+              t={t}
+              onPostText={setPostText}
+              onMood={setMood}
+              onSubmit={sharePost}
+            />
 
-            <div className="social-post-list">
-              {posts.length === 0 && <p className="social-empty">{t('social.emptyFeed')}</p>}
-              {posts.map(post => (
+            <div className="social-post-list" aria-busy={!postsReady}>
+              {!postsReady && <FeedSkeleton />}
+              {postsReady && posts.length === 0 && <p className="social-empty">{t('social.emptyFeed')}</p>}
+              {postsReady && posts.map(post => (
                 <PostCard
                   key={post.id}
                   post={post}
@@ -440,8 +402,47 @@ const SocialPage = () => {
                 />
               ))}
             </div>
-          </div>
-        </section>
+          </section>
+
+          <aside className="social-sidebar">
+            <section className="social-personal" data-testid="personal-week">
+              <header>
+                <h2>{t('social.myWeek')}</h2>
+                <button type="button" onClick={refresh} disabled={saving || !user}>
+                  {saving ? t('social.refreshing') : t('social.refresh')}
+                </button>
+              </header>
+              {!profilesReady ? <StatsSkeleton /> : ownProfile ? (
+                <dl>
+                  <div><dt>{t('social.focusTime')}</dt><dd><strong>{ownProfile.weeklyMinutes || 0}</strong> {t('social.minutes')}</dd></div>
+                  <div><dt>{t('social.completedSessions')}</dt><dd><strong>{ownProfile.completedSessions || 0}</strong></dd></div>
+                  <div><dt>{t('social.activeDays')}</dt><dd><strong>{ownProfile.activeDays || 0}</strong> {t('social.days')}</dd></div>
+                </dl>
+              ) : <p className="social-empty">{t('social.noPersonalStats')}</p>}
+            </section>
+
+            <section className="social-ranking" aria-labelledby="social-leaders-title">
+              <header>
+                <h2 id="social-leaders-title">{t('social.leadersTitle')}</h2>
+                <p>{t('social.leadersText')}</p>
+              </header>
+              <div className="social-board-tabs" role="tablist" aria-label={t('social.leadersTitle')}>
+                {boards.map(board => (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={activeBoard === board.metric}
+                    key={board.metric}
+                    onClick={() => setActiveBoard(board.metric)}
+                  >
+                    {board.title}
+                  </button>
+                ))}
+              </div>
+              <LeaderboardList board={selectedBoard} profiles={profiles} ready={profilesReady} t={t} />
+            </section>
+          </aside>
+        </div>
       </main>
 
       {modalOpen === 'themes' && (
@@ -451,26 +452,64 @@ const SocialPage = () => {
   );
 };
 
-const LeaderboardCard = ({ metric, icon, title, unit, profiles, t }) => {
-  const ranked = rankProfiles(profiles, metric, 5);
-  return (
-    <article className={`social-leader-card metric-${metric}`}>
-      <header><span aria-hidden="true">{icon}</span><h3>{title}</h3></header>
-      {ranked.length === 0 ? (
-        <p className="social-empty">{t('social.emptyLeaders')}</p>
-      ) : (
-        <ol>
-          {ranked.map((profile, index) => (
-            <li key={profile.userId}>
-              <span className="social-rank">{index === 0 ? '♛' : index + 1}</span>
-              <span className="social-mini-avatar">{profile.displayName.slice(0, 1).toUpperCase()}</span>
-              <strong>{profile.displayName}</strong>
-              <span>{profile[metric] || 0} {unit}</span>
-            </li>
+const SocialLoading = ({ t }) => (
+  <main className="social-loading" role="status" aria-busy="true">
+    <span />
+    <p>{t('social.loading')}</p>
+  </main>
+);
+
+const Composer = ({ user, postText, mood, saving, t, onPostText, onMood, onSubmit }) => (
+  <form className="social-composer" onSubmit={onSubmit}>
+    <span className="social-avatar" aria-hidden="true">{displayNameFor(user).slice(0, 1).toUpperCase()}</span>
+    <div>
+      <textarea
+        rows="3"
+        value={postText}
+        onChange={event => onPostText(event.target.value)}
+        placeholder={t(user ? 'social.sharePlaceholder' : 'social.guestSharePlaceholder')}
+        maxLength={SOCIAL_LIMITS.postLength}
+        aria-label={t(user ? 'social.sharePlaceholder' : 'social.guestSharePlaceholder')}
+        disabled={!user}
+      />
+      <div className="social-composer-footer">
+        <div className="social-moods" aria-label={t('social.mood')}>
+          {SOCIAL_MOODS.map(item => (
+            <button
+              type="button"
+              key={item}
+              className={mood === item ? 'active' : ''}
+              onClick={() => onMood(item)}
+              aria-pressed={mood === item}
+            >
+              <span aria-hidden="true">{moodIcons[item]}</span>
+              {t(`social.mood.${item}`)}
+            </button>
           ))}
-        </ol>
-      )}
-    </article>
+        </div>
+        <span>{postText.length}/{SOCIAL_LIMITS.postLength}</span>
+        <button type="submit" disabled={!user || !postText.trim() || saving}>{t('social.share')}</button>
+      </div>
+    </div>
+  </form>
+);
+
+const LeaderboardList = ({ board, profiles, ready, t }) => {
+  if (!ready) return <StatsSkeleton />;
+  const ranked = rankProfiles(profiles, board.metric, 5);
+  if (ranked.length === 0) return <p className="social-empty">{t('social.emptyLeaders')}</p>;
+
+  return (
+    <ol className="social-leader-list">
+      {ranked.map((profile, index) => (
+        <li key={profile.userId}>
+          <span className="social-rank">{index + 1}</span>
+          <span className="social-mini-avatar" aria-hidden="true">{profile.displayName.slice(0, 1).toUpperCase()}</span>
+          <strong>{profile.displayName}</strong>
+          <span>{profile[board.metric] || 0} {board.unit}</span>
+        </li>
+      ))}
+    </ol>
   );
 };
 
@@ -499,13 +538,16 @@ const PostCard = ({
     : t('social.now');
 
   return (
-    <article className={`social-post mood-${post.mood}`}>
+    <article className="social-post">
       <header>
         <span className="social-avatar" aria-hidden="true">{post.authorName.slice(0, 1).toUpperCase()}</span>
-        <div><strong>{post.authorName}</strong><span>{formattedDate}</span></div>
-        <span className="social-post-mood" title={t(`social.mood.${post.mood}`)}>{moodIcons[post.mood]}</span>
-        {post.authorId === user.uid && (
-          <button type="button" className="social-delete" onClick={onDeletePost} aria-label={t('social.delete')}>×</button>
+        <div>
+          <strong>{post.authorName}</strong>
+          <time dateTime={createdAt?.toISOString?.()}>{formattedDate}</time>
+        </div>
+        <span className="social-post-mood"><span aria-hidden="true">{moodIcons[post.mood]}</span>{t(`social.mood.${post.mood}`)}</span>
+        {post.authorId === user?.uid && (
+          <button type="button" className="social-delete" onClick={onDeletePost}>{t('social.delete')}</button>
         )}
       </header>
       <p>{post.body}</p>
@@ -517,18 +559,19 @@ const PostCard = ({
               <button
                 type="button"
                 key={type}
-                className={post.reactions?.[user.uid] === type ? 'active' : ''}
+                className={post.reactions?.[user?.uid] === type ? 'active' : ''}
                 onClick={() => onReact(type)}
-                aria-label={t(`social.reaction.${type}`)}
-                title={t(`social.reaction.${type}`)}
+                disabled={!user}
+                aria-pressed={post.reactions?.[user?.uid] === type}
               >
-                {reactionIcons[type]} {count > 0 && <span>{count}</span>}
+                <span aria-hidden="true">{reactionIcons[type]}</span>
+                {t(`social.reaction.${type}`)}{count > 0 && <strong>{count}</strong>}
               </button>
             );
           })}
         </div>
-        <button type="button" className="social-comments-toggle" onClick={onToggleComments}>
-          ◌ {isOpen ? t('social.hideComments') : t('social.comments')}
+        <button type="button" className="social-comments-toggle" onClick={onToggleComments} disabled={!user}>
+          {isOpen ? t('social.hideComments') : t('social.comments')}
         </button>
       </footer>
 
@@ -537,10 +580,10 @@ const PostCard = ({
           {comments.length === 0 && <p className="social-empty">{t('social.noComments')}</p>}
           {comments.map(comment => (
             <div className="social-comment" key={comment.id}>
-              <span className="social-mini-avatar">{comment.authorName.slice(0, 1).toUpperCase()}</span>
+              <span className="social-mini-avatar" aria-hidden="true">{comment.authorName.slice(0, 1).toUpperCase()}</span>
               <p><strong>{comment.authorName}</strong>{comment.body}</p>
-              {comment.authorId === user.uid && (
-                <button type="button" onClick={() => onDeleteComment(comment)} aria-label={t('social.delete')}>×</button>
+              {comment.authorId === user?.uid && (
+                <button type="button" onClick={() => onDeleteComment(comment)}>{t('social.delete')}</button>
               )}
             </div>
           ))}
@@ -560,77 +603,7 @@ const PostCard = ({
   );
 };
 
-const SocialConstellation = ({ profileCount, themeKey }) => {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext('2d');
-    if (!canvas || !context) return undefined;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const nodeCount = Math.min(38, 18 + profileCount * 2);
-    const nodes = Array.from({ length: nodeCount }, (_, index) => ({
-      x: ((index * 47) % 101) / 100,
-      y: ((index * 71 + 13) % 97) / 96,
-      size: 1.5 + (index % 4),
-      speed: 0.00018 + (index % 5) * 0.000025,
-      phase: index * 0.83
-    }));
-    let frame;
-
-    const draw = time => {
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      const accent = getComputedStyle(canvas).getPropertyValue('--primary-accent').trim() || '#7bd8ff';
-      context.clearRect(0, 0, width, height);
-      const points = nodes.map(node => ({
-        x: node.x * width + Math.sin(time * node.speed + node.phase) * 16,
-        y: node.y * height + Math.cos(time * node.speed * 0.8 + node.phase) * 12,
-        size: node.size
-      }));
-
-      context.strokeStyle = accent;
-      context.lineWidth = 0.8;
-      points.forEach((point, index) => {
-        points.slice(index + 1).forEach(other => {
-          const distance = Math.hypot(point.x - other.x, point.y - other.y);
-          if (distance > 125) return;
-          context.globalAlpha = (1 - distance / 125) * 0.22;
-          context.beginPath();
-          context.moveTo(point.x, point.y);
-          context.lineTo(other.x, other.y);
-          context.stroke();
-        });
-      });
-
-      context.fillStyle = accent;
-      points.forEach((point, index) => {
-        context.globalAlpha = 0.35 + (index % 5) * 0.12;
-        context.beginPath();
-        context.arc(point.x, point.y, point.size, 0, Math.PI * 2);
-        context.fill();
-      });
-      context.globalAlpha = 1;
-      if (!reducedMotion) frame = requestAnimationFrame(draw);
-    };
-
-    const resize = () => {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(1, Math.floor(canvas.clientWidth * ratio));
-      canvas.height = Math.max(1, Math.floor(canvas.clientHeight * ratio));
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      if (reducedMotion) draw(0);
-    };
-    resize();
-    window.addEventListener('resize', resize);
-    if (!reducedMotion) frame = requestAnimationFrame(draw);
-    return () => {
-      window.removeEventListener('resize', resize);
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, [profileCount, themeKey]);
-
-  return <canvas ref={canvasRef} className="social-constellation" aria-hidden="true" />;
-};
+const FeedSkeleton = () => <div className="social-feed-skeleton" aria-hidden="true"><span /><span /><span /></div>;
+const StatsSkeleton = () => <div className="social-stats-skeleton" aria-hidden="true"><span /><span /><span /></div>;
 
 export default SocialPage;

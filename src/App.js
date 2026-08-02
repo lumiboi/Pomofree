@@ -25,7 +25,8 @@ import {
   updateDoc, 
   increment,
   deleteDoc,
-  deleteField
+  deleteField,
+  serverTimestamp
 } from 'firebase/firestore';
 import { themes } from './themes';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -70,6 +71,7 @@ import {
   getBreakTip
 } from './focusModel';
 import { isFocusTask } from './todoModel';
+import { buildWeeklyProfile } from './socialModel';
 
 const SESSION_STORAGE_KEY = 'pomofree_active_session_v2';
 const FOCUS_FLOW_STORAGE_KEY = 'pomofree_focus_flow_v1';
@@ -81,6 +83,11 @@ const emptyFocusSession = () => ({
     distractions: [],
     interruptions: []
 });
+
+const syncSocialProfile = (currentUser, sessions) => setDoc(
+    doc(db, 'socialProfiles', currentUser.uid),
+    { ...buildWeeklyProfile({ sessions, user: currentUser }), updatedAt: serverTimestamp() }
+);
 
 const readFocusFlow = () => {
     try {
@@ -133,6 +140,7 @@ function AppContent() {
     const finishedHandledRef = useRef(false);
     const breakReturnNotifiedRef = useRef(false);
     const participantCountRef = useRef(0);
+    const weeklySessionsRef = useRef([]);
     
     // Timer hook'unu kullan
     const {
@@ -200,8 +208,8 @@ function AppContent() {
     
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            if (currentUser) { setUser(currentUser); fetchUserData(currentUser.uid); } 
-            else { setUser(null); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
+            if (currentUser) { setUser(currentUser); fetchUserData(currentUser); }
+            else { setUser(null); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); weeklySessionsRef.current = []; setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
         });
         return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -375,6 +383,9 @@ function AppContent() {
             session
         );
         const savedSession = { id: sessionRef.id, ...session };
+        weeklySessionsRef.current = [...weeklySessionsRef.current, savedSession];
+        syncSocialProfile(user, weeklySessionsRef.current)
+            .catch(error => console.error('Haftalık sosyal özet güncellenemedi:', error));
         setRecentSessions(current => [...current, savedSession].slice(-30));
         setPendingReview(savedSession);
         setWeeklyFocusTime(prevTime => prevTime + session.duration);
@@ -398,7 +409,8 @@ function AppContent() {
             )));
         }
     };
-    const fetchUserData = async (uid) => {
+    const fetchUserData = async (currentUser) => {
+        const uid = currentUser.uid;
         const userDocRef = doc(db, 'users', uid);
         const docSnap = await getDoc(userDocRef);
         const data = docSnap.exists() ? docSnap.data() : {};
@@ -465,6 +477,11 @@ function AppContent() {
             const completedAt = session.completedAt?.toDate?.() || new Date(session.completedAt);
             return completedAt >= startOfWeek;
         });
+        weeklySessionsRef.current = weeklySessions;
+        syncSocialProfile({
+            uid: currentUser.uid,
+            displayName: currentUser.displayName || data.username
+        }, weeklySessions).catch(error => console.error('Haftalık sosyal özet güncellenemedi:', error));
         const focusTimes = sumFocusSessions(weeklySessions, startOfToday);
         setRecentSessions(sessions.slice(-30));
         setWeeklyFocusTime(focusTimes.totalSeconds);
