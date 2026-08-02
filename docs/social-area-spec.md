@@ -2,12 +2,12 @@
 
 ## Amaç
 
-Giriş yapan kullanıcı üst menüdeki **Sosyal** düğmesiyle `/social` sayfasına gider. Sayfa, Pomofree odak seanslarından haftalık topluluk sıralamalarını üretir; kullanıcılar kısa not paylaşabilir, tepki verebilir ve yorum bırakabilir.
+Giriş yapan kullanıcı üst menüdeki **Sosyal** düğmesiyle `/social` sayfasına gider. Sayfa, Pomofree'de kayıtlı kullanıcıları ve toplam odak seanslarından oluşan topluluk sıralamalarını gösterir; kullanıcılar kısa not paylaşabilir, tepki verebilir ve yorum bırakabilir.
 
 ## Kapsam
 
-- Haftanın odak şampiyonları, seri tamamlayanları ve çok yönlüleri
-- Kullanıcının yalnızca görünen adıyla yayınlanan haftalık profil özeti
+- Toplam odak süresi, tamamlanan seans ve aktif gün sıralamaları
+- Kullanıcının yalnızca görünen adıyla yayınlanan toplam profil özeti
 - 30 gönderilik akış; en fazla 400 karakterlik not, dört ruh hâli ve üç tepki
 - Gönderi başına istek üzerine yüklenen en fazla 40 yorum; yorum sınırı 240 karakter
 - Gönderi/yorum silme yalnızca sahibine açık
@@ -16,10 +16,10 @@ Giriş yapan kullanıcı üst menüdeki **Sosyal** düğmesiyle `/social` sayfas
 
 ## Veri ve Güvenlik
 
-- `socialProfiles/{uid}`: haftalık dakika, seans, aktif gün ve proje sayısı; kullanıcı sadece kendi profilini yazar
+- `socialProfiles/{uid}`: toplam dakika, seans, aktif gün ve proje sayısı; kullanıcı sadece kendi profilini yazar
 - `socialPosts/{postId}` ve `socialPosts/{postId}/comments/{commentId}`: kimlik doğrulamalı okuma/yazma, alan ve uzunluk doğrulaması
 - E-posta ve özel proje/görev içeriği sosyal alana yazılmaz
-- Sorgular profil için 100, gönderi için 30, açık yorumlar için 40 kayıtla sınırlıdır
+- Sorgular profil için 300, gönderi için 30, açık yorumlar için 40 kayıtla sınırlıdır
 - Sıralama istemcide doğrulanmış Pomofree seanslarından türetilen, ödülsüz bir topluluk göstergesidir; hileye dayanıklı yarışma gerekirse güvenilir sunucu toplulaştırması eklenir
 
 ## Doğrulama

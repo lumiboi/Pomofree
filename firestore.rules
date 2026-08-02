@@ -18,8 +18,7 @@ service cloud.firestore {
       return request.resource.data.keys().hasOnly([
           'userId',
           'displayName',
-          'weekKey',
-          'weeklyMinutes',
+          'totalMinutes',
           'completedSessions',
           'activeDays',
           'projectCount',
@@ -27,20 +26,18 @@ service cloud.firestore {
         ])
         && request.resource.data.userId == userId
         && validText(request.resource.data.displayName, 50)
-        && request.resource.data.weekKey is string
-        && request.resource.data.weekKey.size() == 10
-        && request.resource.data.weeklyMinutes is int
-        && request.resource.data.weeklyMinutes >= 0
-        && request.resource.data.weeklyMinutes <= 10080
+        && request.resource.data.totalMinutes is int
+        && request.resource.data.totalMinutes >= 0
+        && request.resource.data.totalMinutes <= 5256000
         && request.resource.data.completedSessions is int
         && request.resource.data.completedSessions >= 0
-        && request.resource.data.completedSessions <= 1000
+        && request.resource.data.completedSessions <= 100000
         && request.resource.data.activeDays is int
         && request.resource.data.activeDays >= 0
-        && request.resource.data.activeDays <= 7
+        && request.resource.data.activeDays <= 36500
         && request.resource.data.projectCount is int
         && request.resource.data.projectCount >= 0
-        && request.resource.data.projectCount <= 1000
+        && request.resource.data.projectCount <= 10000
         && request.resource.data.updatedAt is timestamp;
     }
 

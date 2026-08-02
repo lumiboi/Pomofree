@@ -82,7 +82,7 @@ test('kişisel hafta özeti Firestore profil snapshotından gelir', async () => 
       data: () => ({
         userId: 'user-a',
         displayName: 'Hesap A',
-        weeklyMinutes: 95,
+        totalMinutes: 95,
         completedSessions: 4,
         activeDays: 3,
         projectCount: 2

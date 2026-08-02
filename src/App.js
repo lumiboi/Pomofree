@@ -71,7 +71,7 @@ import {
   getBreakTip
 } from './focusModel';
 import { isFocusTask } from './todoModel';
-import { buildWeeklyProfile } from './socialModel';
+import { buildSocialProfile } from './socialModel';
 
 const SESSION_STORAGE_KEY = 'pomofree_active_session_v2';
 const FOCUS_FLOW_STORAGE_KEY = 'pomofree_focus_flow_v1';
@@ -86,7 +86,7 @@ const emptyFocusSession = () => ({
 
 const syncSocialProfile = (currentUser, sessions) => setDoc(
     doc(db, 'socialProfiles', currentUser.uid),
-    { ...buildWeeklyProfile({ sessions, user: currentUser }), updatedAt: serverTimestamp() }
+    { ...buildSocialProfile({ sessions, user: currentUser }), updatedAt: serverTimestamp() }
 );
 
 const readFocusFlow = () => {
@@ -140,7 +140,7 @@ function AppContent() {
     const finishedHandledRef = useRef(false);
     const breakReturnNotifiedRef = useRef(false);
     const participantCountRef = useRef(0);
-    const weeklySessionsRef = useRef([]);
+    const socialSessionsRef = useRef([]);
     
     // Timer hook'unu kullan
     const {
@@ -209,7 +209,7 @@ function AppContent() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) { setUser(currentUser); fetchUserData(currentUser); }
-            else { setUser(null); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); weeklySessionsRef.current = []; setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
+            else { setUser(null); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); socialSessionsRef.current = []; setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
         });
         return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -383,9 +383,9 @@ function AppContent() {
             session
         );
         const savedSession = { id: sessionRef.id, ...session };
-        weeklySessionsRef.current = [...weeklySessionsRef.current, savedSession];
-        syncSocialProfile(user, weeklySessionsRef.current)
-            .catch(error => console.error('Haftalık sosyal özet güncellenemedi:', error));
+        socialSessionsRef.current = [...socialSessionsRef.current, savedSession];
+        syncSocialProfile(user, socialSessionsRef.current)
+            .catch(error => console.error('Sosyal özet güncellenemedi:', error));
         setRecentSessions(current => [...current, savedSession].slice(-30));
         setPendingReview(savedSession);
         setWeeklyFocusTime(prevTime => prevTime + session.duration);
@@ -477,11 +477,11 @@ function AppContent() {
             const completedAt = session.completedAt?.toDate?.() || new Date(session.completedAt);
             return completedAt >= startOfWeek;
         });
-        weeklySessionsRef.current = weeklySessions;
+        socialSessionsRef.current = sessions;
         syncSocialProfile({
             uid: currentUser.uid,
             displayName: currentUser.displayName || data.username
-        }, weeklySessions).catch(error => console.error('Haftalık sosyal özet güncellenemedi:', error));
+        }, sessions).catch(error => console.error('Sosyal özet güncellenemedi:', error));
         const focusTimes = sumFocusSessions(weeklySessions, startOfToday);
         setRecentSessions(sessions.slice(-30));
         setWeeklyFocusTime(focusTimes.totalSeconds);

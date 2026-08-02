@@ -15,18 +15,14 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  Timestamp,
-  updateDoc,
-  where
+  updateDoc
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { themes } from '../themes';
 import { useTranslation } from '../hooks/useTranslation';
 import {
-  buildWeeklyProfile,
+  buildSocialProfile,
   cleanSocialText,
-  getWeekKey,
-  getWeekStart,
   rankProfiles,
   SOCIAL_LIMITS,
   SOCIAL_MOODS,
@@ -56,12 +52,11 @@ const loadCommunity = async currentUser => {
     getDoc(doc(db, 'users', currentUser.uid)),
     getDocs(query(
       collection(db, 'users', currentUser.uid, 'focusSessions'),
-      where('completedAt', '>=', Timestamp.fromDate(getWeekStart())),
-      limit(200)
+      limit(5000)
     ))
   ]);
   const userData = userSnapshot.exists() ? userSnapshot.data() : {};
-  const profile = buildWeeklyProfile({
+  const profile = buildSocialProfile({
     sessions: sessionsSnapshot.docs.map(item => item.data()),
     user: { uid: currentUser.uid, displayName: currentUser.displayName || userData.username }
   });
@@ -86,7 +81,7 @@ const SocialPage = () => {
   const [postText, setPostText] = useState('');
   const [commentText, setCommentText] = useState('');
   const [mood, setMood] = useState('progress');
-  const [activeBoard, setActiveBoard] = useState('weeklyMinutes');
+  const [activeBoard, setActiveBoard] = useState('totalMinutes');
   const [modalOpen, setModalOpen] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profilesReady, setProfilesReady] = useState(false);
@@ -143,12 +138,10 @@ const SocialPage = () => {
     };
     const unsubscribeProfiles = onSnapshot(query(
       collection(db, 'socialProfiles'),
-      where('weekKey', '==', getWeekKey()),
       limit(SOCIAL_LIMITS.profiles)
     ), snapshot => {
       setProfiles(snapshot.docs
-        .map(item => ({ id: item.id, ...item.data() }))
-        .filter(profile => profile.weeklyMinutes > 0 || profile.completedSessions > 0));
+        .map(item => ({ id: item.id, ...item.data() })));
       setProfilesReady(true);
     }, handleError);
     const unsubscribePosts = onSnapshot(query(
@@ -301,13 +294,13 @@ const SocialPage = () => {
   };
 
   const boards = useMemo(() => ([
-    { metric: 'weeklyMinutes', title: t('social.focusChampions'), unit: t('social.minutes') },
+    { metric: 'totalMinutes', title: t('social.focusChampions'), unit: t('social.minutes') },
     { metric: 'completedSessions', title: t('social.finishers'), unit: t('social.sessions') },
     { metric: 'activeDays', title: t('social.activeDays'), unit: t('social.days') }
   ]), [t]);
   const selectedBoard = boards.find(board => board.metric === activeBoard) || boards[0];
   const ownProfile = profiles.find(profile => profile.userId === user?.uid);
-  const totalMinutes = profiles.reduce((total, profile) => total + (profile.weeklyMinutes || 0), 0);
+  const totalMinutes = profiles.reduce((total, profile) => total + (profile.totalMinutes || 0), 0);
 
   if (loading) return <SocialLoading t={t} />;
 
@@ -344,7 +337,7 @@ const SocialPage = () => {
 
         <section className="social-community-strip" aria-label={t('social.weekLabel')}>
           <p><strong>{profilesReady ? profiles.length : '…'}</strong> {t('social.activePeople')}</p>
-          <p><strong>{profilesReady ? totalMinutes.toLocaleString(language === 'tr' ? 'tr-TR' : 'en-US') : '…'}</strong> {t('social.weeklyMinutes')}</p>
+          <p><strong>{profilesReady ? totalMinutes.toLocaleString(language === 'tr' ? 'tr-TR' : 'en-US') : '…'}</strong> {t('social.totalMinutes')}</p>
           <span>{t('social.syncHint')}</span>
         </section>
 
@@ -414,7 +407,7 @@ const SocialPage = () => {
               </header>
               {!profilesReady ? <StatsSkeleton /> : ownProfile ? (
                 <dl>
-                  <div><dt>{t('social.focusTime')}</dt><dd><strong>{ownProfile.weeklyMinutes || 0}</strong> {t('social.minutes')}</dd></div>
+                  <div><dt>{t('social.focusTime')}</dt><dd><strong>{ownProfile.totalMinutes || 0}</strong> {t('social.minutes')}</dd></div>
                   <div><dt>{t('social.completedSessions')}</dt><dd><strong>{ownProfile.completedSessions || 0}</strong></dd></div>
                   <div><dt>{t('social.activeDays')}</dt><dd><strong>{ownProfile.activeDays || 0}</strong> {t('social.days')}</dd></div>
                 </dl>
