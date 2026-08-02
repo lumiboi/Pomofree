@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useStudyRoom } from '../contexts/StudyRoomContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { useBackgroundTimer } from '../hooks/useBackgroundTimer';
-import { useBackgroundAudio } from '../hooks/useBackgroundAudio';
+import { SESSION_END_AUDIO, useBackgroundAudio } from '../hooks/useBackgroundAudio';
 import { useAchievements } from '../hooks/useAchievements';
 import { auth, db } from '../firebase';
 import { 
@@ -305,8 +305,11 @@ function RoomPage() {
                 sharedSessions: (stats.sharedSessions || 0) + 1
             };
             setStats(newStats);
-            const birdSoundUrl = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/10558/birds.mp3';
-            playNotificationSound(birdSoundUrl, 2200, t('notifications.sessionEnded'));
+            playNotificationSound(
+                SESSION_END_AUDIO.url,
+                SESSION_END_AUDIO.maxDurationMs,
+                t('notifications.sessionEnded')
+            );
             if (user) {
                 updateUserDataInDb({ stats: newStats });
                 logFocusSession();

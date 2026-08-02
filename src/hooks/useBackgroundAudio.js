@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 
+export const SESSION_END_AUDIO = {
+  url: `${process.env.PUBLIC_URL}/sounds/session-birds.mp3`,
+  maxDurationMs: 2200
+};
+
 export const useBackgroundAudio = () => {
   const audioRef = useRef(null);
   const stopTimerRef = useRef(null);

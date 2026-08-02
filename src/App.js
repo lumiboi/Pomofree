@@ -24,14 +24,15 @@ import {
   writeBatch, 
   updateDoc, 
   increment,
-  deleteDoc
+  deleteDoc,
+  deleteField
 } from 'firebase/firestore';
 import { themes } from './themes';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { StudyRoomProvider } from './contexts/StudyRoomContext';
 import { useTranslation } from './hooks/useTranslation';
 import { useBackgroundTimer } from './hooks/useBackgroundTimer';
-import { useBackgroundAudio } from './hooks/useBackgroundAudio';
+import { SESSION_END_AUDIO, useBackgroundAudio } from './hooks/useBackgroundAudio';
 import { useAchievements } from './hooks/useAchievements';
 import { useStudyRoom } from './contexts/StudyRoomContext';
 
@@ -58,6 +59,7 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import ParallaxFooter from './components/ParallaxFooter';
 import SupportModal from './components/SupportModal';
 import TodoPage from './components/TodoPage';
+import SocialPage from './components/SocialPage';
 import FocusTools, { CommandPalette, SessionReviewModal } from './components/FocusTools';
 import FocusSoundMixer from './components/FocusSoundMixer';
 import {
@@ -244,17 +246,16 @@ function AppContent() {
                 };
                 setStats(newStats);
                 // Ses çal
-                const birdSoundUrl = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/10558/birds.mp3';
                 if (userSettings.notifications && userSettings.notificationTypes.sessionEnd) {
                     const isLongBreakTime = newStats.completedPomodoros % 4 === 0 &&
                         userSettings.notificationTypes.longBreak;
                     playNotificationSound(
-                        birdSoundUrl,
-                        2200,
+                        SESSION_END_AUDIO.url,
+                        SESSION_END_AUDIO.maxDurationMs,
                         t(isLongBreakTime ? 'notifications.longBreakTime' : 'notifications.sessionEnded')
                     );
                 }
-                else playSound(birdSoundUrl, 2200);
+                else playSound(SESSION_END_AUDIO.url, SESSION_END_AUDIO.maxDurationMs);
                 
                 if (user) { 
                     updateUserDataInDb({ stats: newStats }); 
@@ -509,6 +510,34 @@ function AppContent() {
                     doc(db, 'users', user.uid, paths[index], item.id)
                 ))
             )));
+            const socialPostsSnapshot = await getDocs(collection(db, 'socialPosts'));
+            await Promise.all(socialPostsSnapshot.docs.map(async postSnapshot => {
+                const postRef = doc(db, 'socialPosts', postSnapshot.id);
+                if (postSnapshot.data().authorId === user.uid) {
+                    const commentsSnapshot = await getDocs(
+                        collection(db, 'socialPosts', postSnapshot.id, 'comments')
+                    );
+                    await Promise.all(commentsSnapshot.docs.map(comment => deleteDoc(comment.ref)));
+                    await deleteDoc(postRef);
+                    return;
+                }
+
+                const ownCommentRef = doc(
+                    db,
+                    'socialPosts',
+                    postSnapshot.id,
+                    'comments',
+                    user.uid
+                );
+                const ownComment = await getDoc(ownCommentRef);
+                await Promise.all([
+                    ownComment.exists() ? deleteDoc(ownCommentRef) : Promise.resolve(),
+                    postSnapshot.data().reactions?.[user.uid]
+                        ? updateDoc(postRef, { [`reactions.${user.uid}`]: deleteField() })
+                        : Promise.resolve()
+                ]);
+            }));
+            await deleteDoc(doc(db, 'socialProfiles', user.uid));
             await deleteDoc(doc(db, 'users', user.uid));
             await deleteUser(user);
             localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -1036,6 +1065,7 @@ function App() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/todo" element={<TodoPage />} />
+            <Route path="/social" element={<SocialPage />} />
           </Routes>
         </StudyRoomProvider>
       </LanguageProvider>

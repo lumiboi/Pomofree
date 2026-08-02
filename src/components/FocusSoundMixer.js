@@ -15,6 +15,7 @@ const SOUND_TYPES = [
 const STORAGE_KEY = 'pomofree_sound_profiles_v1';
 const SAMPLE_URLS = {
   rain: `${process.env.PUBLIC_URL}/sounds/gentle-rain.mp3`,
+  cafe: `${process.env.PUBLIC_URL}/sounds/chill-cafe.mp3`,
   keyboard: `${process.env.PUBLIC_URL}/sounds/chill-keyboard.mp3`
 };
 const EMPTY_LEVELS = {

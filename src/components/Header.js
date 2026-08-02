@@ -3,7 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import LanguageSelector from './LanguageSelector';
 
-const Header = ({ user, openModal, handleLogout, isRoomPage, onLeaveRoom, isTodoPage = false }) => {
+const Header = ({
+  user,
+  openModal,
+  handleLogout,
+  isRoomPage,
+  onLeaveRoom,
+  isTodoPage = false,
+  isSocialPage = false
+}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -28,6 +36,10 @@ const Header = ({ user, openModal, handleLogout, isRoomPage, onLeaveRoom, isTodo
   const handleTodoClick = () => {
     if (user) navigate('/todo');
     else alert(t('general.loginRequired'));
+  };
+
+  const handleSocialClick = () => {
+    navigate('/social');
   };
 
   useEffect(() => {
@@ -77,13 +89,17 @@ const Header = ({ user, openModal, handleLogout, isRoomPage, onLeaveRoom, isTodo
           // Normal page - show all menu items
           <>
             <LanguageSelector />
-            {isTodoPage ? (
+            {(isTodoPage || isSocialPage) && (
               <button onClick={() => navigate('/')} className="btn btn-secondary">{t('header.home')}</button>
-            ) : (
+            )}
+            {!isTodoPage && (
               <button onClick={handleTodoClick} className="btn btn-secondary">{t('header.todo')}</button>
             )}
+            {!isSocialPage && (
+              <button onClick={handleSocialClick} className="btn btn-secondary">{t('header.social')}</button>
+            )}
             <button onClick={() => openModal('themes')} className="btn btn-secondary">{t('header.themes')}</button>
-            {!isTodoPage && (
+            {!isTodoPage && !isSocialPage && (
               <>
                 <button onClick={handleDashboardClick} className="btn btn-secondary">{t('header.dashboard')}</button>
                 <button onClick={handleAdvancedReportsClick} className="btn btn-secondary">{t('header.advancedReports')}</button>

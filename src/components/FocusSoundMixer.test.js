@@ -66,3 +66,31 @@ test('klavye seviyesi chill ve döngülü klavye kaydını çalar', () => {
   expect(keyboard).toMatchObject({ loop: true, preload: 'auto', volume: 0.35 });
   expect(keyboard.play).toHaveBeenCalled();
 });
+
+test('kafe seviyesi gerçek ve döngülü kafe ortamı kaydını çalar', () => {
+  const cafe = {
+    loop: false,
+    preload: '',
+    volume: 0,
+    play: jest.fn().mockResolvedValue(),
+    pause: jest.fn()
+  };
+  window.Audio = jest.fn(() => cafe);
+
+  render(
+    <FocusSoundMixer
+      isOpen
+      onClose={() => {}}
+      projectId="test"
+      isFocusActive
+    />
+  );
+
+  fireEvent.change(screen.getByRole('slider', { name: /^focusSound\.cafe/ }), {
+    target: { value: '30' }
+  });
+
+  expect(window.Audio).toHaveBeenCalledWith('/sounds/chill-cafe.mp3');
+  expect(cafe).toMatchObject({ loop: true, preload: 'auto', volume: 0.3 });
+  expect(cafe.play).toHaveBeenCalled();
+});
