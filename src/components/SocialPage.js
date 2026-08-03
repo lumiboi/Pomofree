@@ -20,6 +20,7 @@ import {
 import { auth, db } from '../firebase';
 import { themes } from '../themes';
 import { useTranslation } from '../hooks/useTranslation';
+import { safeProfilePhoto } from '../profilePhoto';
 import {
   buildSocialProfile,
   cleanSocialText,
@@ -66,7 +67,12 @@ const loadCommunity = async currentUser => {
     updatedAt: serverTimestamp()
   });
 
-  return userData.theme || 'default';
+  return {
+    theme: userData.theme || 'default',
+    profilePhoto: safeProfilePhoto(
+      userData.profilePhoto !== undefined ? userData.profilePhoto : currentUser.photoURL
+    )
+  };
 };
 
 const SocialPage = () => {
@@ -88,6 +94,7 @@ const SocialPage = () => {
   const [postsReady, setPostsReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState('');
   const loadErrorMessage = t('social.loadError');
 
   useEffect(() => {
@@ -105,8 +112,11 @@ const SocialPage = () => {
 
       setUser(currentUser);
       try {
-        const theme = await loadCommunity(currentUser);
-        if (active) setActiveTheme(theme);
+        const profile = await loadCommunity(currentUser);
+        if (active) {
+          setActiveTheme(profile.theme);
+          setProfilePhoto(profile.profilePhoto);
+        }
       } catch (loadError) {
         console.error('Sosyal alan yüklenemedi:', loadError);
         if (active) setError(t('social.loadError'));
@@ -308,6 +318,7 @@ const SocialPage = () => {
     <div className={`app-container social-page theme-${activeTheme}`}>
       <Header
         user={user}
+        profilePhoto={profilePhoto}
         openModal={name => name === 'login' ? navigate('/') : setModalOpen(name)}
         handleLogout={async () => {
           await signOut(auth);

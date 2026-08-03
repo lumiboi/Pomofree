@@ -24,6 +24,7 @@ import Tasks from './Tasks';
 import Celebration from './Celebration';
 import AchievementNotification from './AchievementNotification';
 import { createFocusSession, DEFAULT_FOCUS_SETTINGS } from '../focusModel';
+import { safeProfilePhoto } from '../profilePhoto';
 import './RoomPage.css';
 
 function RoomPage() {
@@ -54,6 +55,7 @@ function RoomPage() {
     const [activeTheme, setActiveTheme] = useState('default');
     const [showCelebration, setShowCelebration] = useState(false);
     const [weeklyFocusTime, setWeeklyFocusTime] = useState(0);
+    const [profilePhoto, setProfilePhoto] = useState('');
     const finishedHandledRef = useRef(false);
     const roomTimerStorageKey = `pomofree_room_${roomId || 'pending'}_timer`;
 
@@ -88,7 +90,7 @@ function RoomPage() {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
-                fetchUserData(currentUser.uid);
+                fetchUserData(currentUser);
             } else {
                 // Redirect to home if not authenticated
                 navigate('/');
@@ -152,7 +154,9 @@ function RoomPage() {
         setWeeklyFocusTime(prevTime => prevTime + session.duration); 
     };
 
-    const fetchUserData = async (uid) => { 
+    const fetchUserData = async (currentUser) => {
+        const uid = currentUser.uid;
+        setProfilePhoto(safeProfilePhoto(currentUser.photoURL));
         const userDocRef = doc(db, 'users', uid); 
         const docSnap = await getDoc(userDocRef); 
         if (docSnap.exists()) { 
@@ -165,6 +169,9 @@ function RoomPage() {
             }
             setMode('pomodoro'); 
             setActiveTheme(data.theme || 'default'); 
+            setProfilePhoto(safeProfilePhoto(
+                data.profilePhoto !== undefined ? data.profilePhoto : currentUser.photoURL
+            ));
         } 
         
         const projectsColRef = collection(db, 'users', uid, 'projects'); 
@@ -403,6 +410,7 @@ function RoomPage() {
         <div className={`room-page theme-${activeTheme}`}>
             <Header 
                 user={user} 
+                profilePhoto={profilePhoto}
                 openModal={() => {}} 
                 handleLogout={handleLogout} 
                 isRoomPage={true}

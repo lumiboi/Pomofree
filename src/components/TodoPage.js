@@ -18,6 +18,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { createTodo, filterTodos, isFocusTask, sanitizeTodoPatch, toDateKey } from '../todoModel';
 import { sanitizeProjectPatch } from '../todoModel';
 import { getProjectForecast } from '../focusModel';
+import { safeProfilePhoto } from '../profilePhoto';
 import Header from './Header';
 import ThemeSelector from './ThemeSelector';
 import ProjectSettingsModal from './ProjectSettingsModal';
@@ -49,6 +50,7 @@ const TodoPage = () => {
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -86,7 +88,11 @@ const TodoPage = () => {
         setProjects(projectList);
         setTodos(tasksSnapshot.docs.map(item => ({ id: item.id, ...item.data() })));
         setActiveProjectId(projectList[0].id);
-        setActiveTheme(userSnapshot.exists() ? userSnapshot.data().theme || 'default' : 'default');
+        const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+        setActiveTheme(userData.theme || 'default');
+        setProfilePhoto(safeProfilePhoto(
+          userData.profilePhoto !== undefined ? userData.profilePhoto : currentUser.photoURL
+        ));
       } catch (loadError) {
         console.error('Todo yüklenirken hata:', loadError);
         if (active) setError(t('todo.loadError'));
@@ -308,6 +314,7 @@ const TodoPage = () => {
     <div className={`app-container todo-page theme-${activeTheme}`}>
       <Header
         user={user}
+        profilePhoto={profilePhoto}
         openModal={setModalOpen}
         handleLogout={async () => {
           await signOut(auth);

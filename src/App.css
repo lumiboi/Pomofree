@@ -769,6 +769,16 @@ input::placeholder { color: rgba(255,255,255,0.5); }
 .quick-timer-modal { max-width: 420px; }
 .timer-settings-grid { display: grid; gap: 0.75rem; }
 .timer-settings-grid label { display: grid; gap: 0.35rem; font-size: 0.8rem; font-weight: 600; }
+.profile-settings { display: grid; grid-template-columns: 88px 1fr; align-items: start; gap: 1rem; }
+.profile-settings-preview { width: 88px; height: 88px; display: grid; place-items: center; overflow: hidden; border: 1px solid var(--card-border); border-radius: 50%; background: rgba(0,0,0,0.15); font-size: 2rem; }
+.profile-settings-preview img { width: 100%; height: 100%; object-fit: cover; }
+.profile-settings-controls { min-width: 0; display: grid; gap: 0.45rem; }
+.profile-settings-controls > label { font-size: 0.75rem; font-weight: 600; }
+.profile-settings-controls input[type="url"] { width: 100%; padding: 0.65rem; border: 1px solid var(--card-border); border-radius: 8px; background: rgba(0,0,0,0.2); color: var(--text-color); font: inherit; }
+.profile-settings-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.profile-settings-actions .btn { margin: 0; }
+.settings-error { color: #ffb4b8; font-size: 0.72rem; }
+.visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
 .settings-modal h3 { margin: 1.2rem 0 0.65rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--card-border); font-size: 0.85rem; }
 .settings-modal select { width: 100%; padding: 0.65rem; border: 1px solid var(--card-border); border-radius: 8px; background: rgba(0,0,0,0.2); color: var(--text-color); }
 .settings-toggle { margin-bottom: 0.55rem; padding: 0.55rem 0.65rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--card-border); border-radius: 8px; }
@@ -786,7 +796,7 @@ input::placeholder { color: rgba(255,255,255,0.5); }
 body[data-color-vision="deuteranopia"] { --progress-active-color: #4aa8ff; --progress-inactive-color: #ffb000; }
 body[data-color-vision="protanopia"] { --progress-active-color: #00b7c7; --progress-inactive-color: #f0c808; }
 body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progress-inactive-color: #00a67e; }
-@media (max-width: 520px) { .shortcut-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .shortcut-grid, .profile-settings { grid-template-columns: 1fr; } }
 @media (max-width: 768px) {
   .timer-adaptive-tip { align-items: stretch; flex-direction: column; }
   .timer-adaptive-tip .timer-adaptive-actions { justify-content: space-between; }
@@ -817,9 +827,12 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
 .btn-icon:hover:not(:disabled) { background-color: var(--card-bg); }
 .btn-icon:disabled, .btn-complete-project:disabled { opacity: 0.4; cursor: not-allowed; }
 .user-menu { position: relative; display: inline-block; }
-.dropdown-menu { position: absolute; top: calc(100% + 10px); right: 0; background-color: #2c3e50; border-radius: 8px; box-shadow: var(--soft-shadow); border: 1px solid var(--card-border); width: 150px; padding: 0.5rem; z-index: 1001; overflow: hidden; animation: fadeIn 0.2s ease-out; }
-.dropdown-item { width: 100%; background: none; border: none; color: var(--text-color); padding: 0.75rem 1rem; text-align: left; border-radius: 6px; cursor: pointer; font-family: var(--font-family); font-size: 0.95rem; font-weight: 400; display: block; }
-.dropdown-item:hover { background-color: rgba(255, 255, 255, 0.1); }
+.user-menu-trigger { display: inline-flex; align-items: center; gap: 0.55rem; }
+.profile-avatar { width: 30px; height: 30px; flex: 0 0 30px; display: grid; place-items: center; overflow: hidden; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); border-radius: 50%; background: color-mix(in srgb, currentColor 12%, transparent); font-size: 0.72rem; }
+.profile-avatar img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.dropdown-menu { position: absolute; top: calc(100% + 10px); right: 0; width: 150px; padding: 0.5rem; z-index: 1001; overflow: hidden; border: 1px solid var(--card-border); border-radius: 8px; background: color-mix(in srgb, var(--card-bg) 88%, var(--bg-color-pomodoro)); color: var(--text-color); box-shadow: var(--soft-shadow); backdrop-filter: blur(16px); animation: fadeIn 0.2s ease-out; }
+.dropdown-item { width: 100%; display: block; padding: 0.75rem 1rem; border: none; border-radius: 6px; background: none; color: inherit; text-align: left; cursor: pointer; font-family: var(--font-family); font-size: 0.95rem; font-weight: 600; }
+.dropdown-item:hover { background: color-mix(in srgb, var(--text-color) 12%, transparent); }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* 9. DİĞER BİLEŞENLER (TEMA, VİTRİN, İSTATİSTİK, ANİMASYON) */

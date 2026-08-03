@@ -74,6 +74,7 @@ import {
 import { isFocusTask } from './todoModel';
 import { buildSocialProfile } from './socialModel';
 import { shouldShowSeoContent } from './authModel';
+import { normalizeProfilePhoto, resizeProfilePhoto, safeProfilePhoto } from './profilePhoto';
 
 const SESSION_STORAGE_KEY = 'pomofree_active_session_v2';
 const FOCUS_FLOW_STORAGE_KEY = 'pomofree_focus_flow_v1';
@@ -180,6 +181,9 @@ function AppContent() {
     const [weeklyFocusTime, setWeeklyFocusTime] = useState(0);
     const [todayFocusTime, setTodayFocusTime] = useState(0);
     const [showSupport, setShowSupport] = useState(false);
+    const [profilePhoto, setProfilePhoto] = useState('');
+    const [tempProfilePhoto, setTempProfilePhoto] = useState('');
+    const [profilePhotoError, setProfilePhotoError] = useState('');
 
     // Celebration handler'ı useCallback ile optimize et
     const handleCelebrationComplete = useCallback(() => {
@@ -212,7 +216,7 @@ function AppContent() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) { setUser(currentUser); fetchUserData(currentUser); }
-            else { setUser(null); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); socialSessionsRef.current = []; setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
+            else { setUser(null); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); setProfilePhoto(''); setTempProfilePhoto(''); socialSessionsRef.current = []; setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
             setAuthReady(true);
         });
         return () => unsubscribe();
@@ -437,6 +441,11 @@ function AppContent() {
         setUserSettings(settings);
         setTempSettings(settings);
         setStats(data.stats || { completedPomodoros: 0 });
+        const storedProfilePhoto = safeProfilePhoto(
+            data.profilePhoto !== undefined ? data.profilePhoto : currentUser.photoURL
+        );
+        setProfilePhoto(storedProfilePhoto);
+        setTempProfilePhoto(storedProfilePhoto);
         setAdaptiveDecision(data.adaptiveDecision || null);
         setActiveTheme(data.theme || 'default');
         if (!localStorage.getItem(SESSION_STORAGE_KEY)) {
@@ -711,7 +720,14 @@ function AppContent() {
         }
     };
     
-    const openModal = (modalName) => { if (modalName === 'settings') { setTempSettings(userSettings); } setModalOpen(modalName); };
+    const openModal = (modalName) => {
+        if (modalName === 'settings') {
+            setTempSettings(userSettings);
+            setTempProfilePhoto(profilePhoto);
+            setProfilePhotoError('');
+        }
+        setModalOpen(modalName);
+    };
     
     const handleCreateRoom = () => {
         if (!user) {
@@ -753,8 +769,24 @@ function AppContent() {
         return roomId;
     };
     const closeModal = () => { setModalOpen(null); };
+
+    const handleProfileFile = async file => {
+        try {
+            setTempProfilePhoto(await resizeProfilePhoto(file));
+            setProfilePhotoError('');
+        } catch {
+            setProfilePhotoError(t('settings.profilePhotoError'));
+        }
+    };
     
     const handleSaveSettings = async () => {
+        let normalizedProfilePhoto;
+        try {
+            normalizedProfilePhoto = normalizeProfilePhoto(tempProfilePhoto);
+        } catch {
+            setProfilePhotoError(t('settings.profilePhotoError'));
+            return;
+        }
         const settings = {
             ...DEFAULT_FOCUS_SETTINGS,
             ...tempSettings,
@@ -767,7 +799,8 @@ function AppContent() {
             await Notification.requestPermission();
         }
         setUserSettings(settings);
-        updateUserDataInDb({ settings });
+        setProfilePhoto(normalizedProfilePhoto);
+        updateUserDataInDb({ settings, profilePhoto: normalizedProfilePhoto });
         closeModal(); 
         resetTimer(settings.pomodoro * 60);
         setMode('pomodoro');
@@ -973,7 +1006,7 @@ function AppContent() {
 
     return (
         <div className={`app-container theme-${activeTheme}`}>
-            <Header user={user} openModal={openModal} handleLogout={handleLogout} />
+            <Header user={user} profilePhoto={profilePhoto} openModal={openModal} handleLogout={handleLogout} />
             <StudyWithMeButton onCreateRoom={handleCreateRoom} activeTheme={activeTheme} />
             {user && <ProjectShowcase completedProjects={projects.filter(p => p.completed)} handleClearShowcase={handleClearShowcase} />}
             <div className="main-content">
@@ -1048,7 +1081,7 @@ function AppContent() {
             {user && <WeeklyStats todaySeconds={todayFocusTime} totalSeconds={weeklyFocusTime} />}
             {modalOpen === 'themes' && <ThemeSelector closeModal={closeModal} handleThemeChange={handleThemeChange} />}
             {modalOpen === 'login' && <LoginModal closeModal={closeModal} isRegistering={isRegistering} setIsRegistering={setIsRegistering} email={email} setEmail={setEmail} password={password} setPassword={setPassword} username={username} setUsername={setUsername} handleRegister={handleRegister} handleLogin={handleLogin} handleGoogleSignIn={handleGoogleSignIn} handleTwitterSignIn={handleTwitterSignIn} />}
-            {modalOpen === 'settings' && <SettingsModal closeModal={closeModal} tempSettings={tempSettings} setTempSettings={setTempSettings} handleSaveSettings={handleSaveSettings} handleExportData={handleExportData} handleDeleteAccount={handleDeleteAccount} />}
+            {modalOpen === 'settings' && <SettingsModal closeModal={closeModal} tempSettings={tempSettings} setTempSettings={setTempSettings} handleSaveSettings={handleSaveSettings} handleExportData={handleExportData} handleDeleteAccount={handleDeleteAccount} profilePhoto={tempProfilePhoto} setProfilePhoto={value => { setTempProfilePhoto(value); setProfilePhotoError(''); }} handleProfileFile={handleProfileFile} profilePhotoError={profilePhotoError} />}
             {modalOpen === 'timer-settings' && <TimerSettingsModal settings={userSettings} onSave={handleSaveTimerSettings} onClose={closeModal} />}
             {modalOpen === 'report' && ( <div className="modal-overlay" onClick={closeModal}><div className="modal-content" onClick={(e) => e.stopPropagation()}> <h2>{t('report.title')}</h2> <p>{t('report.completedPomodoros')}</p> <h3 style={{fontSize: '3em', textAlign: 'center', margin: '1rem 0'}}>{stats.completedPomodoros}</h3> <button onClick={closeModal} className="btn btn-secondary">{t('report.close')}</button> </div></div> )}
             {modalOpen === 'advanced-reports' && <AdvancedReports user={user} closeModal={closeModal} />}

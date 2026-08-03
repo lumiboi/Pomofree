@@ -11,6 +11,7 @@ export const translations = {
     'header.settings': 'Ayarlar',
     'header.login': 'Giriş Yap',
     'header.logout': 'Çıkış Yap',
+    'header.profilePhoto': 'profil fotoğrafı',
     
     // Timer
     'timer.pomodoro': 'Pomodoro',
@@ -255,6 +256,13 @@ export const translations = {
     'settings.cancel': 'İptal',
     'settings.timerSection': 'Sayaç',
     'settings.quickTimerTitle': 'Zamanlayıcıyı ayarla',
+    'settings.profileSection': 'Profil',
+    'settings.profilePhotoUrl': 'Profil fotoğrafı adresi',
+    'settings.profilePhotoUrlPlaceholder': 'https://ornek.com/fotograf.webp',
+    'settings.uploadPhoto': 'Fotoğraf yükle',
+    'settings.removePhoto': 'Fotoğrafı kaldır',
+    'settings.profilePhotoHelp': 'JPG, PNG veya WebP seçebilirsin. Dosya 128×128 boyutuna küçültülüp Firestore için sıkıştırılır.',
+    'settings.profilePhotoError': 'HTTPS adresi veya 5 MB altı JPG, PNG ya da WebP kullan.',
     'settings.emergencyMinutes': 'Acil başlama süresi (3–10 dakika)',
     'settings.focusFlow': 'Odak akışı',
     'settings.goalRequired': 'Seans hedefini zorunlu tut',
@@ -732,6 +740,7 @@ export const translations = {
     'header.settings': 'Settings',
     'header.login': 'Login',
     'header.logout': 'Logout',
+    'header.profilePhoto': 'profile photo',
     
     // Timer
     'timer.pomodoro': 'Pomodoro',
@@ -976,6 +985,13 @@ export const translations = {
     'settings.cancel': 'Cancel',
     'settings.timerSection': 'Timer',
     'settings.quickTimerTitle': 'Adjust timer',
+    'settings.profileSection': 'Profile',
+    'settings.profilePhotoUrl': 'Profile photo URL',
+    'settings.profilePhotoUrlPlaceholder': 'https://example.com/photo.webp',
+    'settings.uploadPhoto': 'Upload photo',
+    'settings.removePhoto': 'Remove photo',
+    'settings.profilePhotoHelp': 'Choose a JPG, PNG, or WebP. It is resized to 128×128 and compressed for Firestore.',
+    'settings.profilePhotoError': 'Use an HTTPS URL or a JPG, PNG, or WebP under 5 MB.',
     'settings.emergencyMinutes': 'Quick-start duration (3–10 minutes)',
     'settings.focusFlow': 'Focus flow',
     'settings.goalRequired': 'Require a session goal',

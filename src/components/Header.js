@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
+import { safeProfilePhoto } from '../profilePhoto';
 import LanguageSelector from './LanguageSelector';
 
 const Header = ({
@@ -10,12 +11,18 @@ const Header = ({
   isRoomPage,
   onLeaveRoom,
   isTodoPage = false,
-  isSocialPage = false
+  isSocialPage = false,
+  profilePhoto
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const dropdownRef = useRef(null);
+  const displayName = user && (user.displayName || user.email.split('@')[0]);
+  const profileSrc = safeProfilePhoto(profilePhoto !== undefined ? profilePhoto : user?.photoURL);
+
+  useEffect(() => setImageFailed(false), [profileSrc]);
 
   const handleDashboardClick = () => {
     if (user) {
@@ -55,6 +62,37 @@ const Header = ({
     };
   }, [isDropdownOpen]);
 
+  const userMenu = user && (
+    <div className="user-menu" ref={dropdownRef}>
+      <button
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        className="btn btn-primary user-menu-trigger"
+      >
+        <span className="profile-avatar">
+          {profileSrc && !imageFailed ? (
+            <img
+              src={profileSrc}
+              alt={`${displayName} ${t('header.profilePhoto')}`}
+              referrerPolicy="no-referrer"
+              onError={() => setImageFailed(true)}
+            />
+          ) : (
+            <span aria-hidden="true">{displayName.slice(0, 1).toUpperCase()}</span>
+          )}
+        </span>
+        <span>{displayName}</span>
+      </button>
+
+      {isDropdownOpen && (
+        <div className="dropdown-menu">
+          <button onClick={handleLogout} className="dropdown-item">
+            {t('header.logout')}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <header className="header-container">
       <h1>{t('general.appName')}</h1>
@@ -66,24 +104,7 @@ const Header = ({
             <button onClick={onLeaveRoom} className="btn btn-danger">
               {t('header.leaveRoom')}
             </button>
-            {user && (
-              <div className="user-menu" ref={dropdownRef}>
-                <button 
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
-                  className="btn btn-primary"
-                >
-                  {user.displayName || user.email.split('@')[0]}
-                </button>
-
-                {isDropdownOpen && (
-                  <div className="dropdown-menu">
-                    <button onClick={handleLogout} className="dropdown-item">
-                      {t('header.logout')}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+            {userMenu}
           </>
         ) : (
           // Normal page - show all menu items
@@ -108,24 +129,7 @@ const Header = ({
               </>
             )}
             
-            {user ? (
-              <div className="user-menu" ref={dropdownRef}>
-                <button 
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
-                  className="btn btn-primary"
-                >
-                  {user.displayName || user.email.split('@')[0]}
-                </button>
-
-                {isDropdownOpen && (
-                  <div className="dropdown-menu">
-                    <button onClick={handleLogout} className="dropdown-item">
-                      {t('header.logout')}
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
+            {user ? userMenu : (
               <button onClick={() => openModal('login')} className="btn btn-primary">{t('header.login')}</button>
             )}
           </>

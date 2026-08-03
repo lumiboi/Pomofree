@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from '../hooks/useTranslation';
+import { safeProfilePhoto } from '../profilePhoto';
 
 const SettingsModal = ({
   closeModal,
@@ -7,9 +8,14 @@ const SettingsModal = ({
   setTempSettings,
   handleSaveSettings,
   handleExportData,
-  handleDeleteAccount
+  handleDeleteAccount,
+  profilePhoto,
+  setProfilePhoto,
+  handleProfileFile,
+  profilePhotoError
 }) => {
   const { t } = useTranslation();
+  const photoPreview = safeProfilePhoto(profilePhoto);
   const update = patch => setTempSettings({ ...tempSettings, ...patch });
   const updateShortcut = (name, value) => update({
     shortcuts: {
@@ -34,6 +40,47 @@ const SettingsModal = ({
     <div className="modal-overlay" onClick={closeModal}>
       <div className="modal-content settings-modal" onClick={(e) => e.stopPropagation()}>
         <h2>{t('settings.title')}</h2>
+        {setProfilePhoto && (
+          <>
+            <h3>{t('settings.profileSection')}</h3>
+            <div className="profile-settings">
+              <div className="profile-settings-preview" aria-hidden="true">
+                {photoPreview ? <img src={photoPreview} alt="" referrerPolicy="no-referrer" /> : '👤'}
+              </div>
+              <div className="profile-settings-controls">
+                <label htmlFor="profile-photo-url">{t('settings.profilePhotoUrl')}</label>
+                <input
+                  id="profile-photo-url"
+                  type="url"
+                  value={profilePhoto}
+                  onChange={event => setProfilePhoto(event.target.value)}
+                  placeholder={t('settings.profilePhotoUrlPlaceholder')}
+                  maxLength={100000}
+                />
+                <div className="profile-settings-actions">
+                  <label className="btn btn-secondary" htmlFor="profile-photo-file">
+                    {t('settings.uploadPhoto')}
+                  </label>
+                  <input
+                    id="profile-photo-file"
+                    className="visually-hidden"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    aria-label={t('settings.uploadPhoto')}
+                    onChange={event => event.target.files?.[0] && handleProfileFile(event.target.files[0])}
+                  />
+                  {profilePhoto && (
+                    <button type="button" className="btn btn-secondary" onClick={() => setProfilePhoto('')}>
+                      {t('settings.removePhoto')}
+                    </button>
+                  )}
+                </div>
+                <p className="settings-helper">{t('settings.profilePhotoHelp')}</p>
+                {profilePhotoError && <p className="settings-error" role="alert">{profilePhotoError}</p>}
+              </div>
+            </div>
+          </>
+        )}
         <h3>{t('settings.timerSection')}</h3>
         <div className="form-group">
           <label>{t('settings.pomodoro')}</label>
