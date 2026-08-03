@@ -35,6 +35,23 @@ body { font-family: var(--font-family); color: var(--text-color); line-height: 1
 .header-buttons { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
 .language-selector { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
 
+.seo-content { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 2rem; max-width: 1200px; margin: 2rem auto; }
+.seo-content h2 { margin: 0.35rem 0 0.75rem; font-size: clamp(1.65rem, 3vw, 2.2rem); line-height: 1.2; }
+.seo-content h3 { margin-bottom: 0.75rem; font-size: 1.05rem; }
+.seo-content p,
+.seo-content li { opacity: 0.84; }
+.seo-content-kicker { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.68; }
+.seo-content-steps ol { display: grid; gap: 0.55rem; padding-left: 1.25rem; }
+.seo-content-faq { grid-column: 1 / -1; }
+.seo-content-faq details { padding: 0.85rem 0; border-top: 1px solid var(--card-border); }
+.seo-content-faq summary { cursor: pointer; font-weight: 600; }
+.seo-content-faq details p { margin-top: 0.45rem; }
+
+@media (max-width: 767px) {
+  .seo-content { grid-template-columns: 1fr; gap: 1.5rem; }
+  .seo-content-faq { grid-column: auto; }
+}
+
 /* Header Styles */
 
 

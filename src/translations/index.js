@@ -462,7 +462,7 @@ export const translations = {
     
     // General
     'general.appName': 'Pomofree',
-    'general.tagline': 'Odaklan ve Başar',
+    'general.tagline': 'Ücretsiz Pomodoro Zamanlayıcı',
     'general.loginRequired': 'Bu özellikleri kullanabilmek için giriş yapmalısınız!',
     
     // Achievements
@@ -1181,7 +1181,7 @@ export const translations = {
     
     // General
     'general.appName': 'Pomofree',
-    'general.tagline': 'Focus and Achieve',
+    'general.tagline': 'Free Pomodoro Timer',
     'general.loginRequired': 'You must login to use these features!',
     
     // Achievements

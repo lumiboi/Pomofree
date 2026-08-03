@@ -316,7 +316,7 @@ function AppContent() {
 
     // Sayfa başlığını güncelle
     useEffect(() => {
-        document.title = isTimerActive ? `${formatTime(time)} - ${t('general.appName')}` : `${t('general.appName')} - ${t('general.tagline')}`;
+        document.title = isTimerActive ? `${formatTime(time)} - ${t('general.appName')}` : `${t('general.appName')} | ${t('general.tagline')}`;
     }, [time, isTimerActive, t]);
 
     // Daily support modal (once per day)
@@ -997,6 +997,39 @@ function AppContent() {
                     breakTip={breakTip}
                 />
             )}
+            <section className="seo-content card" aria-labelledby="pomofree-nedir">
+                <div className="seo-content-intro">
+                    <span className="seo-content-kicker">Pomodoro zamanlayıcı</span>
+                    <h2 id="pomofree-nedir">Pomofree nedir?</h2>
+                    <p>Pomofree, tarayıcıda çalışan ücretsiz bir Pomodoro zamanlayıcısıdır. Çalışmaya başlamak için hesap açman gerekmez.</p>
+                    <p>Görevini yazıp 25 dakikalık sayacı başlatabilirsin. İstersen ortam seslerini açabilir, projelerini düzenleyebilir ve tamamladığın odak seanslarını raporlardan takip edebilirsin.</p>
+                </div>
+
+                <div className="seo-content-steps">
+                    <h3>Üç adımda başla</h3>
+                    <ol>
+                        <li>Bu seansta bitirmek istediğin işi yaz.</li>
+                        <li>Sayacı başlat ve o süre boyunca tek işe odaklan.</li>
+                        <li>Süre dolunca kısa bir mola ver; hazır olduğunda devam et.</li>
+                    </ol>
+                </div>
+
+                <div className="seo-content-faq">
+                    <h3>Merak edilenler</h3>
+                    <details>
+                        <summary>Pomodoro tekniği nedir?</summary>
+                        <p>Pomodoro tekniği, işi kısa odak seanslarına böler. En yaygın düzen 25 dakika çalışma ve ardından 5 dakika moladır.</p>
+                    </details>
+                    <details>
+                        <summary>Pomofree ücretsiz mi?</summary>
+                        <p>Evet. Pomofree'yi ücretsiz kullanabilir, zamanlayıcını hemen başlatabilirsin.</p>
+                    </details>
+                    <details>
+                        <summary>Hesap açmak şart mı?</summary>
+                        <p>Hayır. Zamanlayıcı hesap olmadan çalışır. Görevlerini, raporlarını ve kişisel istatistiklerini saklamak istersen giriş yapman gerekir.</p>
+                    </details>
+                </div>
+            </section>
             <PatreonSupport />
             {user && <WeeklyStats todaySeconds={todayFocusTime} totalSeconds={weeklyFocusTime} />}
             {modalOpen === 'themes' && <ThemeSelector closeModal={closeModal} handleThemeChange={handleThemeChange} />}
