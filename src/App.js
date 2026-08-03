@@ -72,6 +72,7 @@ import {
 } from './focusModel';
 import { isFocusTask } from './todoModel';
 import { buildSocialProfile } from './socialModel';
+import { shouldShowSeoContent } from './authModel';
 
 const SESSION_STORAGE_KEY = 'pomofree_active_session_v2';
 const FOCUS_FLOW_STORAGE_KEY = 'pomofree_focus_flow_v1';
@@ -128,6 +129,7 @@ function AppContent() {
     } = useBackgroundAudio();
     const [restoredFlow] = useState(readFocusFlow);
     const [user, setUser] = useState(null);
+    const [authReady, setAuthReady] = useState(false);
     const [userSettings, setUserSettings] = useState(DEFAULT_FOCUS_SETTINGS);
     const [mode, setMode] = useState(restoredFlow.mode);
     const [activeTaskId, setActiveTaskId] = useState(restoredFlow.activeTaskId);
@@ -210,6 +212,7 @@ function AppContent() {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) { setUser(currentUser); fetchUserData(currentUser); }
             else { setUser(null); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); socialSessionsRef.current = []; setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
+            setAuthReady(true);
         });
         return () => unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -997,7 +1000,7 @@ function AppContent() {
                     breakTip={breakTip}
                 />
             )}
-            <section className="seo-content card" aria-labelledby="pomofree-nedir">
+            {shouldShowSeoContent(authReady, user) && <section className="seo-content card" aria-labelledby="pomofree-nedir">
                 <div className="seo-content-intro">
                     <span className="seo-content-kicker">Pomodoro zamanlayıcı</span>
                     <h2 id="pomofree-nedir">Pomofree nedir?</h2>
@@ -1029,7 +1032,7 @@ function AppContent() {
                         <p>Hayır. Zamanlayıcı hesap olmadan çalışır. Görevlerini, raporlarını ve kişisel istatistiklerini saklamak istersen giriş yapman gerekir.</p>
                     </details>
                 </div>
-            </section>
+            </section>}
             <PatreonSupport />
             {user && <WeeklyStats todaySeconds={todayFocusTime} totalSeconds={weeklyFocusTime} />}
             {modalOpen === 'themes' && <ThemeSelector closeModal={closeModal} handleThemeChange={handleThemeChange} />}
