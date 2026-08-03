@@ -36,3 +36,18 @@ test('kaydedilmiş fotoğraf silindiyse sağlayıcı fotoğrafına geri dönmez'
 
   expect(screen.queryByRole('img')).not.toBeInTheDocument();
 });
+
+test('Pomofree kedisini üzerine gelince oynatır', () => {
+  const { container } = render(
+    <LanguageProvider>
+      <Header openModal={jest.fn()} handleLogout={jest.fn()} />
+    </LanguageProvider>
+  );
+
+  const cat = container.querySelector('.pomocat-logo');
+  expect(cat).toHaveAttribute('src', '/pomocat.png');
+  fireEvent.mouseEnter(cat);
+  expect(cat).toHaveAttribute('src', '/pomocat-animated.webp');
+  fireEvent.mouseLeave(cat);
+  expect(cat).toHaveAttribute('src', '/pomocat.png');
+});

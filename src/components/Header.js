@@ -18,6 +18,7 @@ const Header = ({
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
+  const [isPomocatAnimated, setIsPomocatAnimated] = useState(false);
   const dropdownRef = useRef(null);
   const displayName = user && (user.displayName || user.email.split('@')[0]);
   const profileSrc = safeProfilePhoto(profilePhoto !== undefined ? profilePhoto : user?.photoURL);
@@ -95,7 +96,18 @@ const Header = ({
 
   return (
     <header className="header-container">
-      <h1>{t('general.appName')}</h1>
+      <div className="header-brand">
+        <img
+          className="pomocat-logo"
+          src={isPomocatAnimated ? '/pomocat-animated.webp' : '/pomocat.png'}
+          alt=""
+          aria-hidden="true"
+          draggable="false"
+          onMouseEnter={() => setIsPomocatAnimated(true)}
+          onMouseLeave={() => setIsPomocatAnimated(false)}
+        />
+        <h1>{t('general.appName')}</h1>
+      </div>
       <div className="header-buttons">
         {isRoomPage ? (
           // Room page - show language selector and leave room button
