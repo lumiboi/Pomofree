@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { LanguageProvider } from '../contexts/LanguageContext';
 import Timer from './Timer';
 
@@ -36,4 +36,25 @@ test('zamanlayıcı çalışırken play yerine stop simgesi gösterir', () => {
   );
 
   expect(screen.getByRole('button', { name: 'DURDUR' })).toHaveTextContent('■');
+});
+
+test('hızlı sayaç ayarı düğmesi modalı açar', () => {
+  const onOpenSettings = jest.fn();
+  render(
+    <LanguageProvider>
+      <Timer
+        mode="pomodoro"
+        time={1500}
+        isActive={false}
+        switchMode={jest.fn()}
+        toggleTimer={jest.fn()}
+        formatTime={() => '25:00'}
+        totalTime={1500}
+        onOpenSettings={onOpenSettings}
+      />
+    </LanguageProvider>
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Zamanlayıcı ayarları' }));
+  expect(onOpenSettings).toHaveBeenCalledTimes(1);
 });

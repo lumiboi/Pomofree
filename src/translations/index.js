@@ -32,6 +32,7 @@ export const translations = {
     'timer.scope.project': 'Bu projedeki ritmin',
     'timer.scope.task': 'Bu görevdeki ritmin',
     'timer.goalRequiredAlert': 'Başlamadan önce bu seansın net hedefini yaz.',
+    'timer.quickSettings': 'Zamanlayıcı ayarları',
     
     // Tasks
     'tasks.activeTasks': 'Aktif Görevler',
@@ -253,6 +254,7 @@ export const translations = {
     'settings.save': 'Kaydet',
     'settings.cancel': 'İptal',
     'settings.timerSection': 'Sayaç',
+    'settings.quickTimerTitle': 'Zamanlayıcıyı ayarla',
     'settings.emergencyMinutes': 'Acil başlama süresi (3–10 dakika)',
     'settings.focusFlow': 'Odak akışı',
     'settings.goalRequired': 'Seans hedefini zorunlu tut',
@@ -751,6 +753,7 @@ export const translations = {
     'timer.scope.project': 'Your rhythm in this project',
     'timer.scope.task': 'Your rhythm on this task',
     'timer.goalRequiredAlert': 'Write one concrete goal for this session before starting.',
+    'timer.quickSettings': 'Timer settings',
     
     // Tasks
     'tasks.activeTasks': 'Active Tasks',
@@ -972,6 +975,7 @@ export const translations = {
     'settings.save': 'Save',
     'settings.cancel': 'Cancel',
     'settings.timerSection': 'Timer',
+    'settings.quickTimerTitle': 'Adjust timer',
     'settings.emergencyMinutes': 'Quick-start duration (3–10 minutes)',
     'settings.focusFlow': 'Focus flow',
     'settings.goalRequired': 'Require a session goal',

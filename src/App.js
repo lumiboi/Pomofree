@@ -44,6 +44,7 @@ import LoginModal from './components/LoginModal';
 import ThemeSelector from './components/ThemeSelector';
 import ProjectShowcase from './components/ProjectShowcase';
 import SettingsModal from './components/SettingsModal';
+import TimerSettingsModal from './components/TimerSettingsModal';
 import Celebration from './components/Celebration';
 import WeeklyStats, { sumFocusSessions } from './components/WeeklyStats';
 import AdvancedReports from './components/AdvancedReports';
@@ -771,6 +772,15 @@ function AppContent() {
         resetTimer(settings.pomodoro * 60);
         setMode('pomodoro');
     };
+
+    const handleSaveTimerSettings = timerSettings => {
+        const settings = { ...userSettings, ...timerSettings };
+        setUserSettings(settings);
+        updateUserDataInDb({ settings });
+        closeModal();
+        resetTimer(settings.pomodoro * 60);
+        setMode('pomodoro');
+    };
     
     const toggleTimer = () => {
         if (!isTimerActive && mode === 'pomodoro' && userSettings.goalRequired && !focusSession.completionCriterion.trim()) {
@@ -985,6 +995,7 @@ function AppContent() {
                     adaptiveSuggestion={adaptiveSuggestion}
                     onAcceptSuggestion={handleAdaptiveSuggestion}
                     onRejectSuggestion={handleRejectAdaptiveSuggestion}
+                    onOpenSettings={() => openModal('timer-settings')}
                 />
                 {user && activeProjectId && (<Tasks tasks={tasks.filter(isFocusTask)} projects={projects} activeProjectId={activeProjectId} setActiveProjectId={setActiveProjectId} handleAddProject={handleAddProject} handleCompleteProject={handleCompleteProject} handleDeleteProject={handleDeleteProject} taskInput={taskInput} setTaskInput={setTaskInput} handleAddTask={handleAddTask} handleDeleteTask={handleDeleteTask} activeTaskId={activeTaskId} setActiveTaskId={setActiveTaskId} userSettings={userSettings} />)}
             </div>
@@ -1038,6 +1049,7 @@ function AppContent() {
             {modalOpen === 'themes' && <ThemeSelector closeModal={closeModal} handleThemeChange={handleThemeChange} />}
             {modalOpen === 'login' && <LoginModal closeModal={closeModal} isRegistering={isRegistering} setIsRegistering={setIsRegistering} email={email} setEmail={setEmail} password={password} setPassword={setPassword} username={username} setUsername={setUsername} handleRegister={handleRegister} handleLogin={handleLogin} handleGoogleSignIn={handleGoogleSignIn} handleTwitterSignIn={handleTwitterSignIn} />}
             {modalOpen === 'settings' && <SettingsModal closeModal={closeModal} tempSettings={tempSettings} setTempSettings={setTempSettings} handleSaveSettings={handleSaveSettings} handleExportData={handleExportData} handleDeleteAccount={handleDeleteAccount} />}
+            {modalOpen === 'timer-settings' && <TimerSettingsModal settings={userSettings} onSave={handleSaveTimerSettings} onClose={closeModal} />}
             {modalOpen === 'report' && ( <div className="modal-overlay" onClick={closeModal}><div className="modal-content" onClick={(e) => e.stopPropagation()}> <h2>{t('report.title')}</h2> <p>{t('report.completedPomodoros')}</p> <h3 style={{fontSize: '3em', textAlign: 'center', margin: '1rem 0'}}>{stats.completedPomodoros}</h3> <button onClick={closeModal} className="btn btn-secondary">{t('report.close')}</button> </div></div> )}
             {modalOpen === 'advanced-reports' && <AdvancedReports user={user} closeModal={closeModal} />}
             {modalOpen === 'dashboard' && <ProductivityDashboard user={user} closeModal={closeModal} />}

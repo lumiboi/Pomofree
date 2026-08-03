@@ -15,7 +15,8 @@ const Timer = ({
   onEmergencyStart,
   adaptiveSuggestion,
   onAcceptSuggestion,
-  onRejectSuggestion
+  onRejectSuggestion,
+  onOpenSettings
 }) => {
   const { t } = useTranslation();
   
@@ -40,6 +41,19 @@ const Timer = ({
 
   return (
     <div className="card timer-card">
+      {onOpenSettings && (
+        <button
+          type="button"
+          className="timer-quick-settings"
+          onClick={onOpenSettings}
+          aria-label={t('timer.quickSettings')}
+          title={t('timer.quickSettings')}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm8 4-.1-1.2 2-1.5-2-3.4-2.4 1a8 8 0 0 0-2-1.2L15.2 3h-4l-.4 2.7a8 8 0 0 0-2 1.2l-2.5-1-2 3.4 2 1.5A8 8 0 0 0 6.2 12l.1 1.2-2 1.5 2 3.4 2.4-1a8 8 0 0 0 2 1.2l.4 2.7h4l.4-2.7a8 8 0 0 0 2-1.2l2.5 1 2-3.4-2-1.5.1-1.2Z" />
+          </svg>
+        </button>
+      )}
       <div className="timer-modes">
         <button aria-pressed={mode === 'pomodoro'} onClick={() => handleModeChange('pomodoro')} className={`btn mode-btn ${mode === 'pomodoro' ? 'active' : ''}`}>{t('timer.pomodoro')}</button>
         <button aria-pressed={mode === 'short'} onClick={() => handleModeChange('short')} className={`btn mode-btn ${mode === 'short' ? 'active' : ''}`}>{t('timer.shortBreak')}</button>
