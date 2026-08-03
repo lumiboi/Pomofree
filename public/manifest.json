@@ -1,11 +1,17 @@
 {
   "short_name": "Pomofree",
-  "name": "Pomofree - Odaklan ve Başar",
+  "name": "Pomofree | Pomodoro Zamanlayıcı",
+  "description": "Ücretsiz Pomodoro zamanlayıcı, görev ve odak takibi.",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "favicon-48.png",
+      "sizes": "48x48",
+      "type": "image/png"
     },
     {
       "src": "logo192.png",
