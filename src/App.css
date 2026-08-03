@@ -27,7 +27,7 @@ body { font-family: var(--font-family); color: var(--text-color); line-height: 1
 .card { background: var(--card-bg); border-radius: 16px; box-shadow: var(--soft-shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--card-border); padding: 1.5rem; }
 
 /* 3. HEADER VE LOGO STİLLERİ */
-.header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; gap: 1rem; }
+.header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1600px; margin: 0 auto; flex-wrap: wrap; gap: 1rem; }
 .logo-container { display: flex; align-items: center; cursor: default; user-select: none; }
 .logo-svg { height: 40px; width: auto; overflow: visible; }
 .logo-target { transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -1535,6 +1535,13 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   .main-content { flex-direction: row; align-items: flex-start; }
   .timer-card { flex: 1; }
   .tasks-container { flex: 1; max-width: 450px; }
+}
+
+@media (min-width: 1100px) {
+  .header-container,
+  .header-buttons { flex-wrap: nowrap; }
+  .header-buttons { gap: 0.5rem; }
+  .header-buttons .btn { padding: 0.5rem 0.75rem; font-size: 0.9rem; white-space: nowrap; }
 }
 
 .theme-dark_academia {
