@@ -49,8 +49,9 @@ const Timer = ({
           aria-label={t('timer.quickSettings')}
           title={t('timer.quickSettings')}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm8 4-.1-1.2 2-1.5-2-3.4-2.4 1a8 8 0 0 0-2-1.2L15.2 3h-4l-.4 2.7a8 8 0 0 0-2 1.2l-2.5-1-2 3.4 2 1.5A8 8 0 0 0 6.2 12l.1 1.2-2 1.5 2 3.4 2.4-1a8 8 0 0 0 2 1.2l.4 2.7h4l.4-2.7a8 8 0 0 0 2-1.2l2.5 1 2-3.4-2-1.5.1-1.2Z" />
+          <svg data-icon="clock" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
           </svg>
         </button>
       )}

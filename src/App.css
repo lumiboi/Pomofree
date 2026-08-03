@@ -28,8 +28,22 @@ body { font-family: var(--font-family); color: var(--text-color); line-height: 1
 
 /* 3. HEADER VE LOGO STİLLERİ */
 .header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1600px; margin: 0 auto; flex-wrap: wrap; gap: 1rem; }
-.header-brand { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
-.pomocat-logo { width: 3rem; height: 3rem; flex: 0 0 3rem; display: block; object-fit: contain; cursor: pointer; user-select: none; }
+.header-brand { display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
+.header-brand h1 { line-height: 1; }
+.pomocat-logo { width: clamp(3.5rem, 5vw, 4rem); height: clamp(3.5rem, 5vw, 4rem); flex: none; display: block; object-fit: contain; cursor: pointer; user-select: none; filter: var(--pomocat-filter, none); }
+.theme-whimsy_core { --pomocat-filter: sepia(0.25) hue-rotate(15deg) saturate(0.9) brightness(1.02); }
+.theme-frutiger_aero { --pomocat-filter: hue-rotate(135deg) saturate(1.15) brightness(1.05); }
+.theme-wired { --pomocat-filter: hue-rotate(315deg) saturate(0.65) brightness(0.9); }
+.theme-synthwave { --pomocat-filter: hue-rotate(245deg) saturate(1.45) brightness(1.08); }
+.theme-dark_academia { --pomocat-filter: sepia(0.75) hue-rotate(5deg) saturate(0.75) brightness(0.9); }
+.theme-gothic_core { --pomocat-filter: grayscale(0.35) hue-rotate(275deg) saturate(0.6) brightness(0.95); }
+.theme-forest, .theme-matrix { --pomocat-filter: hue-rotate(85deg) saturate(1.2) brightness(1.02); }
+.theme-ocean { --pomocat-filter: hue-rotate(145deg) saturate(1.2) brightness(1.05); }
+.theme-lavender { --pomocat-filter: hue-rotate(225deg) saturate(1.15) brightness(1.05); }
+.theme-coffee { --pomocat-filter: sepia(0.65) saturate(0.7) brightness(0.82); }
+.theme-rose { --pomocat-filter: hue-rotate(325deg) saturate(0.9) brightness(1.05); }
+.theme-slate { --pomocat-filter: grayscale(1) brightness(1.15); }
+.theme-sand { --pomocat-filter: sepia(0.75) hue-rotate(12deg) saturate(1.1) brightness(1.02); }
 .logo-container { display: flex; align-items: center; cursor: default; user-select: none; }
 .logo-svg { height: 40px; width: auto; overflow: visible; }
 .logo-target { transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -662,7 +676,7 @@ input::placeholder { color: rgba(255,255,255,0.5); }
 .timer-card { position: relative; text-align: center; }
 .timer-quick-settings { position: absolute; top: 1rem; right: 1rem; width: 40px; height: 40px; padding: 0.55rem; display: grid; place-items: center; border: 1px solid var(--card-border); border-radius: 10px; background: color-mix(in srgb, var(--card-bg) 85%, transparent); color: var(--text-color); cursor: pointer; }
 .timer-quick-settings:hover { background: color-mix(in srgb, var(--text-color) 12%, var(--card-bg)); transform: translateY(-1px); }
-.timer-quick-settings svg { width: 100%; height: 100%; fill: currentColor; }
+.timer-quick-settings svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .timer-modes { display: flex; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; }
 .timer-display { display: flex; justify-content: center; align-items: center; }
 .timer-display h2 { font-size: clamp(3.5rem, 20vw, 8rem); font-weight: 700; margin: 1rem 0; }

@@ -55,6 +55,8 @@ test('hızlı sayaç ayarı düğmesi modalı açar', () => {
     </LanguageProvider>
   );
 
-  fireEvent.click(screen.getByRole('button', { name: 'Zamanlayıcı ayarları' }));
+  const settingsButton = screen.getByRole('button', { name: 'Zamanlayıcı ayarları' });
+  expect(settingsButton.querySelector('svg')).toHaveAttribute('data-icon', 'clock');
+  fireEvent.click(settingsButton);
   expect(onOpenSettings).toHaveBeenCalledTimes(1);
 });
