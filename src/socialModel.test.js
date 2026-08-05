@@ -1,6 +1,7 @@
 import {
   buildSocialProfile,
   cleanSocialText,
+  maskDisplayName,
   rankProfiles
 } from './socialModel';
 
@@ -18,11 +19,26 @@ test('sosyal profil kullanıcının kayıtlı tüm seanslarını özetler', () =
     now
   })).toEqual({
     userId: 'u1',
-    displayName: 'Ada',
+    displayName: 'A**',
+    profilePhoto: '',
+    publicProfile: false,
     totalMinutes: 70,
     completedSessions: 3,
     activeDays: 3,
     projectCount: 3
+  });
+});
+
+test('sosyal kimlik varsayılan olarak maskelenir, açık izinle ad ve fotoğraf gösterilir', () => {
+  expect(maskDisplayName('Lal Nehir')).toBe('L** N****');
+  expect(buildSocialProfile({
+    user: { uid: 'u1', displayName: 'Lal Nehir' },
+    publicProfile: true,
+    profilePhoto: 'https://example.com/lal.webp'
+  })).toMatchObject({
+    displayName: 'Lal Nehir',
+    profilePhoto: 'https://example.com/lal.webp',
+    publicProfile: true
   });
 });
 

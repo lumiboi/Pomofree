@@ -24,6 +24,7 @@ import { safeProfilePhoto } from '../profilePhoto';
 import {
   buildSocialProfile,
   cleanSocialText,
+  maskDisplayName,
   rankProfiles,
   SOCIAL_LIMITS,
   SOCIAL_MOODS,
@@ -48,6 +49,15 @@ const reactionIcons = {
 
 const displayNameFor = user => cleanSocialText(user?.displayName, 50) || 'Pomofree Kullanıcısı';
 
+const getSocialIdentity = (profile, fallbackName) => {
+  const displayName = cleanSocialText(profile?.displayName || fallbackName, 50) || 'Pomofree Kullanıcısı';
+  const publicProfile = profile?.publicProfile === true;
+  return {
+    displayName: publicProfile ? displayName : maskDisplayName(displayName),
+    profilePhoto: publicProfile ? safeProfilePhoto(profile?.profilePhoto) : ''
+  };
+};
+
 const loadCommunity = async currentUser => {
   const [userSnapshot, sessionsSnapshot] = await Promise.all([
     getDoc(doc(db, 'users', currentUser.uid)),
@@ -57,9 +67,15 @@ const loadCommunity = async currentUser => {
     ))
   ]);
   const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+  const profilePhoto = safeProfilePhoto(
+    userData.profilePhoto !== undefined ? userData.profilePhoto : currentUser.photoURL
+  );
+  const publicProfile = userData.settings?.socialProfilePublic === true;
   const profile = buildSocialProfile({
     sessions: sessionsSnapshot.docs.map(item => item.data()),
-    user: { uid: currentUser.uid, displayName: currentUser.displayName || userData.username }
+    user: { uid: currentUser.uid, displayName: currentUser.displayName || userData.username },
+    profilePhoto,
+    publicProfile
   });
 
   await setDoc(doc(db, 'socialProfiles', currentUser.uid), {
@@ -69,9 +85,8 @@ const loadCommunity = async currentUser => {
 
   return {
     theme: userData.theme || 'default',
-    profilePhoto: safeProfilePhoto(
-      userData.profilePhoto !== undefined ? userData.profilePhoto : currentUser.photoURL
-    )
+    profilePhoto,
+    publicProfile
   };
 };
 
@@ -95,6 +110,8 @@ const SocialPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [profilePhoto, setProfilePhoto] = useState('');
+  const [socialProfilePublic, setSocialProfilePublic] = useState(false);
+  const [tempSocialProfilePublic, setTempSocialProfilePublic] = useState(false);
   const loadErrorMessage = t('social.loadError');
 
   useEffect(() => {
@@ -116,6 +133,8 @@ const SocialPage = () => {
         if (active) {
           setActiveTheme(profile.theme);
           setProfilePhoto(profile.profilePhoto);
+          setSocialProfilePublic(profile.publicProfile);
+          setTempSocialProfilePublic(profile.publicProfile);
         }
       } catch (loadError) {
         console.error('Sosyal alan yüklenemedi:', loadError);
@@ -206,7 +225,9 @@ const SocialPage = () => {
     setSaving(true);
     setError('');
     try {
-      await loadCommunity(user);
+      const profile = await loadCommunity(user);
+      setProfilePhoto(profile.profilePhoto);
+      setSocialProfilePublic(profile.publicProfile);
     } catch (refreshError) {
       console.error('Sosyal alan yenilenemedi:', refreshError);
       setError(t('social.loadError'));
@@ -220,6 +241,27 @@ const SocialPage = () => {
     if (user) await setDoc(doc(db, 'users', user.uid), { theme: themeKey }, { merge: true });
   };
 
+  const saveSocialSettings = async event => {
+    event.preventDefault();
+    if (!user || saving) return;
+    setSaving(true);
+    setError('');
+    try {
+      await setDoc(doc(db, 'users', user.uid), {
+        settings: { socialProfilePublic: tempSocialProfilePublic }
+      }, { merge: true });
+      const profile = await loadCommunity(user);
+      setSocialProfilePublic(profile.publicProfile);
+      setProfilePhoto(profile.profilePhoto);
+      setModalOpen(null);
+    } catch (saveError) {
+      console.error('Sosyal ayarlar kaydedilemedi:', saveError);
+      setError(t('social.saveError'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const sharePost = async event => {
     event.preventDefault();
     const body = cleanSocialText(postText, SOCIAL_LIMITS.postLength);
@@ -228,7 +270,7 @@ const SocialPage = () => {
     try {
       await addDoc(collection(db, 'socialPosts'), {
         authorId: user.uid,
-        authorName: displayNameFor(user),
+        authorName: socialProfilePublic ? displayNameFor(user) : maskDisplayName(displayNameFor(user)),
         body,
         mood,
         createdAt: serverTimestamp(),
@@ -269,7 +311,7 @@ const SocialPage = () => {
     try {
       await setDoc(doc(db, 'socialPosts', openPostId, 'comments', user.uid), {
         authorId: user.uid,
-        authorName: displayNameFor(user),
+        authorName: socialProfilePublic ? displayNameFor(user) : maskDisplayName(displayNameFor(user)),
         body,
         createdAt: serverTimestamp()
       });
@@ -310,6 +352,14 @@ const SocialPage = () => {
   ]), [t]);
   const selectedBoard = boards.find(board => board.metric === activeBoard) || boards[0];
   const ownProfile = profiles.find(profile => profile.userId === user?.uid);
+  const profilesByUserId = useMemo(() => new Map(
+    profiles.map(profile => [profile.userId, profile])
+  ), [profiles]);
+  const ownIdentity = getSocialIdentity({
+    displayName: displayNameFor(user),
+    profilePhoto,
+    publicProfile: socialProfilePublic
+  }, displayNameFor(user));
   const totalMinutes = profiles.reduce((total, profile) => total + (profile.totalMinutes || 0), 0);
 
   if (loading) return <SocialLoading t={t} />;
@@ -319,7 +369,11 @@ const SocialPage = () => {
       <Header
         user={user}
         profilePhoto={profilePhoto}
-        openModal={name => name === 'login' ? navigate('/') : setModalOpen(name)}
+        openModal={name => {
+          if (name === 'login') return navigate('/');
+          if (name === 'social-settings') setTempSocialProfilePublic(socialProfilePublic);
+          setModalOpen(name);
+        }}
         handleLogout={async () => {
           await signOut(auth);
           navigate('/');
@@ -374,6 +428,7 @@ const SocialPage = () => {
 
             <Composer
               user={user}
+              identity={ownIdentity}
               postText={postText}
               mood={mood}
               saving={saving}
@@ -391,6 +446,8 @@ const SocialPage = () => {
                   key={post.id}
                   post={post}
                   user={user}
+                  ownIdentity={ownIdentity}
+                  profilesByUserId={profilesByUserId}
                   comments={comments[post.id] || []}
                   isOpen={openPostId === post.id}
                   commentText={commentText}
@@ -452,6 +509,16 @@ const SocialPage = () => {
       {modalOpen === 'themes' && (
         <ThemeSelector closeModal={() => setModalOpen(null)} handleThemeChange={handleThemeChange} />
       )}
+      {modalOpen === 'social-settings' && (
+        <SocialSettingsModal
+          value={tempSocialProfilePublic}
+          saving={saving}
+          t={t}
+          onChange={setTempSocialProfilePublic}
+          onSave={saveSocialSettings}
+          onClose={() => setModalOpen(null)}
+        />
+      )}
     </div>
   );
 };
@@ -463,9 +530,9 @@ const SocialLoading = ({ t }) => (
   </main>
 );
 
-const Composer = ({ user, postText, mood, saving, t, onPostText, onMood, onSubmit }) => (
+const Composer = ({ user, identity, postText, mood, saving, t, onPostText, onMood, onSubmit }) => (
   <form className="social-composer" onSubmit={onSubmit}>
-    <span className="social-avatar" aria-hidden="true">{displayNameFor(user).slice(0, 1).toUpperCase()}</span>
+    <SocialAvatar identity={identity} />
     <div>
       <textarea
         rows="3"
@@ -508,8 +575,8 @@ const LeaderboardList = ({ board, profiles, ready, t }) => {
       {ranked.map((profile, index) => (
         <li key={profile.userId}>
           <span className="social-rank">{index + 1}</span>
-          <span className="social-mini-avatar" aria-hidden="true">{profile.displayName.slice(0, 1).toUpperCase()}</span>
-          <strong>{profile.displayName}</strong>
+          <SocialAvatar identity={getSocialIdentity(profile, profile.displayName)} small />
+          <strong>{getSocialIdentity(profile, profile.displayName).displayName}</strong>
           <span>{profile[board.metric] || 0} {board.unit}</span>
         </li>
       ))}
@@ -520,6 +587,8 @@ const LeaderboardList = ({ board, profiles, ready, t }) => {
 const PostCard = ({
   post,
   user,
+  ownIdentity,
+  profilesByUserId,
   comments,
   isOpen,
   commentText,
@@ -533,6 +602,10 @@ const PostCard = ({
   onDeletePost,
   onDeleteComment
 }) => {
+  const identityFor = (authorId, authorName) => authorId === user?.uid
+    ? ownIdentity
+    : getSocialIdentity(profilesByUserId.get(authorId), authorName);
+  const identity = identityFor(post.authorId, post.authorName);
   const reactionValues = Object.values(post.reactions || {});
   const createdAt = post.createdAt?.toDate?.();
   const formattedDate = createdAt
@@ -544,9 +617,9 @@ const PostCard = ({
   return (
     <article className="social-post">
       <header>
-        <span className="social-avatar" aria-hidden="true">{post.authorName.slice(0, 1).toUpperCase()}</span>
+        <SocialAvatar identity={identity} />
         <div>
-          <strong>{post.authorName}</strong>
+          <strong>{identity.displayName}</strong>
           <time dateTime={createdAt?.toISOString?.()}>{formattedDate}</time>
         </div>
         <span className="social-post-mood"><span aria-hidden="true">{moodIcons[post.mood]}</span>{t(`social.mood.${post.mood}`)}</span>
@@ -584,8 +657,8 @@ const PostCard = ({
           {comments.length === 0 && <p className="social-empty">{t('social.noComments')}</p>}
           {comments.map(comment => (
             <div className="social-comment" key={comment.id}>
-              <span className="social-mini-avatar" aria-hidden="true">{comment.authorName.slice(0, 1).toUpperCase()}</span>
-              <p><strong>{comment.authorName}</strong>{comment.body}</p>
+              <SocialAvatar identity={identityFor(comment.authorId, comment.authorName)} small />
+              <p><strong>{identityFor(comment.authorId, comment.authorName).displayName}</strong>{comment.body}</p>
               {comment.authorId === user?.uid && (
                 <button type="button" onClick={() => onDeleteComment(comment)}>{t('social.delete')}</button>
               )}
@@ -606,6 +679,48 @@ const PostCard = ({
     </article>
   );
 };
+
+const SocialAvatar = ({ identity, small = false }) => {
+  const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => setImageFailed(false), [identity.profilePhoto]);
+  return (
+    <span className={small ? 'social-mini-avatar' : 'social-avatar'} aria-hidden="true">
+      {identity.profilePhoto && !imageFailed ? (
+        <img
+          src={identity.profilePhoto}
+          alt=""
+          referrerPolicy="no-referrer"
+          onError={() => setImageFailed(true)}
+        />
+      ) : identity.displayName.slice(0, 1).toLocaleUpperCase('tr-TR')}
+    </span>
+  );
+};
+
+const SocialSettingsModal = ({ value, saving, t, onChange, onSave, onClose }) => (
+  <div className="modal-overlay" onClick={onClose}>
+    <form
+      className="modal-content social-settings-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="social-settings-title"
+      onSubmit={onSave}
+      onClick={event => event.stopPropagation()}
+    >
+      <h2 id="social-settings-title">{t('social.settings')}</h2>
+      <p>{t('social.settingsText')}</p>
+      <label className="settings-toggle">
+        <span>{t('social.publicProfile')}</span>
+        <input type="checkbox" checked={value} onChange={event => onChange(event.target.checked)} />
+      </label>
+      <p className="settings-helper">{t('social.publicProfileHelp')}</p>
+      <footer className="settings-footer">
+        <button type="submit" className="btn btn-primary" disabled={saving}>{t('settings.save')}</button>
+        <button type="button" className="btn btn-secondary" onClick={onClose}>{t('settings.cancel')}</button>
+      </footer>
+    </form>
+  </div>
+);
 
 const FeedSkeleton = () => <div className="social-feed-skeleton" aria-hidden="true"><span /><span /><span /></div>;
 const StatsSkeleton = () => <div className="social-stats-skeleton" aria-hidden="true"><span /><span /><span /></div>;

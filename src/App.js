@@ -87,9 +87,9 @@ const emptyFocusSession = () => ({
     interruptions: []
 });
 
-const syncSocialProfile = (currentUser, sessions) => setDoc(
+const syncSocialProfile = (currentUser, sessions, options = {}) => setDoc(
     doc(db, 'socialProfiles', currentUser.uid),
-    { ...buildSocialProfile({ sessions, user: currentUser }), updatedAt: serverTimestamp() }
+    { ...buildSocialProfile({ sessions, user: currentUser, ...options }), updatedAt: serverTimestamp() }
 );
 
 const readFocusFlow = () => {
@@ -392,7 +392,10 @@ function AppContent() {
         );
         const savedSession = { id: sessionRef.id, ...session };
         socialSessionsRef.current = [...socialSessionsRef.current, savedSession];
-        syncSocialProfile(user, socialSessionsRef.current)
+        syncSocialProfile(user, socialSessionsRef.current, {
+            publicProfile: userSettings.socialProfilePublic,
+            profilePhoto
+        })
             .catch(error => console.error('Sosyal özet güncellenemedi:', error));
         setRecentSessions(current => [...current, savedSession].slice(-30));
         setPendingReview(savedSession);
@@ -494,7 +497,10 @@ function AppContent() {
         syncSocialProfile({
             uid: currentUser.uid,
             displayName: currentUser.displayName || data.username
-        }, sessions).catch(error => console.error('Sosyal özet güncellenemedi:', error));
+        }, sessions, {
+            publicProfile: settings.socialProfilePublic,
+            profilePhoto: storedProfilePhoto
+        }).catch(error => console.error('Sosyal özet güncellenemedi:', error));
         const focusTimes = sumFocusSessions(weeklySessions, startOfToday);
         setRecentSessions(sessions.slice(-30));
         setWeeklyFocusTime(focusTimes.totalSeconds);
@@ -801,6 +807,10 @@ function AppContent() {
         setUserSettings(settings);
         setProfilePhoto(normalizedProfilePhoto);
         updateUserDataInDb({ settings, profilePhoto: normalizedProfilePhoto });
+        if (user) syncSocialProfile(user, socialSessionsRef.current, {
+            publicProfile: settings.socialProfilePublic,
+            profilePhoto: normalizedProfilePhoto
+        }).catch(error => console.error('Sosyal profil güncellenemedi:', error));
         closeModal(); 
         resetTimer(settings.pomodoro * 60);
         setMode('pomodoro');

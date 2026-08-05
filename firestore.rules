@@ -14,6 +14,16 @@ service cloud.firestore {
       return value is string && value.size() > 0 && value.size() <= maxLength;
     }
 
+    function validProfilePhoto(value) {
+      return value is string
+        && value.size() <= 100000
+        && (
+          value == ''
+          || value.matches('https://.*')
+          || value.matches('data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]*')
+        );
+    }
+
     function validSocialProfile(userId) {
       return request.resource.data.keys().hasOnly([
           'userId',
@@ -22,6 +32,8 @@ service cloud.firestore {
           'completedSessions',
           'activeDays',
           'projectCount',
+          'profilePhoto',
+          'publicProfile',
           'updatedAt'
         ])
         && request.resource.data.userId == userId
@@ -38,6 +50,12 @@ service cloud.firestore {
         && request.resource.data.projectCount is int
         && request.resource.data.projectCount >= 0
         && request.resource.data.projectCount <= 10000
+        && request.resource.data.publicProfile is bool
+        && validProfilePhoto(request.resource.data.profilePhoto)
+        && (
+          request.resource.data.publicProfile
+          || request.resource.data.profilePhoto == ''
+        )
         && request.resource.data.updatedAt is timestamp;
     }
 

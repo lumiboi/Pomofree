@@ -131,6 +131,14 @@ const SettingsModal = ({
           />
         </div>
 
+        <h3>{t('settings.socialSection')}</h3>
+        <SettingToggle
+          label={t('settings.socialProfilePublic')}
+          checked={tempSettings.socialProfilePublic}
+          onChange={checked => update({ socialProfilePublic: checked })}
+        />
+        <p className="settings-helper">{t('settings.socialProfileHelp')}</p>
+
         <h3>{t('settings.focusFlow')}</h3>
         <SettingToggle label={t('settings.goalRequired')} checked={tempSettings.goalRequired} onChange={checked => update({ goalRequired: checked })} />
         <SettingToggle label={t('settings.notifications')} checked={tempSettings.notifications} onChange={checked => update({ notifications: checked })} />

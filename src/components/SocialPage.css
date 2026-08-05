@@ -600,6 +600,27 @@
   font-size: 0.65rem;
 }
 
+.social-avatar,
+.social-mini-avatar {
+  overflow: hidden;
+}
+
+.social-avatar img,
+.social-mini-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.social-settings-modal {
+  max-width: 520px;
+}
+
+.social-settings-modal > p {
+  margin-bottom: 1rem;
+}
+
 .social-empty {
   padding: 1rem 0;
   color: var(--social-muted);

@@ -13,13 +13,28 @@ export const cleanSocialText = (value, maxLength) => (
   typeof value === 'string' ? value.trim().slice(0, maxLength) : ''
 );
 
+export const maskDisplayName = value => cleanSocialText(value, 50)
+  .split(/\s+/)
+  .filter(Boolean)
+  .map(part => {
+    const characters = Array.from(part);
+    return `${characters[0].toLocaleUpperCase('tr-TR')}${'*'.repeat(Math.max(0, characters.length - 1))}`;
+  })
+  .join(' ');
+
 const asDate = value => {
   if (value?.toDate) return value.toDate();
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
-export const buildSocialProfile = ({ sessions = [], user, now = new Date() }) => {
+export const buildSocialProfile = ({
+  sessions = [],
+  user,
+  now = new Date(),
+  publicProfile = false,
+  profilePhoto = ''
+}) => {
   const completed = sessions.filter(session => {
     const completedAt = asDate(session.completedAt || session.endedAt);
     return completedAt && completedAt <= now;
@@ -38,9 +53,12 @@ export const buildSocialProfile = ({ sessions = [], user, now = new Date() }) =>
     if (session.projectId) projectIds.add(String(session.projectId));
   });
 
+  const displayName = cleanSocialText(user.displayName, 50) || 'Pomofree Kullanıcısı';
   return {
     userId: user.uid,
-    displayName: cleanSocialText(user.displayName, 50) || 'Pomofree Kullanıcısı',
+    displayName: publicProfile ? displayName : maskDisplayName(displayName),
+    profilePhoto: publicProfile ? cleanSocialText(profilePhoto, 100000) : '',
+    publicProfile: Boolean(publicProfile),
     totalMinutes: Math.min(5256000, Math.floor(seconds / 60)),
     completedSessions: completed.length,
     activeDays: activeDays.size,

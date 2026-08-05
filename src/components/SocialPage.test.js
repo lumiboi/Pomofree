@@ -95,3 +95,38 @@ test('kişisel hafta özeti Firestore profil snapshotından gelir', async () => 
   expect(within(personalWeek).getByText('4')).toBeInTheDocument();
   expect(within(personalWeek).getByText('3')).toBeInTheDocument();
 });
+
+test('genel listede izin yoksa adı maskeler, izin varsa profil fotoğrafını gösterir', async () => {
+  const { container } = render(<SocialPage />);
+
+  await waitFor(() => expect(mockSnapshotListeners.profiles).toBeDefined());
+  act(() => mockSnapshotListeners.profiles({
+    docs: [
+      {
+        id: 'private-user',
+        data: () => ({
+          userId: 'private-user',
+          displayName: 'Lal Nehir',
+          publicProfile: false,
+          profilePhoto: 'https://example.com/private.webp',
+          totalMinutes: 60
+        })
+      },
+      {
+        id: 'public-user',
+        data: () => ({
+          userId: 'public-user',
+          displayName: 'Kübra Güler',
+          publicProfile: true,
+          profilePhoto: 'https://example.com/public.webp',
+          totalMinutes: 30
+        })
+      }
+    ]
+  }));
+
+  expect(await screen.findByText('L** N****')).toBeInTheDocument();
+  expect(screen.queryByText('Lal Nehir')).not.toBeInTheDocument();
+  expect(container.querySelector('img[src="https://example.com/private.webp"]')).toBeNull();
+  expect(container.querySelector('img[src="https://example.com/public.webp"]')).toBeInTheDocument();
+});

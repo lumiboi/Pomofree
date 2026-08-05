@@ -25,6 +25,7 @@ export const DEFAULT_FOCUS_SETTINGS = {
   reducedMotion: false,
   highContrast: false,
   colorVision: 'default',
+  socialProfilePublic: false,
   shortcutsEnabled: true,
   shortcuts: {
     task: 'n',
