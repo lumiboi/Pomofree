@@ -96,7 +96,12 @@ const Header = ({
 
   return (
     <header className="header-container">
-      <div className="header-brand">
+      <button
+        type="button"
+        className="header-brand"
+        aria-label={t('general.appName')}
+        onClick={() => navigate('/')}
+      >
         <img
           className="pomocat-logo"
           src={isPomocatAnimated ? '/pomocat-animated.webp' : '/pomocat.png'}
@@ -107,7 +112,7 @@ const Header = ({
           onMouseLeave={() => setIsPomocatAnimated(false)}
         />
         <h1>{t('general.appName')}</h1>
-      </div>
+      </button>
       <div className="header-buttons">
         {isRoomPage ? (
           // Room page - show language selector and leave room button

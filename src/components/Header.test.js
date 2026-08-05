@@ -3,7 +3,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { LanguageProvider } from '../contexts/LanguageContext';
 import Header from './Header';
 
-jest.mock('react-router-dom', () => ({ useNavigate: () => jest.fn() }));
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate }));
+
+beforeEach(() => mockNavigate.mockClear());
 
 test('profil fotoğrafını adın solunda gösterir', () => {
   render(
@@ -50,4 +53,15 @@ test('Pomofree kedisini üzerine gelince oynatır', () => {
   expect(cat).toHaveAttribute('src', '/pomocat-animated.webp');
   fireEvent.mouseLeave(cat);
   expect(cat).toHaveAttribute('src', '/pomocat.png');
+});
+
+test('Pomofree markası ana sayfaya götürür', () => {
+  render(
+    <LanguageProvider>
+      <Header openModal={jest.fn()} handleLogout={jest.fn()} isSocialPage />
+    </LanguageProvider>
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Pomofree' }));
+  expect(mockNavigate).toHaveBeenCalledWith('/');
 });
