@@ -1,6 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createTimerSnapshot, restoreTimerSnapshot } from '../focusModel';
 
+const startTicker = callback => {
+  if (typeof Worker === 'function' && URL.createObjectURL) {
+    const url = URL.createObjectURL(new Blob([
+      'setInterval(() => postMessage(0), 500)'
+    ], { type: 'text/javascript' }));
+    const worker = new Worker(url);
+    worker.onmessage = callback;
+    return () => {
+      worker.terminate();
+      URL.revokeObjectURL(url);
+    };
+  }
+
+  const interval = window.setInterval(callback, 500);
+  return () => window.clearInterval(interval);
+};
+
 const readStoredTimer = (storageKey, initialTime) => {
   try {
     return restoreTimerSnapshot(
@@ -108,11 +125,11 @@ export const useBackgroundTimer = (
     };
 
     tick();
-    const interval = window.setInterval(tick, 500);
+    const stopTicker = startTicker(tick);
     document.addEventListener('visibilitychange', tick);
     window.addEventListener('focus', tick);
     return () => {
-      window.clearInterval(interval);
+      stopTicker();
       document.removeEventListener('visibilitychange', tick);
       window.removeEventListener('focus', tick);
     };
