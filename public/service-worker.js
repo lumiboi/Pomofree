@@ -1,5 +1,5 @@
 const IS_LOCALHOST = ['localhost', '127.0.0.1', '[::1]'].includes(self.location.hostname);
-const CACHE = 'pomofree-shell-v3';
+const CACHE = 'pomofree-shell-v4';
 const SHELL = ['/', '/index.html', '/manifest.json', '/logo192.png', '/logo512.png'];
 
 self.addEventListener('install', event => {

@@ -72,6 +72,7 @@ import { normalizeProfilePhoto, resizeProfilePhoto, safeProfilePhoto } from './p
 import { createCheckIn, isReturnAfterBreak, toDayKey } from './effortModel';
 import { readTodayContribution, recordEffort, saveCheckIn } from './catService';
 import CollectiveCat from './components/CollectiveCat';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Açılışta gerekmeyen ekranlar ayrı parçalara bölündü (chart.js dahil).
 const AdvancedReports = lazy(() => import('./components/AdvancedReports'));
@@ -1308,6 +1309,7 @@ function App() {
     <Router>
       <LanguageProvider>
         <StudyRoomProvider>
+          <ErrorBoundary>
           <Suspense fallback={null}>
             <Routes>
               <Route path="/" element={<AppContent />} />
@@ -1321,6 +1323,7 @@ function App() {
               <Route path="/moderation" element={<ModerationPage />} />
             </Routes>
           </Suspense>
+          </ErrorBoundary>
         </StudyRoomProvider>
       </LanguageProvider>
     </Router>
