@@ -2,6 +2,7 @@ import {
   authorLabel,
   buildReflection,
   containsPersonalInfo,
+  getCatFeedMessage,
   isPublishable,
   looksSensitive,
   normalizeVisibility,
@@ -61,4 +62,45 @@ it('surfaces the least supported posts first and honours hidden lists', () => {
   expect(orderReflections(feed).map(item => item.id)).toEqual(['c', 'b', 'a']);
   expect(orderReflections(feed, { hiddenIds: ['c'] }).map(item => item.id)).toEqual(['b', 'a']);
   expect(orderReflections(feed, { hiddenAuthorIds: ['u2'] }).map(item => item.id)).toEqual(['c', 'a']);
+});
+
+it('never writes an author id onto an anonymous post', () => {
+  const anonymous = buildReflection({ authorId: 'user-1', displayName: 'Mert', body: 'not', visibility: 'anonymous' });
+  const open = buildReflection({ authorId: 'user-1', displayName: 'Mert', body: 'not', visibility: 'public' });
+
+  expect(anonymous.authorId).toBe('');
+  expect(anonymous.displayName).toBe('');
+  expect(open.authorId).toBe('user-1');
+  expect(anonymous.moderationStatus).toBe('published');
+  expect(anonymous.kind).toBe('reflection');
+});
+
+it('splits the feed by kind, day and ownership instead of popularity', () => {
+  const now = new Date('2026-08-06T12:00:00');
+  const feed = [
+    { id: 'a', kind: 'reflection', createdAt: new Date('2026-08-06T09:00:00') },
+    { id: 'b', kind: 'rest', createdAt: new Date('2026-08-05T09:00:00') },
+    { id: 'c', kind: 'progress', createdAt: new Date('2026-08-06T11:00:00') }
+  ];
+
+  expect(orderReflections(feed, { tab: 'today', now }).map(i => i.id).sort()).toEqual(['a', 'c']);
+  expect(orderReflections(feed, { tab: 'rest', now }).map(i => i.id)).toEqual(['b']);
+  expect(orderReflections(feed, { tab: 'mine', ownedIds: ['c'], now }).map(i => i.id)).toEqual(['c']);
+});
+
+it('keeps removed posts out of the feed but leaves limited ones visible', () => {
+  const feed = [
+    { id: 'a', moderationStatus: 'removed', createdAt: new Date() },
+    { id: 'b', moderationStatus: 'limited', createdAt: new Date() },
+    { id: 'c', createdAt: new Date() }
+  ];
+
+  expect(orderReflections(feed).map(i => i.id).sort()).toEqual(['b', 'c']);
+});
+
+it('gives the cat a feed line that never diagnoses anyone', () => {
+  expect(getCatFeedMessage([])).toBe('quiet');
+  expect(getCatFeedMessage([{ kind: 'rest' }, { kind: 'rest' }])).toBe('restingTogether');
+  expect(getCatFeedMessage([{ kind: 'progress' }, { kind: 'progress' }])).toBe('smallSteps');
+  expect(getCatFeedMessage([{ kind: 'reflection' }])).toBe('sittingNearby');
 });

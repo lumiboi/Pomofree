@@ -21,3 +21,5 @@ yarn-error.log*
 # Kaynak kedi animasyonları (7 MB'lık ham GIF'ler); yayınlanan hâlleri public/pomocat-*.webp
 /pomocat-happy.gif
 /pomocat-normal.gif
+firestore-debug.log
+ui-debug.log

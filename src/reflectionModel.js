@@ -4,6 +4,12 @@ export const REFLECTION_VISIBILITIES = ['private', 'anonymous', 'public'];
 export const DEFAULT_VISIBILITY = 'private';
 export const REFLECTION_MAX_LENGTH = 1000;
 
+// Akış sekmeleri popülerlik değil, içerik türü üzerinden ayrılır (plan §10).
+export const REFLECTION_KINDS = ['reflection', 'progress', 'rest'];
+export const DEFAULT_KIND = 'reflection';
+export const FEED_TABS = ['today', 'reflection', 'progress', 'rest', 'mine'];
+export const MODERATION_STATUSES = ['published', 'limited', 'removed'];
+
 export const SUPPORT_TYPES = [
   'with_you',
   'read',
@@ -70,16 +76,47 @@ export const buildReflection = (input, now = new Date()) => {
   const body = clean(input.body, REFLECTION_MAX_LENGTH);
 
   return {
-    authorId: clean(input.authorId, 128),
+    // Anonim paylaşımda yazar kimliği belgeye hiç yazılmaz; sahiplik
+    // kullanıcının kendi özel kaydında tutulur, böylece akışı okuyan
+    // kimse gönderiyi bir hesaba bağlayamaz (plan §7.2, §19).
+    authorId: visibility === 'anonymous' ? '' : clean(input.authorId, 128),
     displayName: visibility === 'public' ? clean(input.displayName, 50) || 'Pomofree' : '',
     body,
+    kind: REFLECTION_KINDS.includes(input.kind) ? input.kind : DEFAULT_KIND,
     visibility,
     isSensitive: Boolean(input.isSensitive) || looksSensitive(body),
+    moderationStatus: 'published',
     createdAt: now instanceof Date ? now : new Date()
   };
 };
 
 export const isPublishable = body => clean(body, REFLECTION_MAX_LENGTH).length > 0;
+
+const toDate = value => value?.toDate?.() || (value ? new Date(value) : null);
+
+export const matchesTab = (reflection, tab, { ownedIds = [], now = new Date() } = {}) => {
+  if (!tab || tab === 'all') return true;
+  if (tab === 'mine') return ownedIds.includes(reflection.id);
+  if (tab === 'today') {
+    const created = toDate(reflection.createdAt);
+    if (!created || Number.isNaN(created.getTime())) return false;
+    return created.toDateString() === now.toDateString();
+  }
+  return (reflection.kind || DEFAULT_KIND) === tab;
+};
+
+/**
+ * Kedi akışa bakıp kısa bir cümle söyler; teşhis veya psikolojik yorum değil (plan §11).
+ */
+export const getCatFeedMessage = (reflections = []) => {
+  const visible = reflections.filter(Boolean);
+  if (visible.length === 0) return 'quiet';
+  const rest = visible.filter(item => item.kind === 'rest').length;
+  const progress = visible.filter(item => item.kind === 'progress').length;
+  if (rest > progress && rest >= 2) return 'restingTogether';
+  if (progress >= 2) return 'smallSteps';
+  return 'sittingNearby';
+};
 
 export const authorLabel = (reflection, anonymousLabel) =>
   reflection?.visibility === 'public' && reflection.displayName
@@ -89,9 +126,18 @@ export const authorLabel = (reflection, anonymousLabel) =>
 /**
  * Akış popülerliğe göre değil; yeni ve az destek almış gönderiler öne gelir (plan §10).
  */
-export const orderReflections = (reflections = [], { hiddenIds = [], hiddenAuthorIds = [] } = {}) =>
+export const orderReflections = (reflections = [], {
+  hiddenIds = [],
+  hiddenAuthorIds = [],
+  tab = null,
+  ownedIds = [],
+  now = new Date()
+} = {}) =>
   reflections
     .filter(item => item && !hiddenIds.includes(item.id) && !hiddenAuthorIds.includes(item.authorId))
+    // Moderasyonda kaldırılan içerik akışta görünmez (plan §8).
+    .filter(item => item.moderationStatus !== 'removed')
+    .filter(item => matchesTab(item, tab, { ownedIds, now }))
     .slice()
     .sort((a, b) => {
       const supportDiff = (a.supportCount || 0) - (b.supportCount || 0);

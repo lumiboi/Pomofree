@@ -1,11 +1,13 @@
 import React from 'react';
 import { useTranslation } from '../hooks/useTranslation';
+import { FLEXIBLE_DURATIONS } from '../effortModel';
 
 const Timer = ({
   mode,
   time,
   isActive,
   switchMode,
+  onPickDuration,
   toggleTimer,
   formatTime,
   totalTime,
@@ -60,6 +62,23 @@ const Timer = ({
         <button aria-pressed={mode === 'short'} onClick={() => handleModeChange('short')} className={`btn mode-btn ${mode === 'short' ? 'active' : ''}`}>{t('timer.shortBreak')}</button>
         <button aria-pressed={mode === 'long'} onClick={() => handleModeChange('long')} className={`btn mode-btn ${mode === 'long' ? 'active' : ''}`}>{t('timer.longBreak')}</button>
       </div>
+
+      {mode === 'pomodoro' && !isActive && onPickDuration && (
+        // Esnek seans süreleri: kısa seans küçümsenmez (plan §9.2).
+        <div className="timer-durations" role="group" aria-label={t('timer.durations')}>
+          {FLEXIBLE_DURATIONS.map(minutes => (
+            <button
+              key={minutes}
+              type="button"
+              className={`timer-duration${Math.round(totalTime / 60) === minutes ? ' active' : ''}`}
+              aria-pressed={Math.round(totalTime / 60) === minutes}
+              onClick={() => onPickDuration(minutes)}
+            >
+              {minutes} {t('timer.minutesShort')}
+            </button>
+          ))}
+        </div>
+      )}
 
       {mode === 'pomodoro' && setSessionGoal && (
         <label className={`timer-session-goal ${isActive ? 'active' : ''}`}>

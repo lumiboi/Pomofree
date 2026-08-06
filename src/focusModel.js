@@ -12,6 +12,7 @@ export const DEFAULT_FOCUS_SETTINGS = {
     roomStarted: true,
     participantJoined: true
   },
+  gamification: true,
   adaptiveSuggestions: true,
   adaptiveFrequency: 'balanced',
   breakTips: true,
@@ -83,7 +84,9 @@ export const createFocusSession = (input, now = new Date()) => {
     'completed',
     'partially-completed',
     'not-completed',
-    'distracted'
+    'distracted',
+    // Dinlenme ihtiyacı da geçerli bir sonuçtur, başarısızlık değil (plan §9.3).
+    'needs-rest'
   ];
   const type = allowedTypes.includes(input.type) ? input.type : 'pomodoro';
   const completionStatus = allowedStatuses.includes(input.completionStatus)

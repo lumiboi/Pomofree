@@ -211,7 +211,8 @@ export const SessionReviewModal = ({ session, onSubmit, onSkip, onContinue }) =>
     ['completed', t('focus.completed')],
     ['partially-completed', t('focus.partial')],
     ['not-completed', t('focus.notCompleted')],
-    ['distracted', t('focus.distracted')]
+    ['distracted', t('focus.distracted')],
+    ['needs-rest', t('focus.needsRest')]
   ];
 
   return (

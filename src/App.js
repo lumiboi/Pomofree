@@ -82,6 +82,8 @@ const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
 const TodoPage = lazy(() => import('./components/TodoPage'));
 const SocialPage = lazy(() => import('./components/SocialPage'));
 const ReflectionsPage = lazy(() => import('./components/ReflectionsPage'));
+const CatRoom = lazy(() => import('./components/CatRoom'));
+const ModerationPage = lazy(() => import('./components/ModerationPage'));
 
 const ALL_THEME_COLOR_KEYS = [...new Set(Object.values(themes).flatMap(theme => Object.keys(theme.colors)))];
 
@@ -199,6 +201,8 @@ function AppContent() {
     const [restedToday, setRestedToday] = useState(false);
     // Yarım bırakılan bir seansın ardından tekrar başlamak "geri dönüş azmi" sayılır.
     const stoppedFocusRef = useRef(false);
+    // Katkı olayı hangi seansa ait, onu izliyoruz (EffortEvent.relatedSessionId).
+    const lastSessionIdRef = useRef(null);
 
     // Celebration handler'ı useCallback ile optimize et
     const handleCelebrationComplete = useCallback(() => {
@@ -290,8 +294,9 @@ function AppContent() {
                 
                 if (user) {
                     updateUserDataInDb({ stats: newStats });
-                    logFocusSession().catch(error => console.error('Odak seansı kaydedilemedi:', error));
-                    logEffort('focus_completed');
+                    logFocusSession()
+                        .then(() => logEffort('focus_completed', { relatedSessionId: lastSessionIdRef.current }))
+                        .catch(error => console.error('Odak seansı kaydedilemedi:', error));
                     stoppedFocusRef.current = false;
                     if (activeTaskId) { 
                         incrementTaskPomodoro(activeTaskId); 
@@ -415,6 +420,7 @@ function AppContent() {
             .catch(error => console.error('Sosyal özet güncellenemedi:', error));
         setRecentSessions(current => [...current, savedSession].slice(-30));
         setPendingReview(savedSession);
+        lastSessionIdRef.current = savedSession.id;
         setWeeklyFocusTime(prevTime => prevTime + session.duration);
         setTodayFocusTime(prevTime => prevTime + session.duration);
         setFocusSession(emptyFocusSession());
@@ -555,7 +561,10 @@ function AppContent() {
     const logEffort = async (type, extra = {}, currentUser = user) => {
         if (!currentUser) return;
         try {
-            const award = await recordEffort(currentUser, type, extra);
+            const award = await recordEffort(currentUser, type, {
+                ...extra,
+                gamificationEnabled: userSettings.gamification !== false
+            });
             if (award.value > 0) setTodayContribution(current => current + award.value);
         } catch (error) {
             console.error('Katkı kaydedilemedi:', error);
@@ -564,10 +573,23 @@ function AppContent() {
 
     const handleChooseRest = async () => {
         setRestedToday(true);
+        setStopNotice(false);
         if (!user) return;
-        await saveCheckIn(user.uid, { ...createCheckIn(capacity || 'medium'), restChosen: true })
-            .catch(error => console.error('Dinlenme kaydedilemedi:', error));
+        await saveCheckIn(user.uid, {
+            ...createCheckIn(capacity || 'medium'),
+            restChosen: true,
+            chosenFocusTarget: Math.round(userSettings.pomodoro),
+            completedSessions: stats.completedPomodoros || 0
+        }).catch(error => console.error('Dinlenme kaydedilemedi:', error));
         await logEffort('rest_chosen');
+    };
+
+    // Yarım bırakma akışı (plan §9.4): daha kısa seans, mola, iç döküm veya günü kapatmak.
+    const handleShorterSession = minutes => {
+        setStopNotice(false);
+        setMode('pomodoro');
+        resetTimer(minutes * 60);
+        setFocusSession(current => ({ ...current, type: 'custom', startedAt: null }));
     };
     const incrementTaskPomodoro = async (taskId) => { if (!user) return; const taskRef = doc(db, 'users', user.uid, 'tasks', taskId); try { await updateDoc(taskRef, { pomodorosCompleted: increment(1) }); setTasks(tasks.map(task => task.id === taskId ? { ...task, pomodorosCompleted: (task.pomodorosCompleted || 0) + 1 } : task)); } catch (error) { if (error.code === 'not-found' || error.message.includes('No document to update')) { await setDoc(taskRef, { pomodorosCompleted: 1 }, { merge: true }); setTasks(tasks.map(task => task.id === taskId ? { ...task, pomodorosCompleted: 1 } : task)); } else { console.error("Görev sayacı güncellenirken hata:", error); } } };
     // ponytail: giriş sonrası sayfayı tazeleyip veriyi temiz bir açılışta çekiyoruz
@@ -1009,6 +1031,8 @@ function AppContent() {
                     ? { ...session, completionStatus: review.completionStatus, review }
                     : session
             )));
+            // "Dinlenmem gerekiyor" bir başarısızlık değil, bilinçli dinlenme kaydıdır.
+            if (review.completionStatus === 'needs-rest') await handleChooseRest();
         } catch {
             alert(t('focus.reviewSaveError'));
         } finally {
@@ -1107,6 +1131,7 @@ function AppContent() {
                     time={time}
                     isActive={isTimerActive}
                     switchMode={switchMode}
+                    onPickDuration={handleShorterSession}
                     toggleTimer={toggleTimer}
                     formatTime={formatTime}
                     totalTime={timerTotalTime}
@@ -1123,21 +1148,39 @@ function AppContent() {
                     onOpenSettings={() => openModal('timer-settings')}
                 />
                 {stopNotice && (
-                    <p className="stop-notice card" role="status">
-                        {t('focus.halfStopIsOkay')}
-                        <button type="button" className="btn btn-secondary" onClick={() => setStopNotice(false)}>
-                            {t('general.close')}
-                        </button>
-                    </p>
+                    <section className="stop-notice card" role="status">
+                        <p>{t('focus.halfStopIsOkay')}</p>
+                        <div className="stop-notice-actions">
+                            <button type="button" className="btn btn-secondary" onClick={() => handleShorterSession(10)}>
+                                {t('focus.tryShorter')}
+                            </button>
+                            <button type="button" className="btn btn-secondary" onClick={() => { setStopNotice(false); switchMode('short'); }}>
+                                {t('focus.takeBreak')}
+                            </button>
+                            <button type="button" className="btn btn-secondary" onClick={() => navigate('/reflections')}>
+                                {t('focus.writeInstead')}
+                            </button>
+                            {user && (
+                                <button type="button" className="btn btn-secondary" onClick={handleChooseRest}>
+                                    {t('focus.closeTheDay')}
+                                </button>
+                            )}
+                            <button type="button" className="btn btn-secondary" onClick={() => setStopNotice(false)}>
+                                {t('general.close')}
+                            </button>
+                        </div>
+                    </section>
                 )}
                 {user && activeProjectId && (<Tasks tasks={tasks.filter(isFocusTask)} projects={projects} activeProjectId={activeProjectId} setActiveProjectId={setActiveProjectId} handleAddProject={handleAddProject} handleCompleteProject={handleCompleteProject} handleDeleteProject={handleDeleteProject} taskInput={taskInput} setTaskInput={setTaskInput} handleAddTask={handleAddTask} handleDeleteTask={handleDeleteTask} activeTaskId={activeTaskId} setActiveTaskId={setActiveTaskId} userSettings={userSettings} />)}
             </div>
-            <CollectiveCat
-                user={user}
-                todayContribution={todayContribution}
-                rested={restedToday}
-                onChooseRest={handleChooseRest}
-            />
+            {userSettings.gamification !== false && (
+                <CollectiveCat
+                    user={user}
+                    todayContribution={todayContribution}
+                    rested={restedToday}
+                    onChooseRest={handleChooseRest}
+                />
+            )}
             {user && (
                 <FocusTools
                     mode={mode}
@@ -1274,6 +1317,8 @@ function App() {
               <Route path="/todo" element={<TodoPage />} />
               <Route path="/social" element={<SocialPage />} />
               <Route path="/reflections" element={<ReflectionsPage />} />
+              <Route path="/cat" element={<CatRoom />} />
+              <Route path="/moderation" element={<ModerationPage />} />
             </Routes>
           </Suspense>
         </StudyRoomProvider>

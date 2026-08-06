@@ -137,6 +137,7 @@ const Header = ({
               <button onClick={handleSocialClick} className="btn btn-secondary">{t('header.social')}</button>
             )}
             <button onClick={() => navigate('/reflections')} className="btn btn-secondary">{t('header.reflections')}</button>
+            <button onClick={() => navigate('/cat')} className="btn btn-secondary">{t('header.catRoom')}</button>
             <button onClick={() => openModal('themes')} className="btn btn-secondary">{t('header.themes')}</button>
             {isSocialPage && user && (
               <button onClick={() => openModal('social-settings')} className="btn btn-secondary">{t('social.settings')}</button>

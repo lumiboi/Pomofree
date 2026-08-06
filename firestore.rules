@@ -67,38 +67,70 @@ service cloud.firestore {
       }
     }
 
+    function isModerator() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/moderators/$(request.auth.uid));
+    }
+
     // Kolektif kedi: herkes görebilir, yalnızca ileri gider ve tek seferde
     // günlük katkı tavanından fazlası eklenemez (plan §4.1, §14).
     match /collectiveCat/current {
+      function validCatFields() {
+        return request.resource.data.keys().hasOnly([
+            'totalContribution', 'dailyContribution', 'dayKey', 'seasonId', 'updatedAt'
+          ])
+          && request.resource.data.totalContribution is int
+          && request.resource.data.dailyContribution is int
+          && request.resource.data.dailyContribution >= 0
+          && request.resource.data.dayKey is string
+          && request.resource.data.dayKey.size() <= 10
+          && request.resource.data.seasonId is string
+          && request.resource.data.seasonId.size() <= 7;
+      }
+
       allow read: if true;
-      allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['totalContribution', 'updatedAt'])
-        && request.resource.data.totalContribution is int
+      allow create: if signedIn() && validCatFields()
         && request.resource.data.totalContribution > 0
         && request.resource.data.totalContribution <= 12;
-      allow update: if signedIn()
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['totalContribution', 'updatedAt'])
-        && request.resource.data.totalContribution is int
+      allow update: if signedIn() && validCatFields()
         && request.resource.data.totalContribution > resource.data.totalContribution
         && request.resource.data.totalContribution <= resource.data.totalContribution + 12;
     }
 
+    match /moderators/{userId} {
+      // Moderatör listesi konsoldan yönetilir; istemci yalnızca okuyabilir.
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
     match /reflections/{reflectionId} {
+      function ownsReflection() {
+        return signedIn() && (
+          resource.data.authorId == request.auth.uid
+          || exists(/databases/$(database)/documents/users/$(request.auth.uid)/myReflections/$(reflectionId))
+        );
+      }
+
       function validReflection() {
         return request.resource.data.keys().hasOnly([
-            'authorId', 'displayName', 'body', 'visibility',
-            'isSensitive', 'supportCount', 'createdAt'
+            'authorId', 'displayName', 'body', 'kind', 'visibility',
+            'isSensitive', 'moderationStatus', 'supportCount', 'createdAt'
           ])
-          && request.resource.data.authorId == request.auth.uid
           && request.resource.data.displayName is string
           && request.resource.data.displayName.size() <= 50
           && validText(request.resource.data.body, 1000)
+          && request.resource.data.kind in ['reflection', 'progress', 'rest']
           && request.resource.data.visibility in ['anonymous', 'public']
-          // Anonim paylaşımda ad hiçbir zaman yazılamaz (plan §19).
-          && (request.resource.data.visibility == 'public'
-            || request.resource.data.displayName == '')
+          // Anonim paylaşımda ne ad ne de yazar kimliği yazılabilir (plan §7.2, §19).
+          && (
+            (request.resource.data.visibility == 'public'
+              && request.resource.data.authorId == request.auth.uid)
+            || (request.resource.data.visibility == 'anonymous'
+              && request.resource.data.authorId == ''
+              && request.resource.data.displayName == '')
+          )
           && request.resource.data.isSensitive is bool
+          && request.resource.data.moderationStatus == 'published'
           && request.resource.data.supportCount == 0
           && request.resource.data.createdAt is timestamp;
       }
@@ -109,7 +141,11 @@ service cloud.firestore {
       allow update: if signedIn()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['supportCount'])
         && request.resource.data.supportCount == resource.data.supportCount + 1;
-      allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
+      // Moderatör yalnızca görünürlük durumunu değiştirebilir; metne dokunamaz.
+      allow update: if isModerator()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['moderationStatus'])
+        && request.resource.data.moderationStatus in ['published', 'limited', 'removed'];
+      allow delete: if ownsReflection() || isModerator();
 
       match /support/{userId} {
         allow read: if signedIn();
@@ -124,9 +160,11 @@ service cloud.firestore {
       }
     }
 
-    // Raporlar yalnızca yazılır; kimse başkasının bildirimini okuyamaz (plan §8.4).
+    // Raporları yalnızca moderatörler okuyup kapatabilir (plan §8.4).
     match /reports/{reportId} {
-      allow read: if false;
+      allow read: if isModerator();
+      allow update: if isModerator()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['handled']);
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly([
           'reflectionId', 'reporterId', 'reason', 'createdAt'

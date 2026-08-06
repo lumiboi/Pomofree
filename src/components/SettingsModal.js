@@ -140,6 +140,12 @@ const SettingsModal = ({
         <p className="settings-helper">{t('settings.socialProfileHelp')}</p>
 
         <h3>{t('settings.focusFlow')}</h3>
+        <SettingToggle
+          label={t('settings.gamification')}
+          checked={tempSettings.gamification !== false}
+          onChange={checked => update({ gamification: checked })}
+        />
+        <p className="settings-helper">{t('settings.gamificationHelp')}</p>
         <SettingToggle label={t('settings.goalRequired')} checked={tempSettings.goalRequired} onChange={checked => update({ goalRequired: checked })} />
         <SettingToggle label={t('settings.notifications')} checked={tempSettings.notifications} onChange={checked => update({ notifications: checked })} />
         {tempSettings.notifications && (

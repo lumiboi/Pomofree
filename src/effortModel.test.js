@@ -4,8 +4,11 @@ import {
   getCatMood,
   getCatStage,
   getEffortAward,
+  getSeasonId,
   getSuggestedFocus,
-  isReturnAfterBreak
+  getUnlockedItems,
+  isReturnAfterBreak,
+  isWeeklyReviewDue
 } from './effortModel';
 
 const at = iso => new Date(iso);
@@ -78,4 +81,30 @@ it('recognises a return after a break', () => {
   expect(isReturnAfterBreak(at('2026-08-01T10:00:00'), at('2026-08-06T10:00:00'))).toBe(true);
   expect(isReturnAfterBreak(at('2026-08-06T08:00:00'), at('2026-08-06T10:00:00'))).toBe(false);
   expect(isReturnAfterBreak(null, at('2026-08-06T10:00:00'))).toBe(false);
+});
+
+it('lets the weekly review through only once a week', () => {
+  const history = [event('weekly_review', 3, '2026-08-01T10:00:00')];
+
+  expect(getEffortAward('weekly_review', history, at('2026-08-05T10:00:00'))).toEqual({
+    value: 0,
+    reason: 'throttled'
+  });
+  expect(getEffortAward('weekly_review', history, at('2026-08-09T10:00:00')).value).toBe(3);
+  expect(isWeeklyReviewDue(null)).toBe(true);
+  expect(isWeeklyReviewDue(at('2026-08-05T10:00:00'), at('2026-08-06T10:00:00'))).toBe(false);
+});
+
+it('lets the community day lift the cat mood without personal pressure', () => {
+  expect(getCatMood({ recentContribution: 0, communityContribution: 0, hour: 13 })).toBe('calm');
+  expect(getCatMood({ recentContribution: 0, communityContribution: 30, hour: 13 })).toBe('curious');
+  expect(getCatMood({ recentContribution: 0, communityContribution: 160, hour: 13 })).toBe('happy');
+  expect(getCatMood({ recentContribution: 9, communityContribution: 300, userRested: true })).toBe('resting');
+});
+
+it('unlocks room items as stages are reached and never takes them back', () => {
+  expect(getUnlockedItems(0)).toEqual(['kitten']);
+  expect(getUnlockedItems(400)).toEqual(['kitten', 'bowl', 'cushion']);
+  expect(getUnlockedItems(999999)).toHaveLength(CAT_STAGES.length);
+  expect(getSeasonId(at('2026-08-06T10:00:00'))).toBe('2026-08');
 });

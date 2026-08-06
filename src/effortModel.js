@@ -9,7 +9,8 @@ export const EFFORT_CONTRIBUTION = {
   rest_chosen: 1,
   reflection_written: 2,
   support_given: 1,
-  returned_after_break: 4
+  returned_after_break: 4,
+  weekly_review: 3
 };
 
 export const DAILY_CONTRIBUTION_CAP = 12;
@@ -23,7 +24,8 @@ const THROTTLE_MINUTES = {
   rest_chosen: 30,
   reflection_written: 10,
   support_given: 1,
-  returned_after_break: 24 * 60
+  returned_after_break: 24 * 60,
+  weekly_review: 7 * 24 * 60
 };
 
 const DEFAULT_THROTTLE_MINUTES = 5;
@@ -80,16 +82,20 @@ export const getContribution = type => EFFORT_CONTRIBUTION[type] || 0;
  * Bir eylemin kolektif kediye ne kadar katkı yazacağını hesaplar.
  * Günlük tavan ve spam koruması burada uygulanır (plan §14).
  */
-export const getEffortAward = (type, todayEvents = [], now = new Date()) => {
+export const getThrottleMinutes = type => THROTTLE_MINUTES[type] || DEFAULT_THROTTLE_MINUTES;
+
+export const getEffortAward = (type, recentEvents = [], now = new Date()) => {
   const base = getContribution(type);
   if (!base) return { value: 0, reason: 'unknown' };
 
   const moment = toDate(now) || new Date();
   const today = toDayKey(moment);
-  const sameDay = todayEvents.filter(event => toDayKey(event.createdAt) === today);
+  const sameDay = recentEvents.filter(event => toDayKey(event.createdAt) === today);
 
-  const throttleMs = (THROTTLE_MINUTES[type] || DEFAULT_THROTTLE_MINUTES) * 60 * 1000;
-  const lastOfType = sameDay
+  // Tavan günlük, bekleme süresi ise haftalık öz değerlendirme gibi
+  // olaylarda günü aşabilir; bu yüzden tüm geçmişe bakıyoruz.
+  const throttleMs = getThrottleMinutes(type) * 60 * 1000;
+  const lastOfType = recentEvents
     .filter(event => event.type === type)
     .map(event => toDate(event.createdAt))
     .filter(Boolean)
@@ -135,13 +141,46 @@ export const getCatStage = (totalContribution = 0) => {
  * Kedinin hâli; "üzgün", "aç" veya "hasta" gibi suçluluk üreten durumlar yok (plan §4.4).
  * Topluluk sessizse kedi en fazla sakinleşir.
  */
-export const getCatMood = ({ recentContribution = 0, hour = new Date().getHours(), userRested = false } = {}) => {
+export const getCatMood = ({
+  recentContribution = 0,
+  communityContribution = 0,
+  hour = new Date().getHours(),
+  userRested = false
+} = {}) => {
   if (userRested) return 'resting';
-  if (recentContribution >= 6) return 'happy';
-  if (recentContribution >= 3) return 'playful';
-  if (recentContribution >= 1) return 'curious';
+  // Kendi katkın kadar topluluğun günü de kedinin hâlini belirler.
+  const energy = recentContribution + Math.min(6, Math.floor(communityContribution / 25));
+  if (energy >= 6) return 'happy';
+  if (energy >= 3) return 'playful';
+  if (energy >= 1) return 'curious';
   if (hour >= 23 || hour < 6) return 'sleepy';
   return 'calm';
+};
+
+/**
+ * Kedi odasında açılan eşyalar: aşama geçildikçe birikir, hiç geri alınmaz.
+ */
+export const getUnlockedItems = (totalContribution = 0) => {
+  const { stage } = getCatStage(totalContribution);
+  return CAT_STAGES.filter(item => item.stage <= stage).map(item => item.key);
+};
+
+/**
+ * Dönemsel büyüme (plan §4.3): sezon anahtarı takvim ayıdır.
+ */
+export const getSeasonId = (now = new Date()) => {
+  const date = toDate(now) || new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+};
+
+/**
+ * Haftalık öz değerlendirme haftada bir kez katkı üretir (plan §6).
+ */
+export const isWeeklyReviewDue = (lastReviewAt, now = new Date()) => {
+  const last = toDate(lastReviewAt);
+  if (!last) return true;
+  const moment = toDate(now) || new Date();
+  return (moment.getTime() - last.getTime()) / (24 * 60 * 60 * 1000) >= 7;
 };
 
 export const getSuggestedFocus = capacity =>

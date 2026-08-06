@@ -3,6 +3,7 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   getDocs,
   increment,
   limit,
@@ -13,30 +14,54 @@ import {
   where
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { createEffortEvent, getEffortAward, toDayKey } from './effortModel';
+import {
+  createEffortEvent,
+  getEffortAward,
+  getSeasonId,
+  getThrottleMinutes,
+  toDayKey
+} from './effortModel';
 
 export const COLLECTIVE_CAT_PATH = ['collectiveCat', 'current'];
 
+const readCat = snapshot => {
+  const data = snapshot.exists() ? snapshot.data() : {};
+  const today = toDayKey();
+  return {
+    totalContribution: Number(data.totalContribution) || 0,
+    // Gün değiştiyse dünün toplamı bugünün ruh hâlini etkilemesin.
+    dailyContribution: data.dayKey === today ? Number(data.dailyContribution) || 0 : 0,
+    dayKey: data.dayKey || today,
+    seasonId: data.seasonId || getSeasonId(),
+    updatedAt: data.updatedAt || null
+  };
+};
+
 export const subscribeCollectiveCat = (onChange, onError) => onSnapshot(
   doc(db, ...COLLECTIVE_CAT_PATH),
-  snapshot => onChange({
-    totalContribution: snapshot.exists() ? Number(snapshot.data().totalContribution) || 0 : 0,
-    updatedAt: snapshot.exists() ? snapshot.data().updatedAt : null
-  }),
+  snapshot => onChange(readCat(snapshot)),
   onError
 );
 
-const startOfToday = (now = new Date()) => {
+export const fetchCollectiveCat = async () => readCat(await getDoc(doc(db, ...COLLECTIVE_CAT_PATH)));
+
+const startOfDaysAgo = (days, now = new Date()) => {
   const start = new Date(now);
+  start.setDate(start.getDate() - days);
   start.setHours(0, 0, 0, 0);
   return start;
 };
 
-const readTodayEvents = async (uid, now) => {
+/**
+ * Günlük tavan için bugünün olayları yeter; haftalık öz değerlendirme gibi
+ * uzun bekleme süreli olaylarda daha geriye bakmak gerekir.
+ */
+const readRecentEvents = async (uid, type, now) => {
+  const days = Math.max(0, Math.ceil(getThrottleMinutes(type) / (24 * 60)) - 1);
   const snapshot = await getDocs(query(
     collection(db, 'users', uid, 'effortEvents'),
-    where('createdAt', '>=', startOfToday(now)),
-    limit(100)
+    where('createdAt', '>=', startOfDaysAgo(days, now)),
+    limit(300)
   ));
   return snapshot.docs.map(item => item.data());
 };
@@ -48,9 +73,11 @@ const readTodayEvents = async (uid, now) => {
  */
 export const recordEffort = async (user, type, extra = {}, now = new Date()) => {
   if (!user?.uid) return { value: 0, reason: 'anonymous' };
+  // Oyunlaştırmayı kapatan kullanıcı için hiçbir katkı üretilmez (plan §19).
+  if (extra.gamificationEnabled === false) return { value: 0, reason: 'opted-out' };
 
-  const todayEvents = await readTodayEvents(user.uid, now);
-  const award = getEffortAward(type, todayEvents, now);
+  const recentEvents = await readRecentEvents(user.uid, type, now);
+  const award = getEffortAward(type, recentEvents, now);
   const event = createEffortEvent(type, award.value, extra, now);
 
   await addDoc(collection(db, 'users', user.uid, 'effortEvents'), {
@@ -60,8 +87,14 @@ export const recordEffort = async (user, type, extra = {}, now = new Date()) => 
   });
 
   if (award.value > 0) {
+    const today = toDayKey(now);
+    const cat = await fetchCollectiveCat();
     await setDoc(doc(db, ...COLLECTIVE_CAT_PATH), {
       totalContribution: increment(award.value),
+      // Günlük toplam yalnızca kedinin hâli için; gün dönünce sıfırlanır.
+      dailyContribution: cat.dayKey === today ? increment(award.value) : award.value,
+      dayKey: today,
+      seasonId: getSeasonId(now),
       updatedAt: serverTimestamp()
     }, { merge: true });
   }
@@ -71,8 +104,12 @@ export const recordEffort = async (user, type, extra = {}, now = new Date()) => 
 
 export const readTodayContribution = async (uid, now = new Date()) => {
   if (!uid) return 0;
-  const events = await readTodayEvents(uid, now);
-  return events.reduce((total, item) => total + (Number(item.contributionValue) || 0), 0);
+  const snapshot = await getDocs(query(
+    collection(db, 'users', uid, 'effortEvents'),
+    where('createdAt', '>=', startOfDaysAgo(0, now)),
+    limit(300)
+  ));
+  return snapshot.docs.reduce((total, item) => total + (Number(item.data().contributionValue) || 0), 0);
 };
 
 export const saveCheckIn = (uid, checkIn) => setDoc(

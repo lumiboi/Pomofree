@@ -32,14 +32,14 @@ const readPanelState = () => {
 const CollectiveCat = ({ user, todayContribution = 0, rested = false, onChooseRest }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [total, setTotal] = useState(0);
+  const [cat, setCat] = useState({ totalContribution: 0, dailyContribution: 0 });
   const [failed, setFailed] = useState(false);
   const [panel, setPanel] = useState(readPanelState);
   const [dragOffset, setDragOffset] = useState(null);
 
   useEffect(() => subscribeCollectiveCat(
-    cat => {
-      setTotal(cat.totalContribution);
+    current => {
+      setCat(current);
       setFailed(false);
     },
     error => {
@@ -81,8 +81,12 @@ const CollectiveCat = ({ user, todayContribution = 0, rested = false, onChooseRe
     };
   }, [dragOffset, panel.minimized]);
 
-  const stage = useMemo(() => getCatStage(total), [total]);
-  const mood = getCatMood({ recentContribution: todayContribution, userRested: rested });
+  const stage = useMemo(() => getCatStage(cat.totalContribution), [cat.totalContribution]);
+  const mood = getCatMood({
+    recentContribution: todayContribution,
+    communityContribution: cat.dailyContribution,
+    userRested: rested
+  });
   // İki animasyon var: keyifli hâller mutlu kediyi, diğerleri sakin kediyi gösterir.
   const isHappy = mood === 'happy' || mood === 'playful';
   const percent = Math.round(stage.progress * 100);
@@ -174,6 +178,9 @@ const CollectiveCat = ({ user, todayContribution = 0, rested = false, onChooseRe
           {failed && <p className="cat-panel-note">{t('cat.offline')}</p>}
 
           <div className="cat-panel-actions">
+            <button type="button" className="btn btn-secondary" onClick={() => navigate('/cat')}>
+              {t('catRoom.title')}
+            </button>
             <button type="button" className="btn btn-secondary" onClick={() => navigate('/reflections')}>
               {t('cat.actionReflect')}
             </button>
