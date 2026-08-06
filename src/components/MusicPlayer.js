@@ -2,9 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import './MusicPlayer.css';
 
+// Çalar, masaüstü kısayolu gibi kapalı başlar; çift tıklayınca açılır.
+const SHORTCUT_STORAGE_KEY = 'pomofree_music_shortcut_open_v1';
+
 const MusicPlayer = () => {
   const { t } = useTranslation();
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(() => {
+    try {
+      return localStorage.getItem(SHORTCUT_STORAGE_KEY) === 'open';
+    } catch {
+      return false;
+    }
+  });
+  const [isSelected, setIsSelected] = useState(false);
   const [isMinimized, setIsMinimized] = useState(true);
   const [currentPlaylist, setCurrentPlaylist] = useState('jazz');
   const [currentTrack, setCurrentTrack] = useState(0);
@@ -392,7 +402,36 @@ const MusicPlayer = () => {
     };
   }, [isDragging, dragStart, isMinimized]);
 
-  if (!isVisible) return null;
+  useEffect(() => {
+    try {
+      localStorage.setItem(SHORTCUT_STORAGE_KEY, isVisible ? 'open' : 'closed');
+    } catch {
+      // Hatırlanamazsa çalar yine kısayoldan açılır.
+    }
+  }, [isVisible]);
+
+  if (!isVisible) {
+    return (
+      <button
+        type="button"
+        className={`music-shortcut${isSelected ? ' is-selected' : ''}`}
+        onClick={() => setIsSelected(true)}
+        onBlur={() => setIsSelected(false)}
+        onDoubleClick={() => setIsVisible(true)}
+        // Çift tık masaüstü hissi için; klavyeyle tek Enter yeter.
+        onKeyDown={event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setIsVisible(true);
+          }
+        }}
+        title={t('musicPlayer.shortcutHint')}
+      >
+        <span className="music-shortcut-icon" aria-hidden="true">♪</span>
+        <span className="music-shortcut-label">{t('musicPlayer.title')}</span>
+      </button>
+    );
+  }
 
   return (
     <div 
