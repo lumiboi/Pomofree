@@ -67,6 +67,79 @@ service cloud.firestore {
       }
     }
 
+    // Kolektif kedi: herkes görebilir, yalnızca ileri gider ve tek seferde
+    // günlük katkı tavanından fazlası eklenemez (plan §4.1, §14).
+    match /collectiveCat/current {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['totalContribution', 'updatedAt'])
+        && request.resource.data.totalContribution is int
+        && request.resource.data.totalContribution > 0
+        && request.resource.data.totalContribution <= 12;
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['totalContribution', 'updatedAt'])
+        && request.resource.data.totalContribution is int
+        && request.resource.data.totalContribution > resource.data.totalContribution
+        && request.resource.data.totalContribution <= resource.data.totalContribution + 12;
+    }
+
+    match /reflections/{reflectionId} {
+      function validReflection() {
+        return request.resource.data.keys().hasOnly([
+            'authorId', 'displayName', 'body', 'visibility',
+            'isSensitive', 'supportCount', 'createdAt'
+          ])
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() <= 50
+          && validText(request.resource.data.body, 1000)
+          && request.resource.data.visibility in ['anonymous', 'public']
+          // Anonim paylaşımda ad hiçbir zaman yazılamaz (plan §19).
+          && (request.resource.data.visibility == 'public'
+            || request.resource.data.displayName == '')
+          && request.resource.data.isSensitive is bool
+          && request.resource.data.supportCount == 0
+          && request.resource.data.createdAt is timestamp;
+      }
+
+      allow read: if signedIn();
+      allow create: if signedIn() && validReflection();
+      // Yazar dışındakiler yalnızca destek sayacını bir artırabilir.
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['supportCount'])
+        && request.resource.data.supportCount == resource.data.supportCount + 1;
+      allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
+
+      match /support/{userId} {
+        allow read: if signedIn();
+        allow create, update: if ownsUserData(userId)
+          && request.resource.data.keys().hasOnly(['userId', 'type', 'createdAt'])
+          && request.resource.data.userId == userId
+          && request.resource.data.type in [
+            'with_you', 'read', 'not_alone', 'hug', 'rest_is_okay', 'try_again'
+          ]
+          && request.resource.data.createdAt is timestamp;
+        allow delete: if ownsUserData(userId);
+      }
+    }
+
+    // Raporlar yalnızca yazılır; kimse başkasının bildirimini okuyamaz (plan §8.4).
+    match /reports/{reportId} {
+      allow read: if false;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'reflectionId', 'reporterId', 'reason', 'createdAt'
+        ])
+        && request.resource.data.reporterId == request.auth.uid
+        && validText(request.resource.data.reflectionId, 128)
+        && request.resource.data.reason in [
+          'harassment', 'hate', 'personal_info', 'harmful_advice',
+          'spam', 'sensitive', 'other'
+        ]
+        && request.resource.data.createdAt is timestamp;
+    }
+
     match /socialProfiles/{userId} {
       allow read: if signedIn();
       allow create, update: if ownsUserData(userId) && validSocialProfile(userId);

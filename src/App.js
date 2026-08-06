@@ -69,6 +69,10 @@ import { isFocusTask } from './todoModel';
 import { buildSocialProfile } from './socialModel';
 import { shouldShowSeoContent } from './authModel';
 import { normalizeProfilePhoto, resizeProfilePhoto, safeProfilePhoto } from './profilePhoto';
+import { createCheckIn, isReturnAfterBreak, toDayKey } from './effortModel';
+import { readTodayContribution, recordEffort, saveCheckIn } from './catService';
+import CollectiveCat from './components/CollectiveCat';
+import DailyCheckIn from './components/DailyCheckIn';
 
 // Açılışta gerekmeyen ekranlar ayrı parçalara bölündü (chart.js dahil).
 const AdvancedReports = lazy(() => import('./components/AdvancedReports'));
@@ -78,6 +82,7 @@ const TermsOfService = lazy(() => import('./components/TermsOfService'));
 const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
 const TodoPage = lazy(() => import('./components/TodoPage'));
 const SocialPage = lazy(() => import('./components/SocialPage'));
+const ReflectionsPage = lazy(() => import('./components/ReflectionsPage'));
 
 const ALL_THEME_COLOR_KEYS = [...new Set(Object.values(themes).flatMap(theme => Object.keys(theme.colors)))];
 
@@ -189,6 +194,12 @@ function AppContent() {
     const [profilePhoto, setProfilePhoto] = useState('');
     const [tempProfilePhoto, setTempProfilePhoto] = useState('');
     const [profilePhotoError, setProfilePhotoError] = useState('');
+    const [capacity, setCapacity] = useState('');
+    const [stopNotice, setStopNotice] = useState(false);
+    const [todayContribution, setTodayContribution] = useState(0);
+    const [restedToday, setRestedToday] = useState(false);
+    // Yarım bırakılan bir seansın ardından tekrar başlamak "geri dönüş azmi" sayılır.
+    const stoppedFocusRef = useRef(false);
 
     // Celebration handler'ı useCallback ile optimize et
     const handleCelebrationComplete = useCallback(() => {
@@ -278,9 +289,11 @@ function AppContent() {
                 }
                 else playSound(SESSION_END_AUDIO.url, SESSION_END_AUDIO.maxDurationMs);
                 
-                if (user) { 
-                    updateUserDataInDb({ stats: newStats }); 
+                if (user) {
+                    updateUserDataInDb({ stats: newStats });
                     logFocusSession().catch(error => console.error('Odak seansı kaydedilemedi:', error));
+                    logEffort('focus_completed');
+                    stoppedFocusRef.current = false;
                     if (activeTaskId) { 
                         incrementTaskPomodoro(activeTaskId); 
                     } 
@@ -509,8 +522,67 @@ function AppContent() {
         setRecentSessions(sessions.slice(-30));
         setWeeklyFocusTime(focusTimes.totalSeconds);
         setTodayFocusTime(focusTimes.todaySeconds);
+
+        await loadEffortState(currentUser, data);
+    };
+
+    /**
+     * Bugünün kapasitesi, kolektif katkısı ve geri dönüş azmi (plan §5.1).
+     * Buradaki hiçbir okuma seansları bloklamamalı; hata sessizce yutulur.
+     */
+    const loadEffortState = async (currentUser, data) => {
+        try {
+            const today = toDayKey();
+            const [checkInSnap, contribution] = await Promise.all([
+                getDoc(doc(db, 'users', currentUser.uid, 'checkIns', today)),
+                readTodayContribution(currentUser.uid)
+            ]);
+            const checkIn = checkInSnap.exists() ? checkInSnap.data() : null;
+            setCapacity(checkIn?.capacity || '');
+            setRestedToday(Boolean(checkIn?.restChosen));
+            setTodayContribution(contribution);
+
+            if (isReturnAfterBreak(data.lastActiveAt)) {
+                await logEffort('returned_after_break', {}, currentUser);
+            }
+            await setDoc(doc(db, 'users', currentUser.uid), { lastActiveAt: new Date() }, { merge: true });
+        } catch (error) {
+            console.error('Azim durumu okunamadı:', error);
+        }
     };
     const updateUserDataInDb = async (dataToUpdate) => { if (!user) return; await setDoc(doc(db, 'users', user.uid), dataToUpdate, { merge: true }); };
+
+    // Azim olayları: hepsi kolektif kediye katkı yazar, hiçbiri ceza üretmez.
+    const logEffort = async (type, extra = {}, currentUser = user) => {
+        if (!currentUser) return;
+        try {
+            const award = await recordEffort(currentUser, type, extra);
+            if (award.value > 0) setTodayContribution(current => current + award.value);
+        } catch (error) {
+            console.error('Katkı kaydedilemedi:', error);
+        }
+    };
+
+    const handleCapacitySelect = async level => {
+        setCapacity(level);
+        if (!user) return;
+        const checkIn = createCheckIn(level);
+        await saveCheckIn(user.uid, { ...checkIn, restChosen: restedToday })
+            .catch(error => console.error('Kapasite kaydedilemedi:', error));
+    };
+
+    const handleApplySuggestedFocus = minutes => {
+        setMode('pomodoro');
+        resetTimer(minutes * 60);
+    };
+
+    const handleChooseRest = async () => {
+        setRestedToday(true);
+        if (!user) return;
+        await saveCheckIn(user.uid, { ...createCheckIn(capacity || 'medium'), restChosen: true })
+            .catch(error => console.error('Dinlenme kaydedilemedi:', error));
+        await logEffort('rest_chosen');
+    };
     const incrementTaskPomodoro = async (taskId) => { if (!user) return; const taskRef = doc(db, 'users', user.uid, 'tasks', taskId); try { await updateDoc(taskRef, { pomodorosCompleted: increment(1) }); setTasks(tasks.map(task => task.id === taskId ? { ...task, pomodorosCompleted: (task.pomodorosCompleted || 0) + 1 } : task)); } catch (error) { if (error.code === 'not-found' || error.message.includes('No document to update')) { await setDoc(taskRef, { pomodorosCompleted: 1 }, { merge: true }); setTasks(tasks.map(task => task.id === taskId ? { ...task, pomodorosCompleted: 1 } : task)); } else { console.error("Görev sayacı güncellenirken hata:", error); } } };
     // ponytail: giriş sonrası sayfayı tazeleyip veriyi temiz bir açılışta çekiyoruz
     const finishSignIn = () => window.location.reload();
@@ -844,6 +916,13 @@ function AppContent() {
                 ...current,
                 startedAt: current.startedAt || new Date()
             }));
+            // Yarım bırakılan bir seansın ardından tekrar başlamak daha çok katkı verir.
+            logEffort(stoppedFocusRef.current ? 'focus_retried' : 'focus_started');
+            stoppedFocusRef.current = false;
+        } else if (isTimerActive && mode === 'pomodoro' && time > 0) {
+            stoppedFocusRef.current = true;
+            setStopNotice(true);
+            logEffort('focus_stopped');
         }
         // Normal başlat/durdur
         toggleTimerHook();
@@ -1027,6 +1106,13 @@ function AppContent() {
             <StudyWithMeButton onCreateRoom={handleCreateRoom} activeTheme={activeTheme} />
             {user && <ProjectShowcase completedProjects={projects.filter(p => p.completed)} handleClearShowcase={handleClearShowcase} />}
             <div className="main-content">
+                {user && (
+                    <DailyCheckIn
+                        capacity={capacity}
+                        onSelect={handleCapacitySelect}
+                        onApplySuggestion={handleApplySuggestedFocus}
+                    />
+                )}
                 <Timer
                     mode={mode}
                     time={time}
@@ -1047,7 +1133,23 @@ function AppContent() {
                     onRejectSuggestion={handleRejectAdaptiveSuggestion}
                     onOpenSettings={() => openModal('timer-settings')}
                 />
+                {stopNotice && (
+                    <p className="stop-notice card" role="status">
+                        {t('focus.halfStopIsOkay')}
+                        <button type="button" className="btn btn-secondary" onClick={() => setStopNotice(false)}>
+                            {t('general.close')}
+                        </button>
+                    </p>
+                )}
                 {user && activeProjectId && (<Tasks tasks={tasks.filter(isFocusTask)} projects={projects} activeProjectId={activeProjectId} setActiveProjectId={setActiveProjectId} handleAddProject={handleAddProject} handleCompleteProject={handleCompleteProject} handleDeleteProject={handleDeleteProject} taskInput={taskInput} setTaskInput={setTaskInput} handleAddTask={handleAddTask} handleDeleteTask={handleDeleteTask} activeTaskId={activeTaskId} setActiveTaskId={setActiveTaskId} userSettings={userSettings} />)}
+            </div>
+            <div className="main-content">
+                <CollectiveCat
+                    user={user}
+                    todayContribution={todayContribution}
+                    rested={restedToday}
+                    onChooseRest={handleChooseRest}
+                />
             </div>
             {user && (
                 <FocusTools
@@ -1184,6 +1286,7 @@ function App() {
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/todo" element={<TodoPage />} />
               <Route path="/social" element={<SocialPage />} />
+              <Route path="/reflections" element={<ReflectionsPage />} />
             </Routes>
           </Suspense>
         </StudyRoomProvider>

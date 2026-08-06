@@ -17,3 +17,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Kaynak kedi animasyonları (7 MB'lık ham GIF'ler); yayınlanan hâlleri public/pomocat-*.webp
+/pomocat-happy.gif
+/pomocat-normal.gif

@@ -1,0 +1,66 @@
+.daily-checkin {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.daily-checkin h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.daily-checkin-note {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.daily-checkin-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.daily-checkin-option {
+  flex: 1 1 120px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.2));
+  background: var(--progress-bg-color, rgba(255, 255, 255, 0.08));
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.daily-checkin-option:hover {
+  background: var(--progress-bg-color, rgba(255, 255, 255, 0.16));
+  transform: translateY(-1px);
+}
+
+.daily-checkin-option.is-active {
+  background: var(--progress-active-color, #4ECDC4);
+  color: #10202a;
+  font-weight: 600;
+}
+
+.daily-checkin-suggestion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.daily-checkin-suggestion p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-checkin-option {
+    transition: none;
+  }
+
+  .daily-checkin-option:hover {
+    transform: none;
+  }
+}
