@@ -1173,7 +1173,7 @@ function AppContent() {
                 )}
                 {user && activeProjectId && (<Tasks tasks={tasks.filter(isFocusTask)} projects={projects} activeProjectId={activeProjectId} setActiveProjectId={setActiveProjectId} handleAddProject={handleAddProject} handleCompleteProject={handleCompleteProject} handleDeleteProject={handleDeleteProject} taskInput={taskInput} setTaskInput={setTaskInput} handleAddTask={handleAddTask} handleDeleteTask={handleDeleteTask} activeTaskId={activeTaskId} setActiveTaskId={setActiveTaskId} userSettings={userSettings} />)}
             </div>
-            {userSettings.gamification !== false && (
+            {userSettings.gamification !== false && userSettings.showCollectiveCat !== false && (
                 <CollectiveCat
                     user={user}
                     todayContribution={todayContribution}
@@ -1294,7 +1294,7 @@ function AppContent() {
             />
             
             {/* Music Player */}
-            <MusicPlayer />
+            {userSettings.showMusicPlayer !== false && <MusicPlayer />}
             
             {/* Parallax Footer */}
             <ParallaxFooter />

@@ -146,6 +146,17 @@ const SettingsModal = ({
           onChange={checked => update({ gamification: checked })}
         />
         <p className="settings-helper">{t('settings.gamificationHelp')}</p>
+        <SettingToggle
+          label={t('settings.showCollectiveCat')}
+          checked={tempSettings.showCollectiveCat !== false}
+          onChange={checked => update({ showCollectiveCat: checked })}
+        />
+        <SettingToggle
+          label={t('settings.showMusicPlayer')}
+          checked={tempSettings.showMusicPlayer !== false}
+          onChange={checked => update({ showMusicPlayer: checked })}
+        />
+        <p className="settings-helper">{t('settings.panelsHelp')}</p>
         <SettingToggle label={t('settings.goalRequired')} checked={tempSettings.goalRequired} onChange={checked => update({ goalRequired: checked })} />
         <SettingToggle label={t('settings.notifications')} checked={tempSettings.notifications} onChange={checked => update({ notifications: checked })} />
         {tempSettings.notifications && (

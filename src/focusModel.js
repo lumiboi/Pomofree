@@ -13,6 +13,8 @@ export const DEFAULT_FOCUS_SETTINGS = {
     participantJoined: true
   },
   gamification: true,
+  showCollectiveCat: true,
+  showMusicPlayer: true,
   adaptiveSuggestions: true,
   adaptiveFrequency: 'balanced',
   breakTips: true,
