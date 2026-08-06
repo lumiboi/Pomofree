@@ -410,6 +410,12 @@ const MusicPlayer = () => {
     }
   }, [isVisible]);
 
+  // Kısayoldan açılan çalar tam boyda gelir, simge durumunda değil.
+  const openPlayer = () => {
+    setIsMinimized(false);
+    setIsVisible(true);
+  };
+
   if (!isVisible) {
     return (
       <button
@@ -417,12 +423,12 @@ const MusicPlayer = () => {
         className={`music-shortcut${isSelected ? ' is-selected' : ''}`}
         onClick={() => setIsSelected(true)}
         onBlur={() => setIsSelected(false)}
-        onDoubleClick={() => setIsVisible(true)}
+        onDoubleClick={openPlayer}
         // Çift tık masaüstü hissi için; klavyeyle tek Enter yeter.
         onKeyDown={event => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
-            setIsVisible(true);
+            openPlayer();
           }
         }}
         title={t('musicPlayer.shortcutHint')}
