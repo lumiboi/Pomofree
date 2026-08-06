@@ -29,6 +29,7 @@ const MusicPlayer = () => {
   const [isSelected, setIsSelected] = useState(false);
   const [shortcutPosition, setShortcutPosition] = useState(readShortcutPosition);
   const shortcutDragRef = useRef(null);
+  const playerCreatedRef = useRef(false);
   const [isMinimized, setIsMinimized] = useState(true);
   const [currentPlaylist, setCurrentPlaylist] = useState('jazz');
   const [currentTrack, setCurrentTrack] = useState(0);
@@ -169,14 +170,10 @@ const MusicPlayer = () => {
 
   // YouTube API yükleme
   useEffect(() => {
-    if (!window.YT) {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    }
-
-    window.onYouTubeIframeAPIReady = () => {
+    const createPlayer = () => {
+      // API bir kez hazır olur; ikinci kurulum iframe'i çoğaltır.
+      if (playerCreatedRef.current || !document.getElementById('youtube-player')) return;
+      playerCreatedRef.current = true;
       new window.YT.Player('youtube-player', {
         height: '0',
         width: '0',
@@ -232,6 +229,20 @@ const MusicPlayer = () => {
         }
       });
     };
+
+    // API daha önce yüklendiyse hazır olma çağrısı bir daha gelmez.
+    if (window.YT?.Player) {
+      createPlayer();
+      return;
+    }
+
+    window.onYouTubeIframeAPIReady = createPlayer;
+    if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
   }, []);
 
   // YouTube URL'den video ID çıkarma
@@ -467,8 +478,14 @@ const MusicPlayer = () => {
     shortcutDragRef.current = null;
   };
 
+  // Gizli YouTube kabı her iki durumda da ilk sırada durur: React onu aynı
+  // konumda tuttuğu için çalar kapanıp açılırken iframe sökülmez, müzik kesilmez.
+  const youtubeHost = <div id="youtube-player" style={{ display: 'none' }}></div>;
+
   if (!isVisible) {
     return (
+      <>
+      {youtubeHost}
       <button
         type="button"
         className={`music-shortcut${isSelected ? ' is-selected' : ''}`}
@@ -498,11 +515,14 @@ const MusicPlayer = () => {
         />
         <span className="music-shortcut-label">{t('musicPlayer.title')}</span>
       </button>
+      </>
     );
   }
 
   return (
-    <div 
+    <>
+    {youtubeHost}
+    <div
       className={`music-player ${isMinimized ? 'minimized' : ''}`}
       style={{
         position: 'fixed',
@@ -639,8 +659,8 @@ const MusicPlayer = () => {
           </div>
         </div>
 
-      <div id="youtube-player" style={{ display: 'none' }}></div>
     </div>
+    </>
   );
 };
 
