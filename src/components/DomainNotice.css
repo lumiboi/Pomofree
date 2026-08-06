@@ -1,0 +1,40 @@
+.domain-notice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 1rem auto 0;
+  padding: 0.85rem 3.5rem 0.85rem 1.25rem;
+  border-left: 4px solid currentColor;
+  box-shadow: none;
+}
+
+.domain-notice strong { display: block; margin-bottom: 0.1rem; }
+.domain-notice p { margin: 0; opacity: 0.88; }
+.domain-notice a { color: inherit; font-weight: 700; text-underline-offset: 0.18em; }
+
+.domain-notice-close {
+  position: absolute;
+  top: 50%;
+  right: 0.65rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.72;
+}
+
+.domain-notice-close:hover { background: var(--card-bg); opacity: 1; }
+.domain-notice-close:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+@media (max-width: 767px) {
+  .domain-notice { margin-top: 0.75rem; padding-left: 1rem; }
+}

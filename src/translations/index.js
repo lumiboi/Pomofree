@@ -12,6 +12,13 @@ export const translations = {
     'header.login': 'Giriş Yap',
     'header.logout': 'Çıkış Yap',
     'header.profilePhoto': 'profil fotoğrafı',
+
+    // Domain notice
+    'domainNotice.label': 'Yeni adres duyurusu',
+    'domainNotice.title': 'Taşındık, hem de kutuları kaybetmeden.',
+    'domainNotice.newAddress': 'Yeni adresimiz artık',
+    'domainNotice.countdown': 'Eski adres {days} gün sonra kapanıyor; yer imini şimdiden güncelle, sonra kediyi suçlamayalım.',
+    'domainNotice.close': 'Duyuruyu kapat',
     
     // Timer
     'timer.pomodoro': 'Pomodoro',
@@ -748,6 +755,13 @@ export const translations = {
     'header.login': 'Login',
     'header.logout': 'Logout',
     'header.profilePhoto': 'profile photo',
+
+    // Domain notice
+    'domainNotice.label': 'New address announcement',
+    'domainNotice.title': 'We moved without losing the boxes.',
+    'domainNotice.newAddress': 'Our new address is',
+    'domainNotice.countdown': 'The old address closes in {days} days; update your bookmark now so the cat does not get blamed later.',
+    'domainNotice.close': 'Dismiss announcement',
     
     // Timer
     'timer.pomodoro': 'Pomodoro',

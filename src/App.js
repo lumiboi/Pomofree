@@ -38,6 +38,7 @@ import { useAchievements } from './hooks/useAchievements';
 import { useStudyRoom } from './contexts/StudyRoomContext';
 
 import Header from './components/Header';
+import DomainNotice from './components/DomainNotice';
 import Timer from './components/Timer';
 import Tasks from './components/Tasks';
 import LoginModal from './components/LoginModal';
@@ -1017,6 +1018,7 @@ function AppContent() {
     return (
         <div className={`app-container theme-${activeTheme}`}>
             <Header user={user} profilePhoto={profilePhoto} openModal={openModal} handleLogout={handleLogout} />
+            <DomainNotice />
             <StudyWithMeButton onCreateRoom={handleCreateRoom} activeTheme={activeTheme} />
             {user && <ProjectShowcase completedProjects={projects.filter(p => p.completed)} handleClearShowcase={handleClearShowcase} />}
             <div className="main-content">
