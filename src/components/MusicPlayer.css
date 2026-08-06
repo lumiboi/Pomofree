@@ -1152,6 +1152,115 @@
   background: linear-gradient(90deg, #77ce32, #15a8df) !important;
 }
 
+/* App.css'teki genel .progress-bar ve .close-btn kuralları çalara sızıyordu. */
+.music-player .progress-bar {
+  background: none;
+  border-radius: 0;
+  height: auto;
+  transition: none;
+}
+
+.music-player .minimize-btn,
+.music-player .close-btn {
+  width: 16px;
+  height: 16px;
+  min-width: 0;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.music-player .minimize-btn:hover,
+.music-player .close-btn:hover {
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.music-player.minimized {
+  height: auto;
+}
+
+/* Boş kısım da temanın rengini kullansın. */
+.music-player .progress-track {
+  background: var(--progress-bg-color, #2a2a2a);
+}
+
+/* Açık temalarda beyaz metin beyaz zeminde kayboluyordu. */
+.theme-frutiger_aero .track-title,
+.theme-frutiger_aero .track-artist,
+.theme-frutiger_aero .progress-time,
+.theme-frutiger_aero .volume-value,
+.theme-frutiger_aero .volume-icon,
+.theme-frutiger_aero .playlist-dropdown,
+.theme-frutiger_aero .custom-url-input,
+.theme-frutiger_aero .playlist-track {
+  color: #07579a !important;
+}
+
+.theme-frutiger_aero .playlist-dropdown,
+.theme-frutiger_aero .custom-url-input,
+.theme-frutiger_aero .progress-track,
+.theme-frutiger_aero .volume-slider,
+.theme-frutiger_aero .playlist-tracks {
+  background: rgba(255, 255, 255, 0.86) !important;
+  border-color: #8ed0ef !important;
+}
+
+.theme-frutiger_aero .playlist-track {
+  border-bottom-color: rgba(7, 87, 154, 0.15);
+}
+
+.theme-frutiger_aero .playlist-track:hover,
+.theme-frutiger_aero .playlist-track.active {
+  background: #147cca !important;
+  color: #ffffff !important;
+}
+
+.theme-frutiger_aero .playlist-title {
+  background: linear-gradient(180deg, #64c5f5, #147cca);
+  border-color: #8ed0ef;
+  color: #ffffff !important;
+}
+
+.theme-whimsy_core .track-title,
+.theme-whimsy_core .track-artist,
+.theme-whimsy_core .progress-time,
+.theme-whimsy_core .volume-value,
+.theme-whimsy_core .volume-icon,
+.theme-whimsy_core .playlist-dropdown,
+.theme-whimsy_core .custom-url-input,
+.theme-whimsy_core .playlist-track {
+  color: #4a4a2d !important;
+}
+
+.theme-whimsy_core .playlist-dropdown,
+.theme-whimsy_core .custom-url-input,
+.theme-whimsy_core .progress-track,
+.theme-whimsy_core .volume-slider,
+.theme-whimsy_core .playlist-tracks {
+  background: rgba(255, 252, 240, 0.9) !important;
+  border-color: #9b8962 !important;
+}
+
+.theme-whimsy_core .playlist-track {
+  border-bottom-color: rgba(74, 74, 45, 0.15);
+}
+
+.theme-whimsy_core .playlist-track:hover,
+.theme-whimsy_core .playlist-track.active {
+  background: #687248 !important;
+  color: #ffffff !important;
+}
+
+.theme-whimsy_core .playlist-title {
+  background: linear-gradient(180deg, #91996c, #687248);
+  border-color: #9b8962;
+  color: #ffffff !important;
+}
+
 @media (max-width: 640px) {
   .music-player {
     top: auto !important;
