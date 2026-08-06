@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import './App.css';
 import { auth, db } from './firebase';
@@ -48,21 +48,14 @@ import SettingsModal from './components/SettingsModal';
 import TimerSettingsModal from './components/TimerSettingsModal';
 import Celebration from './components/Celebration';
 import WeeklyStats, { sumFocusSessions } from './components/WeeklyStats';
-import AdvancedReports from './components/AdvancedReports';
-import ProductivityDashboard from './components/ProductivityDashboard';
 import AchievementNotification from './components/AchievementNotification';
 import StudyWithMeButton from './components/StudyWithMeButton';
-import RoomSetupModal from './components/RoomSetupModal';
 import StudyRoomPopout from './components/StudyRoomPopout';
-import RoomPage from './components/RoomPage';
 import PatreonSupport from './components/PatreonSupport';
 import MusicPlayer from './components/MusicPlayer';
-import TermsOfService from './components/TermsOfService';
-import PrivacyPolicy from './components/PrivacyPolicy';
 import ParallaxFooter from './components/ParallaxFooter';
+import RoomSetupModal from './components/RoomSetupModal';
 import SupportModal from './components/SupportModal';
-import TodoPage from './components/TodoPage';
-import SocialPage from './components/SocialPage';
 import FocusTools, { CommandPalette, SessionReviewModal } from './components/FocusTools';
 import FocusSoundMixer from './components/FocusSoundMixer';
 import {
@@ -74,8 +67,19 @@ import {
 } from './focusModel';
 import { isFocusTask } from './todoModel';
 import { buildSocialProfile } from './socialModel';
-import { shouldShowSeoContent, shouldShowUserDataContent } from './authModel';
+import { shouldShowSeoContent } from './authModel';
 import { normalizeProfilePhoto, resizeProfilePhoto, safeProfilePhoto } from './profilePhoto';
+
+// Açılışta gerekmeyen ekranlar ayrı parçalara bölündü (chart.js dahil).
+const AdvancedReports = lazy(() => import('./components/AdvancedReports'));
+const ProductivityDashboard = lazy(() => import('./components/ProductivityDashboard'));
+const RoomPage = lazy(() => import('./components/RoomPage'));
+const TermsOfService = lazy(() => import('./components/TermsOfService'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
+const TodoPage = lazy(() => import('./components/TodoPage'));
+const SocialPage = lazy(() => import('./components/SocialPage'));
+
+const ALL_THEME_COLOR_KEYS = [...new Set(Object.values(themes).flatMap(theme => Object.keys(theme.colors)))];
 
 const SESSION_STORAGE_KEY = 'pomofree_active_session_v2';
 const FOCUS_FLOW_STORAGE_KEY = 'pomofree_focus_flow_v1';
@@ -133,7 +137,6 @@ function AppContent() {
     const [restoredFlow] = useState(readFocusFlow);
     const [user, setUser] = useState(null);
     const [authReady, setAuthReady] = useState(false);
-    const [userDataStatus, setUserDataStatus] = useState('idle');
     const [userSettings, setUserSettings] = useState(DEFAULT_FOCUS_SETTINGS);
     const [mode, setMode] = useState(restoredFlow.mode);
     const [activeTaskId, setActiveTaskId] = useState(restoredFlow.activeTaskId);
@@ -217,8 +220,8 @@ function AppContent() {
     
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            if (currentUser) { setUser(currentUser); loadUserData(currentUser); }
-            else { setUser(null); setUserDataStatus('idle'); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); setProfilePhoto(''); setTempProfilePhoto(''); socialSessionsRef.current = []; setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
+            if (currentUser) { setUser(currentUser); fetchUserData(currentUser).catch(error => console.error('Hesap verileri yüklenemedi:', error)); }
+            else { setUser(null); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); setProfilePhoto(''); setTempProfilePhoto(''); socialSessionsRef.current = []; setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
             setAuthReady(true);
         });
         return () => unsubscribe();
@@ -364,8 +367,7 @@ function AppContent() {
         const currentTheme = themes[activeTheme];
         if (!currentTheme) return;
         const root = document.documentElement;
-        [...new Set(Object.values(themes).flatMap(theme => Object.keys(theme.colors)))]
-            .forEach(key => root.style.removeProperty(key));
+        ALL_THEME_COLOR_KEYS.forEach(key => root.style.removeProperty(key));
         Object.keys(currentTheme.colors).forEach(key => { root.style.setProperty(key, currentTheme.colors[key]); });
         document.body.style.backgroundColor = currentTheme.colors[`--bg-color-${mode}`];
     }, [activeTheme, mode]);
@@ -424,8 +426,14 @@ function AppContent() {
     };
     const fetchUserData = async (currentUser) => {
         const uid = currentUser.uid;
-        const userDocRef = doc(db, 'users', uid);
-        const docSnap = await getDoc(userDocRef);
+        const projectsColRef = collection(db, 'users', uid, 'projects');
+        // Dört sorgu birbirinden bağımsız; sırayla değil tek turda çekiliyor.
+        const [docSnap, projectsSnapshot, tasksSnapshot, querySnapshot] = await Promise.all([
+            getDoc(doc(db, 'users', uid)),
+            getDocs(projectsColRef),
+            getDocs(collection(db, 'users', uid, 'tasks')),
+            getDocs(collection(db, 'users', uid, 'focusSessions'))
+        ]);
         const data = docSnap.exists() ? docSnap.data() : {};
         const settings = {
             ...DEFAULT_FOCUS_SETTINGS,
@@ -457,8 +465,6 @@ function AppContent() {
             resetTimer(settings[restoredFlow.mode] * 60);
         }
 
-        const projectsColRef = collection(db, 'users', uid, 'projects');
-        const projectsSnapshot = await getDocs(projectsColRef);
         let projectsList = projectsSnapshot.docs.map(item => ({ id: item.id, ...item.data() }));
         if (projectsList.length === 0) {
             const defaultProject = { name: t('general.defaultProject'), completed: false };
@@ -470,7 +476,6 @@ function AppContent() {
         const restoredProject = activeProjects.find(project => project.id === restoredFlow.activeProjectId);
         setActiveProjectId(restoredProject?.id || activeProjects[0]?.id || null);
 
-        const tasksSnapshot = await getDocs(collection(db, 'users', uid, 'tasks'));
         const taskList = tasksSnapshot.docs.map(item => ({ id: item.id, ...item.data() }));
         setTasks(taskList);
         const restoredTask = taskList.find(task => (
@@ -481,9 +486,6 @@ function AppContent() {
         const startOfWeek = getStartOfWeek();
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
-        const querySnapshot = await getDocs(
-            collection(db, 'users', uid, 'focusSessions')
-        );
         const sessions = querySnapshot.docs
             .map(item => ({ id: item.id, ...item.data() }))
             .sort((a, b) => {
@@ -508,20 +510,12 @@ function AppContent() {
         setWeeklyFocusTime(focusTimes.totalSeconds);
         setTodayFocusTime(focusTimes.todaySeconds);
     };
-    const loadUserData = async (currentUser) => {
-        setUserDataStatus('loading');
-        try {
-            await fetchUserData(currentUser);
-            setUserDataStatus('ready');
-        } catch (error) {
-            console.error('Hesap verileri yüklenemedi:', error);
-            setUserDataStatus('error');
-        }
-    };
     const updateUserDataInDb = async (dataToUpdate) => { if (!user) return; await setDoc(doc(db, 'users', user.uid), dataToUpdate, { merge: true }); };
     const incrementTaskPomodoro = async (taskId) => { if (!user) return; const taskRef = doc(db, 'users', user.uid, 'tasks', taskId); try { await updateDoc(taskRef, { pomodorosCompleted: increment(1) }); setTasks(tasks.map(task => task.id === taskId ? { ...task, pomodorosCompleted: (task.pomodorosCompleted || 0) + 1 } : task)); } catch (error) { if (error.code === 'not-found' || error.message.includes('No document to update')) { await setDoc(taskRef, { pomodorosCompleted: 1 }, { merge: true }); setTasks(tasks.map(task => task.id === taskId ? { ...task, pomodorosCompleted: 1 } : task)); } else { console.error("Görev sayacı güncellenirken hata:", error); } } };
-    const handleRegister = async () => { if (!username.trim()) return alert(t('general.enterUsername')); try { const cred = await createUserWithEmailAndPassword(auth, email, password); await updateProfile(cred.user, { displayName: username }); await setDoc(doc(db, 'users', cred.user.uid), { username }, { merge: true }); closeModal(); } catch (error) { alert(getAuthErrorMessage(error, t)); } };
-    const handleLogin = async () => { try { await signInWithEmailAndPassword(auth, email, password); closeModal(); } catch (error) { alert(getAuthErrorMessage(error, t)); } };
+    // ponytail: giriş sonrası sayfayı tazeleyip veriyi temiz bir açılışta çekiyoruz
+    const finishSignIn = () => window.location.reload();
+    const handleRegister = async () => { if (!username.trim()) return alert(t('general.enterUsername')); try { const cred = await createUserWithEmailAndPassword(auth, email, password); await updateProfile(cred.user, { displayName: username }); await setDoc(doc(db, 'users', cred.user.uid), { username }, { merge: true }); finishSignIn(); } catch (error) { alert(getAuthErrorMessage(error, t)); } };
+    const handleLogin = async () => { try { await signInWithEmailAndPassword(auth, email, password); finishSignIn(); } catch (error) { alert(getAuthErrorMessage(error, t)); } };
     const handleLogout = () => { signOut(auth); };
     const handleExportData = async format => {
         if (!user) return;
@@ -601,10 +595,10 @@ function AppContent() {
     const handleGoogleSignIn = async () => { 
         const provider = new GoogleAuthProvider(); 
         try { 
-            const result = await signInWithPopup(auth, provider); 
-            await setDoc(doc(db, 'users', result.user.uid), { username: result.user.displayName }, { merge: true }); 
-            closeModal(); 
-        } catch (error) { 
+            const result = await signInWithPopup(auth, provider);
+            await setDoc(doc(db, 'users', result.user.uid), { username: result.user.displayName }, { merge: true });
+            finishSignIn();
+        } catch (error) {
             if (error.code === 'auth/account-exists-with-different-credential') {
                 // Kullanıcıya hesapları bağlama seçeneği sun
                 const shouldLink = window.confirm(
@@ -622,8 +616,8 @@ function AppContent() {
                             // Google hesabını bağla
                             const googleCredential = GoogleAuthProvider.credentialFromError(error);
                             await linkWithCredential(existingUser.user, googleCredential);
-                            
-                            closeModal();
+
+                            finishSignIn();
                         }
                     } catch (linkError) {
                         alert(getAuthErrorMessage(linkError, t));
@@ -637,10 +631,10 @@ function AppContent() {
     const handleTwitterSignIn = async () => { 
         const provider = new TwitterAuthProvider(); 
         try { 
-            const result = await signInWithPopup(auth, provider); 
-            await setDoc(doc(db, 'users', result.user.uid), { username: result.user.displayName }, { merge: true }); 
-            closeModal(); 
-        } catch (error) { 
+            const result = await signInWithPopup(auth, provider);
+            await setDoc(doc(db, 'users', result.user.uid), { username: result.user.displayName }, { merge: true });
+            finishSignIn();
+        } catch (error) {
             console.error('Twitter giriş hatası:', error);
             if (error.code === 'auth/popup-blocked') {
                 alert(t('auth.popupBlocked', 'Popup blocked! Please disable your browser\'s popup blocker and try again.'));
@@ -660,8 +654,8 @@ function AppContent() {
                             // Twitter hesabını bağla
                             const twitterCredential = TwitterAuthProvider.credentialFromError(error);
                             await linkWithCredential(existingUser.user, twitterCredential);
-                            
-                            closeModal();
+
+                            finishSignIn();
                         }
                     } catch (linkError) {
                         console.error('Hesapları bağlama hatası:', linkError);
@@ -1026,21 +1020,6 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userSettings, isTimerActive, mode, focusSession.completionCriterion]);
 
-    if (!shouldShowUserDataContent(user, userDataStatus)) {
-        const failed = userDataStatus === 'error';
-        return (
-            <div className={`app-container theme-${activeTheme}`}>
-                <Header user={user} profilePhoto={profilePhoto} openModal={openModal} handleLogout={handleLogout} />
-                <DomainNotice />
-                <main className="account-data-state card" role={failed ? 'alert' : 'status'} aria-busy={!failed}>
-                    {!failed && <progress aria-label={t('auth.loadingData')} />}
-                    <p>{t(failed ? 'auth.dataError' : 'auth.loadingData')}</p>
-                    {failed && <button className="btn btn-primary" onClick={() => loadUserData(user)}>{t('audio.retry')}</button>}
-                </main>
-            </div>
-        );
-    }
-
     return (
         <div className={`app-container theme-${activeTheme}`}>
             <Header user={user} profilePhoto={profilePhoto} openModal={openModal} handleLogout={handleLogout} />
@@ -1122,8 +1101,10 @@ function AppContent() {
             {modalOpen === 'settings' && <SettingsModal closeModal={closeModal} tempSettings={tempSettings} setTempSettings={setTempSettings} handleSaveSettings={handleSaveSettings} handleExportData={handleExportData} handleDeleteAccount={handleDeleteAccount} profilePhoto={tempProfilePhoto} setProfilePhoto={value => { setTempProfilePhoto(value); setProfilePhotoError(''); }} handleProfileFile={handleProfileFile} profilePhotoError={profilePhotoError} />}
             {modalOpen === 'timer-settings' && <TimerSettingsModal settings={userSettings} onSave={handleSaveTimerSettings} onClose={closeModal} />}
             {modalOpen === 'report' && ( <div className="modal-overlay" onClick={closeModal}><div className="modal-content" onClick={(e) => e.stopPropagation()}> <h2>{t('report.title')}</h2> <p>{t('report.completedPomodoros')}</p> <h3 style={{fontSize: '3em', textAlign: 'center', margin: '1rem 0'}}>{stats.completedPomodoros}</h3> <button onClick={closeModal} className="btn btn-secondary">{t('report.close')}</button> </div></div> )}
-            {modalOpen === 'advanced-reports' && <AdvancedReports user={user} closeModal={closeModal} />}
-            {modalOpen === 'dashboard' && <ProductivityDashboard user={user} closeModal={closeModal} />}
+            <Suspense fallback={null}>
+                {modalOpen === 'advanced-reports' && <AdvancedReports user={user} closeModal={closeModal} />}
+                {modalOpen === 'dashboard' && <ProductivityDashboard user={user} closeModal={closeModal} />}
+            </Suspense>
             {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
             {pendingReview && (
                 <SessionReviewModal
@@ -1195,14 +1176,16 @@ function App() {
     <Router>
       <LanguageProvider>
         <StudyRoomProvider>
-          <Routes>
-            <Route path="/" element={<AppContent />} />
-            <Route path="/room/:roomId" element={<RoomPage />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/todo" element={<TodoPage />} />
-            <Route path="/social" element={<SocialPage />} />
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<AppContent />} />
+              <Route path="/room/:roomId" element={<RoomPage />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/todo" element={<TodoPage />} />
+              <Route path="/social" element={<SocialPage />} />
+            </Routes>
+          </Suspense>
         </StudyRoomProvider>
       </LanguageProvider>
     </Router>
