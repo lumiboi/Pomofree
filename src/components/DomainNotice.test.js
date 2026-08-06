@@ -8,14 +8,17 @@ beforeEach(() => {
   localStorage.setItem('language', 'tr');
 });
 
-test('yeni alan adını 21 günlük sayaçla gösterir ve kalıcı olarak kapatılır', () => {
-  const { unmount } = render(
+test('yeni alan adını doğal duyuru metniyle gösterir ve kalıcı olarak kapatılır', () => {
+  const { container, unmount } = render(
     <LanguageProvider>
       <DomainNotice now={Date.parse('2026-08-06T00:00:00+03:00')} />
     </LanguageProvider>
   );
 
-  expect(screen.getByText(/21 gün sonra kapanıyor/)).toBeInTheDocument();
+  expect(screen.getByText('Taşındık. Kutular mutular tamam, kedi de sağ salim.')).toBeInTheDocument();
+  expect(container.querySelector('.domain-notice p')).toHaveTextContent(
+    "Yeni evimiz pomofree.app. Eski adres 21 gün sonra kapanıyor; bookmark'ını falan şimdiden güncelle de sonra yok efendim “kedi bi' şey yaptı” demeyelim."
+  );
   expect(screen.getByRole('link', { name: 'pomofree.app' })).toHaveAttribute('href', 'https://pomofree.app/');
 
   fireEvent.click(screen.getByRole('button', { name: 'Duyuruyu kapat' }));

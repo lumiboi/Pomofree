@@ -17,8 +17,8 @@
 
 .domain-notice-close {
   position: absolute;
-  top: 50%;
-  right: 0.65rem;
+  top: 0.5rem;
+  right: 0.5rem;
   width: 2.75rem;
   height: 2.75rem;
   border: 0;

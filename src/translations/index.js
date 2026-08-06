@@ -15,9 +15,9 @@ export const translations = {
 
     // Domain notice
     'domainNotice.label': 'Yeni adres duyurusu',
-    'domainNotice.title': 'Taşındık, hem de kutuları kaybetmeden.',
-    'domainNotice.newAddress': 'Yeni adresimiz artık',
-    'domainNotice.countdown': 'Eski adres {days} gün sonra kapanıyor; yer imini şimdiden güncelle, sonra kediyi suçlamayalım.',
+    'domainNotice.title': 'Taşındık. Kutular mutular tamam, kedi de sağ salim.',
+    'domainNotice.newAddress': 'Yeni evimiz',
+    'domainNotice.countdown': 'Eski adres {days} gün sonra kapanıyor; bookmark\'ını falan şimdiden güncelle de sonra yok efendim “kedi bi\' şey yaptı” demeyelim.',
     'domainNotice.close': 'Duyuruyu kapat',
     
     // Timer
@@ -758,9 +758,9 @@ export const translations = {
 
     // Domain notice
     'domainNotice.label': 'New address announcement',
-    'domainNotice.title': 'We moved without losing the boxes.',
-    'domainNotice.newAddress': 'Our new address is',
-    'domainNotice.countdown': 'The old address closes in {days} days; update your bookmark now so the cat does not get blamed later.',
+    'domainNotice.title': 'We moved. Boxes sorted, cat safe and sound.',
+    'domainNotice.newAddress': 'Our new home is',
+    'domainNotice.countdown': 'The old address closes in {days} days; update your bookmark now so nobody blames the cat later.',
     'domainNotice.close': 'Dismiss announcement',
     
     // Timer
