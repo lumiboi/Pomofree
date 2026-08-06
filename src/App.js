@@ -74,7 +74,7 @@ import {
 } from './focusModel';
 import { isFocusTask } from './todoModel';
 import { buildSocialProfile } from './socialModel';
-import { shouldShowSeoContent } from './authModel';
+import { shouldShowSeoContent, shouldShowUserDataContent } from './authModel';
 import { normalizeProfilePhoto, resizeProfilePhoto, safeProfilePhoto } from './profilePhoto';
 
 const SESSION_STORAGE_KEY = 'pomofree_active_session_v2';
@@ -133,6 +133,7 @@ function AppContent() {
     const [restoredFlow] = useState(readFocusFlow);
     const [user, setUser] = useState(null);
     const [authReady, setAuthReady] = useState(false);
+    const [userDataStatus, setUserDataStatus] = useState('idle');
     const [userSettings, setUserSettings] = useState(DEFAULT_FOCUS_SETTINGS);
     const [mode, setMode] = useState(restoredFlow.mode);
     const [activeTaskId, setActiveTaskId] = useState(restoredFlow.activeTaskId);
@@ -216,8 +217,8 @@ function AppContent() {
     
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            if (currentUser) { setUser(currentUser); fetchUserData(currentUser); }
-            else { setUser(null); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); setProfilePhoto(''); setTempProfilePhoto(''); socialSessionsRef.current = []; setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
+            if (currentUser) { setUser(currentUser); loadUserData(currentUser); }
+            else { setUser(null); setUserDataStatus('idle'); setTasks([]); setProjects([]); setActiveProjectId(null); setActiveTaskId(null); setUserSettings(DEFAULT_FOCUS_SETTINGS); setStats({ completedPomodoros: 0 }); setActiveTheme('default'); setWeeklyFocusTime(0); setTodayFocusTime(0); setRecentSessions([]); setProfilePhoto(''); setTempProfilePhoto(''); socialSessionsRef.current = []; setAdaptiveDecision(null); setFocusSession(emptyFocusSession()); localStorage.removeItem(SESSION_STORAGE_KEY); localStorage.removeItem(FOCUS_FLOW_STORAGE_KEY); }
             setAuthReady(true);
         });
         return () => unsubscribe();
@@ -506,6 +507,16 @@ function AppContent() {
         setRecentSessions(sessions.slice(-30));
         setWeeklyFocusTime(focusTimes.totalSeconds);
         setTodayFocusTime(focusTimes.todaySeconds);
+    };
+    const loadUserData = async (currentUser) => {
+        setUserDataStatus('loading');
+        try {
+            await fetchUserData(currentUser);
+            setUserDataStatus('ready');
+        } catch (error) {
+            console.error('Hesap verileri yüklenemedi:', error);
+            setUserDataStatus('error');
+        }
     };
     const updateUserDataInDb = async (dataToUpdate) => { if (!user) return; await setDoc(doc(db, 'users', user.uid), dataToUpdate, { merge: true }); };
     const incrementTaskPomodoro = async (taskId) => { if (!user) return; const taskRef = doc(db, 'users', user.uid, 'tasks', taskId); try { await updateDoc(taskRef, { pomodorosCompleted: increment(1) }); setTasks(tasks.map(task => task.id === taskId ? { ...task, pomodorosCompleted: (task.pomodorosCompleted || 0) + 1 } : task)); } catch (error) { if (error.code === 'not-found' || error.message.includes('No document to update')) { await setDoc(taskRef, { pomodorosCompleted: 1 }, { merge: true }); setTasks(tasks.map(task => task.id === taskId ? { ...task, pomodorosCompleted: 1 } : task)); } else { console.error("Görev sayacı güncellenirken hata:", error); } } };
@@ -1014,6 +1025,21 @@ function AppContent() {
     // toggleTimer is intentionally bound to the current render state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userSettings, isTimerActive, mode, focusSession.completionCriterion]);
+
+    if (!shouldShowUserDataContent(user, userDataStatus)) {
+        const failed = userDataStatus === 'error';
+        return (
+            <div className={`app-container theme-${activeTheme}`}>
+                <Header user={user} profilePhoto={profilePhoto} openModal={openModal} handleLogout={handleLogout} />
+                <DomainNotice />
+                <main className="account-data-state card" role={failed ? 'alert' : 'status'} aria-busy={!failed}>
+                    {!failed && <progress aria-label={t('auth.loadingData')} />}
+                    <p>{t(failed ? 'auth.dataError' : 'auth.loadingData')}</p>
+                    {failed && <button className="btn btn-primary" onClick={() => loadUserData(user)}>{t('audio.retry')}</button>}
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className={`app-container theme-${activeTheme}`}>
