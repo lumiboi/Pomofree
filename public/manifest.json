@@ -2,6 +2,9 @@
   "short_name": "Pomofree",
   "name": "Pomofree | Pomodoro Zamanlayıcı",
   "description": "Ücretsiz Pomodoro zamanlayıcı, görev ve odak takibi.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "logo192.png",
@@ -14,7 +17,6 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
   "display": "standalone",
   "theme_color": "#2A3D66",
   "background_color": "#ffffff"

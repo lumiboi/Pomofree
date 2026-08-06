@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://pomofree.one/sitemap.xml
+Sitemap: https://pomofree.app/sitemap.xml

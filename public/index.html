@@ -13,7 +13,7 @@
       name="description"
       content="Pomofree ile Pomodoro zamanlayıcını başlat; görevlerini, odak süreni ve çalışma istatistiklerini tek yerde takip et. Ücretsiz ve tarayıcıda hazır."
     />
-    <link rel="canonical" href="https://pomofree.one/" />
+    <link rel="canonical" href="https://pomofree.app/" />
     <link rel="apple-touch-icon" sizes="192x192" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <meta property="og:type" content="website" />
@@ -21,15 +21,17 @@
     <meta property="og:site_name" content="Pomofree" />
     <meta property="og:title" content="Pomofree | Ücretsiz Pomodoro Zamanlayıcı" />
     <meta property="og:description" content="Pomodoro seanslarını, görevlerini ve odak istatistiklerini tek yerde takip et." />
-    <meta property="og:url" content="https://pomofree.one/" />
-    <meta property="og:image" content="https://pomofree.one/logo512.png" />
+    <meta property="og:url" content="https://pomofree.app/" />
+    <meta property="og:image" content="https://pomofree.app/logo512.png" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
     <meta property="og:image:alt" content="Pomofree zamanlayıcı logosu" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Pomofree | Ücretsiz Pomodoro Zamanlayıcı" />
     <meta name="twitter:description" content="Pomodoro seanslarını, görevlerini ve odak istatistiklerini tek yerde takip et." />
-    <meta name="twitter:image" content="https://pomofree.one/logo512.png" />
+    <meta name="twitter:image" content="https://pomofree.app/logo512.png" />
+    <meta name="twitter:image:alt" content="Pomofree zamanlayıcı logosu" />
     <title>Pomofree | Ücretsiz Pomodoro Zamanlayıcı</title>
 
     <script type="application/ld+json">
@@ -38,30 +40,30 @@
         "@graph": [
           {
             "@type": "WebSite",
-            "@id": "https://pomofree.one/#website",
-            "url": "https://pomofree.one/",
+            "@id": "https://pomofree.app/#website",
+            "url": "https://pomofree.app/",
             "name": "Pomofree",
-            "alternateName": "pomofree.one",
+            "alternateName": "Pomofree.app",
             "inLanguage": "tr-TR",
-            "publisher": { "@id": "https://pomofree.one/#organization" }
+            "publisher": { "@id": "https://pomofree.app/#organization" }
           },
           {
             "@type": "Organization",
-            "@id": "https://pomofree.one/#organization",
+            "@id": "https://pomofree.app/#organization",
             "name": "Pomofree",
-            "url": "https://pomofree.one/",
+            "url": "https://pomofree.app/",
             "logo": {
               "@type": "ImageObject",
-              "url": "https://pomofree.one/logo512.png",
+              "url": "https://pomofree.app/logo512.png",
               "width": 512,
               "height": 512
             }
           },
           {
-            "@type": "WebApplication",
-            "@id": "https://pomofree.one/#app",
+            "@type": "SoftwareApplication",
+            "@id": "https://pomofree.app/#app",
             "name": "Pomofree",
-            "url": "https://pomofree.one/",
+            "url": "https://pomofree.app/",
             "description": "Pomodoro seanslarını, görevleri ve odak istatistiklerini takip etmek için ücretsiz web uygulaması.",
             "applicationCategory": "UtilitiesApplication",
             "operatingSystem": "Any",
@@ -79,7 +81,39 @@
               "Birlikte çalışma odaları",
               "Ortam sesleri ve temalar"
             ],
-            "publisher": { "@id": "https://pomofree.one/#organization" }
+            "publisher": { "@id": "https://pomofree.app/#organization" }
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://pomofree.app/#faq",
+            "url": "https://pomofree.app/#pomofree-nedir",
+            "inLanguage": "tr-TR",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Pomodoro tekniği nedir?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Pomodoro tekniği, işi kısa odak seanslarına böler. En yaygın düzen 25 dakika çalışma ve ardından 5 dakika moladır."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Pomofree ücretsiz mi?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Evet. Pomofree'yi ücretsiz kullanabilir, zamanlayıcını hemen başlatabilirsin."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Hesap açmak şart mı?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Hayır. Zamanlayıcı hesap olmadan çalışır. Görevlerini, raporlarını ve kişisel istatistiklerini saklamak istersen giriş yapman gerekir."
+                }
+              }
+            ]
           }
         ]
       }
