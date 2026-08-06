@@ -1279,9 +1279,8 @@
 /* Masaüstü kısayolu görünümü: sol kenarda boş alanda durur. */
 .music-shortcut {
   position: fixed;
-  left: 1rem;
-  top: 7.5rem;
   z-index: 900;
+  touch-action: none;
   display: grid;
   justify-items: center;
   gap: 0.3rem;
@@ -1308,18 +1307,15 @@
 }
 
 .music-shortcut-icon {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  font-size: 1.5rem;
-  color: #ffffff;
-  background: var(--primary-accent, linear-gradient(180deg, #4a4a4a, #202020));
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
 }
 
 .music-shortcut-label {
+  pointer-events: none;
   font-size: 0.72rem;
   line-height: 1.2;
   text-align: center;
@@ -1327,10 +1323,4 @@
   color: #ffffff;
 }
 
-@media (max-width: 640px) {
-  .music-shortcut {
-    top: auto;
-    bottom: 0.75rem;
-    left: 0.75rem;
-  }
-}
+

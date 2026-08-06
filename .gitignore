@@ -23,3 +23,6 @@ yarn-error.log*
 /pomocat-normal.gif
 firestore-debug.log
 ui-debug.log
+
+# Kaynak simge (1.4 MB); yayınlanan hâli public/player-icon.webp
+/player.png

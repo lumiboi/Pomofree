@@ -1,9 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import './MusicPlayer.css';
 
 // Çalar, masaüstü kısayolu gibi kapalı başlar; çift tıklayınca açılır.
 const SHORTCUT_STORAGE_KEY = 'pomofree_music_shortcut_open_v1';
+const SHORTCUT_POSITION_KEY = 'pomofree_music_shortcut_pos_v1';
+const SHORTCUT_SIZE = { width: 84, height: 96 };
+
+const readShortcutPosition = () => {
+  const fallback = { x: 16, y: 120 };
+  try {
+    const stored = JSON.parse(localStorage.getItem(SHORTCUT_POSITION_KEY) || 'null');
+    return Number.isFinite(stored?.x) && Number.isFinite(stored?.y) ? stored : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 const MusicPlayer = () => {
   const { t } = useTranslation();
@@ -15,6 +27,8 @@ const MusicPlayer = () => {
     }
   });
   const [isSelected, setIsSelected] = useState(false);
+  const [shortcutPosition, setShortcutPosition] = useState(readShortcutPosition);
+  const shortcutDragRef = useRef(null);
   const [isMinimized, setIsMinimized] = useState(true);
   const [currentPlaylist, setCurrentPlaylist] = useState('jazz');
   const [currentTrack, setCurrentTrack] = useState(0);
@@ -410,10 +424,47 @@ const MusicPlayer = () => {
     }
   }, [isVisible]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(SHORTCUT_POSITION_KEY, JSON.stringify(shortcutPosition));
+    } catch {
+      // Konum hatırlanamazsa simge varsayılan yerinde açılır.
+    }
+  }, [shortcutPosition]);
+
   // Kısayoldan açılan çalar tam boyda gelir, simge durumunda değil.
   const openPlayer = () => {
     setIsMinimized(false);
     setIsVisible(true);
+  };
+
+  // Masaüstü simgesi gibi sürüklenir; birkaç pikselden az hareket tık sayılır,
+  // böylece çift tıkla açma bozulmaz.
+  const startShortcutDrag = event => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    shortcutDragRef.current = {
+      dx: event.clientX - shortcutPosition.x,
+      dy: event.clientY - shortcutPosition.y,
+      moved: false
+    };
+    setIsSelected(true);
+  };
+
+  const moveShortcut = event => {
+    const drag = shortcutDragRef.current;
+    if (!drag) return;
+    const x = event.clientX - drag.dx;
+    const y = event.clientY - drag.dy;
+    if (!drag.moved && Math.abs(x - shortcutPosition.x) + Math.abs(y - shortcutPosition.y) < 4) return;
+    drag.moved = true;
+    setShortcutPosition({
+      x: Math.max(0, Math.min(x, window.innerWidth - SHORTCUT_SIZE.width)),
+      y: Math.max(0, Math.min(y, window.innerHeight - SHORTCUT_SIZE.height))
+    });
+  };
+
+  const endShortcutDrag = () => {
+    shortcutDragRef.current = null;
   };
 
   if (!isVisible) {
@@ -421,7 +472,11 @@ const MusicPlayer = () => {
       <button
         type="button"
         className={`music-shortcut${isSelected ? ' is-selected' : ''}`}
-        onClick={() => setIsSelected(true)}
+        style={{ left: `${shortcutPosition.x}px`, top: `${shortcutPosition.y}px` }}
+        onPointerDown={startShortcutDrag}
+        onPointerMove={moveShortcut}
+        onPointerUp={endShortcutDrag}
+        onPointerCancel={endShortcutDrag}
         onBlur={() => setIsSelected(false)}
         onDoubleClick={openPlayer}
         // Çift tık masaüstü hissi için; klavyeyle tek Enter yeter.
@@ -433,7 +488,14 @@ const MusicPlayer = () => {
         }}
         title={t('musicPlayer.shortcutHint')}
       >
-        <span className="music-shortcut-icon" aria-hidden="true">♪</span>
+        <img
+          className="music-shortcut-icon"
+          src="/player-icon.webp"
+          alt=""
+          width="48"
+          height="48"
+          draggable={false}
+        />
         <span className="music-shortcut-label">{t('musicPlayer.title')}</span>
       </button>
     );
