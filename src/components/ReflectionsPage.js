@@ -31,8 +31,10 @@ import {
   REPORT_REASONS,
   SUPPORT_TYPES
 } from '../reflectionModel';
-import { recordEffort } from '../catService';
+import { recordEffort, saveCheckIn } from '../catService';
+import { createCheckIn, toDayKey } from '../effortModel';
 import Header from './Header';
+import DailyCheckIn from './DailyCheckIn';
 import './ReflectionsPage.css';
 
 const FEED_LIMIT = 60;
@@ -76,23 +78,39 @@ const ReflectionsPage = () => {
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [reportingId, setReportingId] = useState(null);
+  const [capacity, setCapacity] = useState('');
+  const [restedToday, setRestedToday] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async currentUser => {
       setUser(currentUser);
       if (!currentUser) return;
       try {
-        const snapshot = await getDoc(doc(db, 'users', currentUser.uid));
+        const [snapshot, checkInSnap] = await Promise.all([
+          getDoc(doc(db, 'users', currentUser.uid)),
+          getDoc(doc(db, 'users', currentUser.uid, 'checkIns', toDayKey()))
+        ]);
         const data = snapshot.exists() ? snapshot.data() : {};
         setActiveTheme(data.theme || 'default');
         setHiddenIds(data.hiddenReflectionIds || []);
         setHiddenAuthorIds(data.hiddenAuthorIds || []);
+        if (checkInSnap.exists()) {
+          setCapacity(checkInSnap.data().capacity || '');
+          setRestedToday(Boolean(checkInSnap.data().restChosen));
+        }
       } catch (loadError) {
         console.error('Ayarlar okunamadı:', loadError);
       }
     });
     return () => unsubscribe();
   }, []);
+
+  const selectCapacity = async level => {
+    setCapacity(level);
+    if (!user) return;
+    await saveCheckIn(user.uid, { ...createCheckIn(level), restChosen: restedToday })
+      .catch(saveError => console.error('Kapasite kaydedilemedi:', saveError));
+  };
 
   useEffect(() => {
     const theme = themes[activeTheme] || themes.default;
@@ -290,6 +308,12 @@ const ReflectionsPage = () => {
           <h1>{t('reflections.title')}</h1>
           <p>{t('reflections.subtitle')}</p>
         </section>
+
+        <DailyCheckIn
+          capacity={capacity}
+          onSelect={selectCapacity}
+          onApplySuggestion={minutes => navigate('/', { state: { focusMinutes: minutes } })}
+        />
 
         <section className="card reflections-composer">
           <div className="reflections-prompts">

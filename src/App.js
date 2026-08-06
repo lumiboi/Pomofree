@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 import { auth, db } from './firebase';
 import { 
@@ -72,7 +72,6 @@ import { normalizeProfilePhoto, resizeProfilePhoto, safeProfilePhoto } from './p
 import { createCheckIn, isReturnAfterBreak, toDayKey } from './effortModel';
 import { readTodayContribution, recordEffort, saveCheckIn } from './catService';
 import CollectiveCat from './components/CollectiveCat';
-import DailyCheckIn from './components/DailyCheckIn';
 
 // Açılışta gerekmeyen ekranlar ayrı parçalara bölündü (chart.js dahil).
 const AdvancedReports = lazy(() => import('./components/AdvancedReports'));
@@ -563,19 +562,6 @@ function AppContent() {
         }
     };
 
-    const handleCapacitySelect = async level => {
-        setCapacity(level);
-        if (!user) return;
-        const checkIn = createCheckIn(level);
-        await saveCheckIn(user.uid, { ...checkIn, restChosen: restedToday })
-            .catch(error => console.error('Kapasite kaydedilemedi:', error));
-    };
-
-    const handleApplySuggestedFocus = minutes => {
-        setMode('pomodoro');
-        resetTimer(minutes * 60);
-    };
-
     const handleChooseRest = async () => {
         setRestedToday(true);
         if (!user) return;
@@ -822,7 +808,17 @@ function AppContent() {
     };
     
     const navigate = useNavigate();
-    
+    const location = useLocation();
+
+    // İç döküm sayfasındaki kapasite kartı önerilen süreyi buraya taşır.
+    useEffect(() => {
+        const minutes = location.state?.focusMinutes;
+        if (!minutes) return;
+        setMode('pomodoro');
+        resetTimer(minutes * 60);
+        navigate('/', { replace: true, state: null });
+    }, [location.state, navigate, resetTimer]);
+
     const handleRoomCreate = async (roomConfig) => {
         try {
             const roomId = await createRoom(roomConfig);
@@ -1106,13 +1102,6 @@ function AppContent() {
             <StudyWithMeButton onCreateRoom={handleCreateRoom} activeTheme={activeTheme} />
             {user && <ProjectShowcase completedProjects={projects.filter(p => p.completed)} handleClearShowcase={handleClearShowcase} />}
             <div className="main-content">
-                {user && (
-                    <DailyCheckIn
-                        capacity={capacity}
-                        onSelect={handleCapacitySelect}
-                        onApplySuggestion={handleApplySuggestedFocus}
-                    />
-                )}
                 <Timer
                     mode={mode}
                     time={time}
