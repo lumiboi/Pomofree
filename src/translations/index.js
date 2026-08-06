@@ -746,6 +746,10 @@ export const translations = {
 
     // Kolektif kedi
     'cat.title': 'Kolektif kedi',
+    'cat.minimize': 'Küçült',
+    'cat.restore': 'Büyüt',
+    'cat.close': 'Kapat',
+    'cat.reopen': '🐈 Kediyi göster',
     'cat.stageLabel': 'Aşama',
     'cat.progressLabel': 'Topluluk ilerlemesi',
     'cat.nextStage': 'Sırada:',
@@ -1592,6 +1596,10 @@ export const translations = {
 
     // Collective cat
     'cat.title': 'The collective cat',
+    'cat.minimize': 'Minimise',
+    'cat.restore': 'Restore',
+    'cat.close': 'Close',
+    'cat.reopen': '🐈 Show the cat',
     'cat.stageLabel': 'Stage',
     'cat.progressLabel': 'Community progress',
     'cat.nextStage': 'Next:',

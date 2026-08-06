@@ -10,11 +10,32 @@ const CAT_SOURCES = {
   normal: '/pomocat-normal.webp'
 };
 
+const PANEL_WIDTH = 300;
+const PANEL_HEIGHT = 420;
+const POSITION_KEY = 'pomofree_cat_panel_v1';
+
+const readPanelState = () => {
+  const fallback = {
+    x: Math.max(16, (typeof window === 'undefined' ? 1200 : window.innerWidth) - PANEL_WIDTH - 24),
+    y: 120,
+    minimized: false,
+    closed: false
+  };
+  try {
+    const stored = JSON.parse(localStorage.getItem(POSITION_KEY) || 'null');
+    return stored ? { ...fallback, ...stored } : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 const CollectiveCat = ({ user, todayContribution = 0, rested = false, onChooseRest }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [total, setTotal] = useState(0);
   const [failed, setFailed] = useState(false);
+  const [panel, setPanel] = useState(readPanelState);
+  const [dragOffset, setDragOffset] = useState(null);
 
   useEffect(() => subscribeCollectiveCat(
     cat => {
@@ -27,68 +48,145 @@ const CollectiveCat = ({ user, todayContribution = 0, rested = false, onChooseRe
     }
   ), []);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(POSITION_KEY, JSON.stringify(panel));
+    } catch {
+      // Konum hatırlanamazsa panel yine çalışır.
+    }
+  }, [panel]);
+
+  useEffect(() => {
+    if (!dragOffset) return undefined;
+    let frame = null;
+    const onMove = event => {
+      if (frame) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const maxX = window.innerWidth - PANEL_WIDTH;
+        const maxY = window.innerHeight - (panel.minimized ? 44 : PANEL_HEIGHT);
+        setPanel(current => ({
+          ...current,
+          x: Math.max(0, Math.min(event.clientX - dragOffset.x, Math.max(0, maxX))),
+          y: Math.max(0, Math.min(event.clientY - dragOffset.y, Math.max(0, maxY)))
+        }));
+      });
+    };
+    const onUp = () => setDragOffset(null);
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+    };
+  }, [dragOffset, panel.minimized]);
+
   const stage = useMemo(() => getCatStage(total), [total]);
   const mood = getCatMood({ recentContribution: todayContribution, userRested: rested });
   // İki animasyon var: keyifli hâller mutlu kediyi, diğerleri sakin kediyi gösterir.
   const isHappy = mood === 'happy' || mood === 'playful';
   const percent = Math.round(stage.progress * 100);
 
+  const startDrag = event => {
+    if (event.target.closest('.cat-panel-controls')) return;
+    event.preventDefault();
+    setDragOffset({ x: event.clientX - panel.x, y: event.clientY - panel.y });
+  };
+
+  if (panel.closed) {
+    return (
+      <button
+        type="button"
+        className="cat-panel-reopen"
+        onClick={() => setPanel(current => ({ ...current, closed: false }))}
+      >
+        {t('cat.reopen')}
+      </button>
+    );
+  }
+
   return (
-    <section className="collective-cat card" aria-labelledby="collective-cat-title">
-      <div className="collective-cat-figure">
-        <img
-          src={isHappy ? CAT_SOURCES.happy : CAT_SOURCES.normal}
-          alt={t(`cat.mood.${mood}`)}
-          className="collective-cat-image"
-          width="320"
-          height="240"
-          loading="lazy"
-          decoding="async"
-        />
-        <span className="collective-cat-mood">{t(`cat.mood.${mood}`)}</span>
-      </div>
-
-      <div className="collective-cat-body">
+    <section
+      className={`cat-panel${panel.minimized ? ' is-minimized' : ''}`}
+      style={{ left: `${panel.x}px`, top: `${panel.y}px` }}
+      aria-labelledby="collective-cat-title"
+    >
+      <header className="cat-panel-header" onPointerDown={startDrag}>
         <h2 id="collective-cat-title">{t('cat.title')}</h2>
-        <p className="collective-cat-stage">
-          {t('cat.stageLabel')} {stage.stage} · {t(`cat.stage.${stage.key}`)}
-        </p>
-
-        {stage.isComplete ? (
-          <p className="collective-cat-note">{t('cat.roomComplete')}</p>
-        ) : (
-          <>
-            <div
-              className="collective-cat-progress"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={percent}
-              aria-label={t('cat.progressLabel')}
-            >
-              <span style={{ width: `${percent}%` }} />
-            </div>
-            <p className="collective-cat-note">
-              {t('cat.nextStage')} {t(`cat.stage.${stage.nextKey}`)} · {t('cat.slowTogether')}
-            </p>
-          </>
-        )}
-
-        {failed && <p className="collective-cat-note">{t('cat.offline')}</p>}
-
-        <div className="collective-cat-actions">
-          <button type="button" className="btn btn-secondary" onClick={() => navigate('/reflections')}>
-            {t('cat.actionReflect')}
+        <div className="cat-panel-controls">
+          <button
+            type="button"
+            onClick={() => setPanel(current => ({ ...current, minimized: !current.minimized }))}
+            title={t(panel.minimized ? 'cat.restore' : 'cat.minimize')}
+            aria-label={t(panel.minimized ? 'cat.restore' : 'cat.minimize')}
+          >
+            {panel.minimized ? '□' : '—'}
           </button>
-          {user && (
-            <button type="button" className="btn btn-secondary" onClick={onChooseRest} disabled={rested}>
-              {rested ? t('cat.restedToday') : t('cat.actionRest')}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setPanel(current => ({ ...current, closed: true }))}
+            title={t('cat.close')}
+            aria-label={t('cat.close')}
+          >
+            ×
+          </button>
         </div>
+      </header>
 
-        <p className="collective-cat-hint">{user ? t('cat.hintSignedIn') : t('cat.hintGuest')}</p>
-      </div>
+      {!panel.minimized && (
+        <div className="cat-panel-body">
+          <div className="cat-panel-figure">
+            <img
+              src={isHappy ? CAT_SOURCES.happy : CAT_SOURCES.normal}
+              alt={t(`cat.mood.${mood}`)}
+              width="320"
+              height="240"
+              loading="lazy"
+              decoding="async"
+            />
+            <span className="cat-panel-mood">{t(`cat.mood.${mood}`)}</span>
+          </div>
+
+          <p className="cat-panel-stage">
+            {t('cat.stageLabel')} {stage.stage} · {t(`cat.stage.${stage.key}`)}
+          </p>
+
+          {stage.isComplete ? (
+            <p className="cat-panel-note">{t('cat.roomComplete')}</p>
+          ) : (
+            <>
+              <div
+                className="cat-panel-progress"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={percent}
+                aria-label={t('cat.progressLabel')}
+              >
+                <span style={{ width: `${percent}%` }} />
+              </div>
+              <p className="cat-panel-note">
+                {t('cat.nextStage')} {t(`cat.stage.${stage.nextKey}`)} · {t('cat.slowTogether')}
+              </p>
+            </>
+          )}
+
+          {failed && <p className="cat-panel-note">{t('cat.offline')}</p>}
+
+          <div className="cat-panel-actions">
+            <button type="button" className="btn btn-secondary" onClick={() => navigate('/reflections')}>
+              {t('cat.actionReflect')}
+            </button>
+            {user && (
+              <button type="button" className="btn btn-secondary" onClick={onChooseRest} disabled={rested}>
+                {rested ? t('cat.restedToday') : t('cat.actionRest')}
+              </button>
+            )}
+          </div>
+
+          <p className="cat-panel-hint">{user ? t('cat.hintSignedIn') : t('cat.hintGuest')}</p>
+        </div>
+      )}
     </section>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { LanguageProvider } from '../contexts/LanguageContext';
 import CollectiveCat from './CollectiveCat';
 
@@ -20,6 +20,7 @@ const renderCat = props => render(
 );
 
 beforeEach(() => {
+  localStorage.clear();
   localStorage.setItem('language', 'tr');
   mockCat.total = 0;
 });
@@ -46,4 +47,21 @@ test('dinlenmeyi seçen kullanıcıya suçlayıcı bir hâl gösterilmez', () =>
 
   expect(screen.getByRole('img')).toHaveAccessibleName('dinleniyor');
   expect(screen.getByRole('button', { name: 'Bugün dinlenmeyi seçtin' })).toBeDisabled();
+});
+
+test('panel küçültülüp kapatılabilir ve konumu hatırlanır', () => {
+  const { unmount } = renderCat({ todayContribution: 0 });
+
+  fireEvent.click(screen.getByRole('button', { name: 'Küçült' }));
+  expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Büyüt' })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Kapat' }));
+  expect(screen.getByRole('button', { name: '🐈 Kediyi göster' })).toBeInTheDocument();
+
+  // Kapalı ve küçültülmüş hâl yeniden açılışta korunur.
+  unmount();
+  renderCat({ todayContribution: 0 });
+  fireEvent.click(screen.getByRole('button', { name: '🐈 Kediyi göster' }));
+  expect(screen.getByRole('button', { name: 'Büyüt' })).toBeInTheDocument();
 });

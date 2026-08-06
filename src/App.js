@@ -1143,14 +1143,12 @@ function AppContent() {
                 )}
                 {user && activeProjectId && (<Tasks tasks={tasks.filter(isFocusTask)} projects={projects} activeProjectId={activeProjectId} setActiveProjectId={setActiveProjectId} handleAddProject={handleAddProject} handleCompleteProject={handleCompleteProject} handleDeleteProject={handleDeleteProject} taskInput={taskInput} setTaskInput={setTaskInput} handleAddTask={handleAddTask} handleDeleteTask={handleDeleteTask} activeTaskId={activeTaskId} setActiveTaskId={setActiveTaskId} userSettings={userSettings} />)}
             </div>
-            <div className="main-content">
-                <CollectiveCat
-                    user={user}
-                    todayContribution={todayContribution}
-                    rested={restedToday}
-                    onChooseRest={handleChooseRest}
-                />
-            </div>
+            <CollectiveCat
+                user={user}
+                todayContribution={todayContribution}
+                rested={restedToday}
+                onChooseRest={handleChooseRest}
+            />
             {user && (
                 <FocusTools
                     mode={mode}
