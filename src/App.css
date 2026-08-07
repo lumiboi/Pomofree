@@ -2292,3 +2292,222 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
 .reflection-support-btn { display: inline-flex; align-items: center; gap: 0.35rem; }
 .cat-room-item-icon { display: grid; place-items: center; }
 .mobile-tab-icon { display: grid; place-items: center; height: 20px; }
+
+/* =========================================================
+   ÖZEL TEMA: DREAMCORE
+   Puslu pastel manzara; kartlar camsı ve düşük kontrastlı.
+   ========================================================= */
+.theme-dreamcore { --pomocat-filter: hue-rotate(255deg) saturate(0.75) brightness(1.05); }
+
+.theme-dreamcore,
+.theme-dreamcore.todo-page {
+  background: #c3b3e0 url('../public/theme-dreamcore.webp') center / cover fixed no-repeat;
+}
+
+.theme-dreamcore h1,
+.theme-dreamcore h2,
+.theme-dreamcore h3,
+.theme-dreamcore h4 {
+  color: #4c4363;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
+
+/* Başlık çubuğu zeminde yüzsün: kart yok, sadece yumuşak hap düğmeler. */
+.theme-dreamcore .header-container {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0.4rem 0.2rem;
+}
+
+.theme-dreamcore .header-buttons .btn,
+.theme-dreamcore .btn-secondary,
+.theme-dreamcore .mode-btn,
+.theme-dreamcore .timer-emergency-start,
+.theme-dreamcore .timer-duration,
+.theme-dreamcore .reflections-tab,
+.theme-dreamcore .reflections-prompt,
+.theme-dreamcore .reflection-support-btn,
+.theme-dreamcore .reflection-link,
+.theme-dreamcore .daily-checkin-option {
+  background: rgba(252, 247, 253, 0.66);
+  border: 1px solid rgba(199, 176, 219, 0.55);
+  color: #574c6e;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(120, 96, 160, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.theme-dreamcore .header-buttons .btn:hover,
+.theme-dreamcore .btn-secondary:hover,
+.theme-dreamcore .mode-btn:hover {
+  background: rgba(255, 252, 255, 0.86);
+  border-color: rgba(180, 150, 210, 0.7);
+}
+
+.theme-dreamcore .mode-btn.active,
+.theme-dreamcore .timer-duration.active,
+.theme-dreamcore .reflections-tab.is-active,
+.theme-dreamcore .daily-checkin-option.is-active {
+  background: rgba(226, 214, 243, 0.92);
+  border-color: rgba(169, 142, 210, 0.6);
+  color: #4a3f66;
+  font-weight: 600;
+}
+
+/* Ana eylem: puslu pastel yeşil */
+.theme-dreamcore .btn-primary,
+.theme-dreamcore .timer-toggle-btn {
+  background: linear-gradient(145deg, rgba(213, 233, 183, 0.95), rgba(190, 220, 160, 0.95));
+  border: 1px solid rgba(160, 190, 130, 0.65);
+  color: #405231;
+  text-shadow: none;
+  box-shadow: 0 8px 20px rgba(120, 150, 90, 0.22);
+}
+
+.theme-dreamcore .btn-primary:hover,
+.theme-dreamcore .timer-toggle-btn:hover {
+  background: linear-gradient(145deg, rgba(222, 240, 195, 1), rgba(198, 227, 168, 1));
+}
+
+.theme-dreamcore .card,
+.theme-dreamcore .focus-tools,
+.theme-dreamcore .focus-stats-container,
+.theme-dreamcore .patreon-support,
+.theme-dreamcore .todo-shell,
+.theme-dreamcore .modal-content,
+.theme-dreamcore .domain-notice {
+  background: linear-gradient(150deg, rgba(250, 246, 254, 0.82), rgba(243, 236, 250, 0.72));
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  color: #4c4363;
+  box-shadow: 0 16px 38px rgba(94, 74, 133, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.theme-dreamcore input,
+.theme-dreamcore select,
+.theme-dreamcore textarea {
+  background: rgba(255, 253, 255, 0.8) !important;
+  color: #4c4363 !important;
+  border: 1px solid rgba(199, 176, 219, 0.55) !important;
+  border-radius: 12px;
+}
+
+.theme-dreamcore input::placeholder,
+.theme-dreamcore textarea::placeholder {
+  color: rgba(76, 67, 99, 0.45);
+}
+
+/* Yüzen pencereler: pembe başlık şeridi */
+.theme-dreamcore .cat-panel,
+.theme-dreamcore .music-player {
+  background: rgba(250, 246, 254, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 14px;
+  box-shadow: 0 16px 34px rgba(94, 74, 133, 0.2);
+}
+
+.theme-dreamcore .cat-panel-header,
+.theme-dreamcore .music-player-header {
+  background: linear-gradient(90deg, rgba(240, 200, 224, 0.95), rgba(214, 198, 240, 0.95));
+  color: #4c4363 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  text-transform: lowercase;
+}
+
+.theme-dreamcore .cat-panel-controls button,
+.theme-dreamcore .music-player .minimize-btn,
+.theme-dreamcore .music-player .close-btn {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.8);
+  color: #4c4363;
+}
+
+.theme-dreamcore .music-player-body,
+.theme-dreamcore .music-player .track-info,
+.theme-dreamcore .music-player .playlist-tracks,
+.theme-dreamcore .music-player .playlist-dropdown,
+.theme-dreamcore .music-player .custom-url-input,
+.theme-dreamcore .music-player .progress-track,
+.theme-dreamcore .music-player .volume-slider {
+  background: rgba(252, 249, 255, 0.9) !important;
+  color: #4c4363 !important;
+  border-color: rgba(199, 176, 219, 0.5) !important;
+}
+
+.theme-dreamcore .music-player .track-title,
+.theme-dreamcore .music-player .track-artist,
+.theme-dreamcore .music-player .progress-time,
+.theme-dreamcore .music-player .volume-value,
+.theme-dreamcore .music-player .playlist-track {
+  color: #4c4363 !important;
+}
+
+.theme-dreamcore .music-player .playlist-title,
+.theme-dreamcore .music-player .playlist-track.active {
+  background: linear-gradient(90deg, rgba(240, 200, 224, 0.9), rgba(214, 198, 240, 0.9)) !important;
+  color: #4c4363 !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.theme-dreamcore .music-player .control-btn,
+.theme-dreamcore .music-player .custom-url-button {
+  background: rgba(252, 247, 253, 0.9);
+  border: 1px solid rgba(199, 176, 219, 0.55);
+  color: #574c6e;
+  text-shadow: none;
+}
+
+/* İlerleme çubukları ve küçük vurgular */
+.theme-dreamcore .progress-fill,
+.theme-dreamcore .cat-panel-progress span,
+.theme-dreamcore .cat-room-progress span {
+  background: linear-gradient(90deg, #b79ada, #e8adcd) !important;
+}
+
+.theme-dreamcore .mobile-tabbar {
+  background: rgba(250, 246, 254, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.theme-dreamcore .mobile-tab.is-active {
+  background: rgba(232, 216, 244, 0.9);
+  color: #5b4a7d;
+}
+
+.theme-dreamcore .no-tasks-message,
+.theme-dreamcore .cat-room-note,
+.theme-dreamcore .cat-panel-hint {
+  color: rgba(76, 67, 99, 0.72);
+}
+
+/* Dreamcore: ana eylem düğmesi pastel yeşil, ikincil eylem camsı */
+.theme-dreamcore .btn-start,
+.theme-dreamcore .timer-primary-actions .btn-start {
+  background: linear-gradient(150deg, #d7ecb5, #bfe0a0);
+  border: 1px solid rgba(150, 185, 120, 0.6);
+  color: #3f5230;
+  box-shadow: 0 6px 0 rgba(150, 180, 125, 0.45), 0 12px 24px rgba(120, 150, 90, 0.18);
+  text-shadow: none;
+}
+
+.theme-dreamcore .btn-start:hover {
+  background: linear-gradient(150deg, #e0f2c0, #c9e7ab);
+}
+
+.theme-dreamcore .timer-emergency-start {
+  background: rgba(252, 247, 253, 0.72);
+  color: #574c6e;
+  opacity: 1;
+}
+
+.theme-dreamcore .btn-primary,
+.theme-dreamcore .header-buttons .btn-primary {
+  background: linear-gradient(150deg, rgba(240, 214, 236, 0.95), rgba(224, 205, 244, 0.95));
+  border: 1px solid rgba(199, 176, 219, 0.6);
+  color: #4c4363;
+}

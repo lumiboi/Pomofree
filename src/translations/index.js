@@ -352,6 +352,7 @@ export const translations = {
     
     // Themes
     'themes.selectTheme': 'Tema Seç',
+    'themes.dreamcore': 'ÖZEL (Dreamcore)',
     'themes.whimsy_core': 'ÖZEL (Cottagecore)',
     'themes.frutiger_aero': 'ÖZEL (Frutiger Aero)',
     'themes.wired': 'ÖZEL (Wired)',
@@ -1302,6 +1303,7 @@ export const translations = {
     
     // Themes
     'themes.selectTheme': 'Select Theme',
+    'themes.dreamcore': 'SPECIAL (Dreamcore)',
     'themes.whimsy_core': 'SPECIAL (Cottagecore)',
     'themes.frutiger_aero': 'SPECIAL (Frutiger Aero)',
     'themes.wired': 'SPECIAL (Wired)',

@@ -250,3 +250,17 @@
     height: 18px;
   }
 }
+
+.study-with-me-btn.theme-dreamcore {
+  background: linear-gradient(150deg, rgba(250, 246, 254, 0.85), rgba(240, 228, 249, 0.8));
+  color: #4c4363;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 12px 26px rgba(94, 74, 133, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.study-with-me-btn.theme-dreamcore:hover {
+  background: linear-gradient(150deg, rgba(255, 252, 255, 0.95), rgba(246, 236, 253, 0.9));
+  transform: translateY(-2px);
+}

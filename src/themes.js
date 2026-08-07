@@ -1,4 +1,23 @@
 export const themes = {
+  dreamcore: {
+    name: "ÖZEL (Dreamcore)",
+    isSpecial: true,
+    colors: {
+      "--font-family": "'Segoe UI', 'Trebuchet MS', 'Avenir Next', sans-serif",
+      "--bg-color-pomodoro": "#c3b3e0",
+      "--bg-color-short": "#b9cfe4",
+      "--bg-color-long": "#dcc0dc",
+      "--text-color": "#4c4363",
+      "--text-color-dark": "#fdfbff",
+      "--primary-accent": "#e7c4dd",
+      "--card-bg": "rgba(248, 244, 253, 0.74)",
+      "--card-border": "rgba(255, 255, 255, 0.82)",
+      "--progress-active-color": "#a98ed2",
+      "--progress-inactive-color": "#e5a6c8",
+      "--progress-bg-color": "rgba(169, 142, 210, 0.18)",
+      "--soft-shadow": "0 16px 38px rgba(94, 74, 133, 0.18)"
+    }
+  },
   whimsy_core: {
     name: "ÖZEL (Cottagecore)",
     isSpecial: true,
