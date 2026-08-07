@@ -9,12 +9,19 @@ const SHORTCUT_SIZE = { width: 84, height: 96 };
 
 const readShortcutPosition = () => {
   const fallback = { x: 16, y: 120 };
+  let position = fallback;
   try {
     const stored = JSON.parse(localStorage.getItem(SHORTCUT_POSITION_KEY) || 'null');
-    return Number.isFinite(stored?.x) && Number.isFinite(stored?.y) ? stored : fallback;
+    if (Number.isFinite(stored?.x) && Number.isFinite(stored?.y)) position = stored;
   } catch {
-    return fallback;
+    position = fallback;
   }
+  if (typeof window === 'undefined') return position;
+  // Dar ekrana geçildiğinde kayıtlı konum görünmez bir yere düşebiliyor.
+  return {
+    x: Math.max(0, Math.min(position.x, Math.max(0, window.innerWidth - SHORTCUT_SIZE.width))),
+    y: Math.max(0, Math.min(position.y, Math.max(0, window.innerHeight - SHORTCUT_SIZE.height)))
+  };
 };
 
 const MusicPlayer = () => {
@@ -169,15 +176,19 @@ const MusicPlayer = () => {
 
   // YouTube API yükleme
   useEffect(() => {
-    if (!window.YT) {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    }
+    // YouTube bu düğümü iframe ile değiştiriyor. JSX'te dururken React onu
+    // kendi ağacının parçası sanıp komşularını yerleştirirken çakışıyordu
+    // (insertBefore hatası). Bu yüzden kabı React'in dışında, body'de tutuyoruz.
+    const host = document.createElement('div');
+    host.id = 'youtube-player';
+    host.style.display = 'none';
+    document.body.appendChild(host);
 
-    window.onYouTubeIframeAPIReady = () => {
-      new window.YT.Player('youtube-player', {
+    let created = false;
+    const createPlayer = () => {
+      if (created) return;
+      created = true;
+      new window.YT.Player(host, {
         height: '0',
         width: '0',
         playerVars: {
@@ -231,6 +242,24 @@ const MusicPlayer = () => {
           }
         }
       });
+    };
+
+    // API daha önce yüklendiyse hazır olma çağrısı bir daha gelmez.
+    if (window.YT?.Player) {
+      createPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = createPlayer;
+      if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      }
+    }
+
+    return () => {
+      // Kap React ağacında olmadığı için temizliği kendimiz yapıyoruz.
+      host.remove();
     };
   }, []);
 
@@ -639,7 +668,6 @@ const MusicPlayer = () => {
           </div>
         </div>
 
-      <div id="youtube-player" style={{ display: 'none' }}></div>
     </div>
   );
 };

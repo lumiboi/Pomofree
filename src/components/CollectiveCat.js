@@ -14,19 +14,35 @@ const PANEL_WIDTH = 300;
 const PANEL_HEIGHT = 420;
 const POSITION_KEY = 'pomofree_cat_panel_v1';
 
+const MOBILE_WIDTH = 720;
+
+const isMobileViewport = () => typeof window !== 'undefined' && window.innerWidth <= MOBILE_WIDTH;
+
 const readPanelState = () => {
+  const viewport = typeof window === 'undefined' ? 1200 : window.innerWidth;
   const fallback = {
-    x: Math.max(16, (typeof window === 'undefined' ? 1200 : window.innerWidth) - PANEL_WIDTH - 24),
+    x: Math.max(16, viewport - PANEL_WIDTH - 24),
     y: 120,
     minimized: false,
     closed: false
   };
+  let state = fallback;
   try {
     const stored = JSON.parse(localStorage.getItem(POSITION_KEY) || 'null');
-    return stored ? { ...fallback, ...stored } : fallback;
+    if (stored) state = { ...fallback, ...stored };
   } catch {
-    return fallback;
+    state = fallback;
   }
+
+  // Dar ekranda panel açık hâlde her şeyin üstünü kapatıyor; simge durumunda başlar.
+  if (isMobileViewport()) return { ...state, minimized: true, x: 12, y: 12 };
+
+  // Masaüstünde de kayıtlı konum ekran dışında kalmışsa geri çekiyoruz.
+  return {
+    ...state,
+    x: Math.max(0, Math.min(state.x, Math.max(0, viewport - PANEL_WIDTH))),
+    y: Math.max(0, Math.min(state.y, Math.max(0, (typeof window === 'undefined' ? 800 : window.innerHeight) - 60)))
+  };
 };
 
 const CollectiveCat = ({ user, todayContribution = 0, rested = false, onChooseRest }) => {

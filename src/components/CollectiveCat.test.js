@@ -65,3 +65,14 @@ test('panel küçültülüp kapatılabilir ve konumu hatırlanır', () => {
   fireEvent.click(screen.getByRole('button', { name: '🐈 Kediyi göster' }));
   expect(screen.getByRole('button', { name: 'Büyüt' })).toBeInTheDocument();
 });
+
+test('dar ekranda panel simge durumunda açılır', () => {
+  const width = window.innerWidth;
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+
+  renderCat({ todayContribution: 0 });
+  expect(screen.getByRole('button', { name: 'Büyüt' })).toBeInTheDocument();
+  expect(screen.queryByRole('img')).not.toBeInTheDocument();
+
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
+});
