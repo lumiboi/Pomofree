@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import { getCatMood, getCatStage } from '../effortModel';
 import { subscribeCollectiveCat } from '../catService';
+import Icon from './Icon';
 import './CollectiveCat.css';
 
 const CAT_SOURCES = {
@@ -120,7 +121,7 @@ const CollectiveCat = ({ user, todayContribution = 0, rested = false, onChooseRe
         className="cat-panel-reopen"
         onClick={() => setPanel(current => ({ ...current, closed: false }))}
       >
-        {t('cat.reopen')}
+        <Icon name="cat" size={18} /> {t('cat.reopen')}
       </button>
     );
   }
@@ -140,7 +141,7 @@ const CollectiveCat = ({ user, todayContribution = 0, rested = false, onChooseRe
             title={t(panel.minimized ? 'cat.restore' : 'cat.minimize')}
             aria-label={t(panel.minimized ? 'cat.restore' : 'cat.minimize')}
           >
-            {panel.minimized ? '□' : '—'}
+            <Icon name={panel.minimized ? 'expand' : 'minimize'} size={14} />
           </button>
           <button
             type="button"
@@ -148,7 +149,7 @@ const CollectiveCat = ({ user, todayContribution = 0, rested = false, onChooseRe
             title={t('cat.close')}
             aria-label={t('cat.close')}
           >
-            ×
+            <Icon name="close" size={14} />
           </button>
         </div>
       </header>

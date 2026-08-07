@@ -57,19 +57,19 @@ const post = (extra = {}) => ({
 // --- Kolektif kedi ---
 await check('kedi belgesi giriş yapmadan okunabilir', assertSucceeds(getDoc(doc(guest, 'collectiveCat', 'current'))));
 await check('kedi ilk katkıyla oluşturulur', assertSucceeds(setDoc(doc(alice, 'collectiveCat', 'current'), {
-  totalContribution: 4, dailyContribution: 4, dayKey: '2026-08-06', seasonId: '2026-08', updatedAt: serverTimestamp()
+  totalContribution: 4, dailyContribution: 4, weeklyContribution: 4, seasonContribution: 4, dayKey: '2026-08-06', weekKey: '2026-08-03', seasonId: '2026-08', updatedAt: serverTimestamp()
 })));
 await check('kedi tavanı aşan tek yazımı reddeder', assertFails(setDoc(doc(alice, 'collectiveCat', 'current'), {
-  totalContribution: increment(50), dailyContribution: increment(50), dayKey: '2026-08-06', seasonId: '2026-08', updatedAt: serverTimestamp()
+  totalContribution: increment(50), dailyContribution: increment(50), weeklyContribution: increment(50), seasonContribution: increment(50), dayKey: '2026-08-06', weekKey: '2026-08-03', seasonId: '2026-08', updatedAt: serverTimestamp()
 }, { merge: true })));
 await check('kedi geriye gidemez', assertFails(setDoc(doc(alice, 'collectiveCat', 'current'), {
-  totalContribution: increment(-2), dailyContribution: 0, dayKey: '2026-08-06', seasonId: '2026-08', updatedAt: serverTimestamp()
+  totalContribution: increment(-2), dailyContribution: 0, weeklyContribution: 0, seasonContribution: 0, dayKey: '2026-08-06', weekKey: '2026-08-03', seasonId: '2026-08', updatedAt: serverTimestamp()
 }, { merge: true })));
 await check('kedi normal katkıyı kabul eder', assertSucceeds(setDoc(doc(alice, 'collectiveCat', 'current'), {
-  totalContribution: increment(3), dailyContribution: increment(3), dayKey: '2026-08-06', seasonId: '2026-08', updatedAt: serverTimestamp()
+  totalContribution: increment(3), dailyContribution: increment(3), weeklyContribution: increment(3), seasonContribution: increment(3), dayKey: '2026-08-06', weekKey: '2026-08-03', seasonId: '2026-08', updatedAt: serverTimestamp()
 }, { merge: true })));
 await check('giriş yapmayan kedi yazamaz', assertFails(setDoc(doc(guest, 'collectiveCat', 'current'), {
-  totalContribution: increment(1), dailyContribution: increment(1), dayKey: '2026-08-06', seasonId: '2026-08', updatedAt: serverTimestamp()
+  totalContribution: increment(1), dailyContribution: increment(1), weeklyContribution: increment(1), seasonContribution: increment(1), dayKey: '2026-08-06', weekKey: '2026-08-03', seasonId: '2026-08', updatedAt: serverTimestamp()
 }, { merge: true })));
 
 // --- İç döküm ---

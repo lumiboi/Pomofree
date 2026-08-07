@@ -38,18 +38,19 @@ import { recordEffort, saveCheckIn } from '../catService';
 import { createCheckIn, isWeeklyReviewDue, toDayKey } from '../effortModel';
 import Header from './Header';
 import DailyCheckIn from './DailyCheckIn';
+import Icon from './Icon';
 import './ReflectionsPage.css';
 
 const FEED_LIMIT = 60;
 const JOURNAL_LIMIT = 50;
 
 const supportIcons = {
-  with_you: '🫂',
-  read: '👀',
-  not_alone: '🤝',
-  hug: '💛',
-  rest_is_okay: '🌙',
-  try_again: '🌱'
+  with_you: 'hands',
+  read: 'eye',
+  not_alone: 'link',
+  hug: 'heart',
+  rest_is_okay: 'moon',
+  try_again: 'sprout'
 };
 
 const formatDate = (value, language) => {
@@ -333,7 +334,9 @@ const ReflectionsPage = () => {
         <section className="card reflections-intro">
           <h1>{t('reflections.title')}</h1>
           <p>{t('reflections.subtitle')}</p>
-          <p className="reflections-cat-line">🐈 {t(`reflections.catMessage.${catMessage}`)}</p>
+          <p className="reflections-cat-line">
+            <Icon name="cat" size={18} /> {t(`reflections.catMessage.${catMessage}`)}
+          </p>
         </section>
 
         <DailyCheckIn
@@ -533,7 +536,7 @@ const ReflectionsPage = () => {
                         onClick={() => giveSupport(reflection, type)}
                         title={t(`reflections.support.${type}`)}
                       >
-                        <span aria-hidden="true">{supportIcons[type]}</span>
+                        <Icon name={supportIcons[type]} size={16} />
                         {t(`reflections.support.${type}`)}
                       </button>
                     ))}

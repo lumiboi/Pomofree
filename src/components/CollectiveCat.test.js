@@ -57,12 +57,12 @@ test('panel küçültülüp kapatılabilir ve konumu hatırlanır', () => {
   expect(screen.getByRole('button', { name: 'Büyüt' })).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: 'Kapat' }));
-  expect(screen.getByRole('button', { name: '🐈 Kediyi göster' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Kediyi göster' })).toBeInTheDocument();
 
   // Kapalı ve küçültülmüş hâl yeniden açılışta korunur.
   unmount();
   renderCat({ todayContribution: 0 });
-  fireEvent.click(screen.getByRole('button', { name: '🐈 Kediyi göster' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Kediyi göster' }));
   expect(screen.getByRole('button', { name: 'Büyüt' })).toBeInTheDocument();
 });
 

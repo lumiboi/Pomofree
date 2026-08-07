@@ -14,19 +14,20 @@ import {
 } from '../effortModel';
 import { fetchCollectiveCat, subscribeCollectiveCat, subscribeContributors } from '../catService';
 import Header from './Header';
+import Icon from './Icon';
 import './CatRoom.css';
 
 const STAGE_ICONS = {
-  kitten: '🐈',
-  bowl: '🥣',
-  cushion: '🛋️',
-  mouse: '🐭',
-  window: '🪟',
-  shelf: '📚',
-  plants: '🪴',
-  playground: '🎪',
-  wall: '🧱',
-  room: '🏡'
+  kitten: 'cat',
+  bowl: 'bowl',
+  cushion: 'cushion',
+  mouse: 'mouse',
+  window: 'window',
+  shelf: 'shelf',
+  plants: 'plants',
+  playground: 'playground',
+  wall: 'wall',
+  room: 'room'
 };
 
 // Katkı tablosu: değerleri modelden okuyoruz ki metin ile kod ayrışmasın.
@@ -61,7 +62,14 @@ const CatRoom = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [activeTheme, setActiveTheme] = useState('default');
-  const [cat, setCat] = useState({ totalContribution: 0, dailyContribution: 0, seasonId: '', updatedAt: null });
+  const [cat, setCat] = useState({
+    totalContribution: 0,
+    dailyContribution: 0,
+    weeklyContribution: 0,
+    seasonContribution: 0,
+    seasonId: '',
+    updatedAt: null
+  });
   const [contributors, setContributors] = useState([]);
   const [failed, setFailed] = useState(false);
 
@@ -149,7 +157,8 @@ const CatRoom = () => {
             <div className="cat-room-stagebar">
               <div className="cat-room-stagebar-head">
                 <strong>
-                  {STAGE_ICONS[stage.key]} {t('cat.stageLabel')} {stage.stage} · {t(`cat.stage.${stage.key}`)}
+                  <Icon name={STAGE_ICONS[stage.key]} size={18} />
+                  {t('cat.stageLabel')} {stage.stage} · {t(`cat.stage.${stage.key}`)}
                 </strong>
                 <span>{cat.totalContribution}{stage.nextThreshold ? ` / ${stage.nextThreshold}` : ''}</span>
               </div>
@@ -167,7 +176,7 @@ const CatRoom = () => {
                 <p className="cat-room-goal">{t('cat.roomComplete')}</p>
               ) : (
                 <p className="cat-room-goal">
-                  {t('catRoom.seasonGoal')} {STAGE_ICONS[stage.nextKey]} {t(`cat.stage.${stage.nextKey}`)} ·{' '}
+                  {t('catRoom.seasonGoal')} {t(`cat.stage.${stage.nextKey}`)} ·{' '}
                   {t('catRoom.remaining')} {remaining} · {t('cat.slowTogether')}
                 </p>
               )}
@@ -177,6 +186,14 @@ const CatRoom = () => {
               <div>
                 <strong>{cat.dailyContribution}</strong>
                 <span>{t('catRoom.todayTogether')}</span>
+              </div>
+              <div>
+                <strong>{cat.weeklyContribution}</strong>
+                <span>{t('catRoom.thisWeek')}</span>
+              </div>
+              <div>
+                <strong>{cat.seasonContribution}</strong>
+                <span>{t('catRoom.thisMonth')}</span>
               </div>
               <div>
                 <strong>{cat.totalContribution}</strong>
@@ -191,7 +208,9 @@ const CatRoom = () => {
             {failed && (
               <p className="cat-room-error" role="alert">
                 {t('cat.offline')}{' '}
-                <button type="button" className="btn btn-secondary" onClick={retry}>{t('audio.retry')}</button>
+                <button type="button" className="btn btn-secondary" onClick={retry}>
+                  <Icon name="refresh" size={16} /> {t('audio.retry')}
+                </button>
               </p>
             )}
             <p className="cat-room-sync">
@@ -232,7 +251,7 @@ const CatRoom = () => {
               const isNext = item.stage === stage.stage + 1;
               return (
                 <li key={item.key} className={`${unlocked ? 'is-unlocked' : ''}${isNext ? ' is-next' : ''}`}>
-                  <span className="cat-room-item-icon" aria-hidden="true">{STAGE_ICONS[item.key]}</span>
+                  <span className="cat-room-item-icon"><Icon name={STAGE_ICONS[item.key]} size={20} /></span>
                   <span className="cat-room-item-name">{t(`cat.stage.${item.key}`)}</span>
                   <span className="cat-room-item-state">
                     {unlocked ? t('catRoom.unlocked') : `${item.threshold} ${t('catRoom.atContribution')}`}

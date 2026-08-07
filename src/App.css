@@ -2279,7 +2279,16 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   }
 
   .cat-panel.is-minimized .cat-panel-header::before {
-    content: '🐈';
+    content: none;
     font-size: 1rem;
   }
 }
+
+/* İkonlar metinle aynı hizada dursun */
+.app-icon { flex: none; vertical-align: -0.15em; }
+.cat-room-stagebar-head strong,
+.reflections-cat-line,
+.cat-panel-reopen,
+.reflection-support-btn { display: inline-flex; align-items: center; gap: 0.35rem; }
+.cat-room-item-icon { display: grid; place-items: center; }
+.mobile-tab-icon { display: grid; place-items: center; height: 20px; }

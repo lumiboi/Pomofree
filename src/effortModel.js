@@ -75,6 +75,18 @@ export const toDayKey = (value = new Date()) => {
   return `${date.getFullYear()}-${month}-${day}`;
 };
 
+/**
+ * Haftanın anahtarı, o haftanın pazartesi tarihidir; gün anahtarıyla aynı
+ * biçimde durur ki karşılaştırması ucuz olsun.
+ */
+export const toWeekKey = (value = new Date()) => {
+  const date = toDate(value) || new Date();
+  const monday = new Date(date);
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+  return toDayKey(monday);
+};
+
 export const isEffortType = type => Object.hasOwn(EFFORT_CONTRIBUTION, type);
 
 export const getContribution = type => EFFORT_CONTRIBUTION[type] || 0;

@@ -21,7 +21,8 @@ import {
   getEffortAward,
   getSeasonId,
   getThrottleMinutes,
-  toDayKey
+  toDayKey,
+  toWeekKey
 } from './effortModel';
 
 export const CONTRIBUTORS_LIMIT = 40;
@@ -45,12 +46,23 @@ export const COLLECTIVE_CAT_PATH = ['collectiveCat', 'current'];
 const readCat = snapshot => {
   const data = snapshot.exists() ? snapshot.data() : {};
   const today = toDayKey();
+  const week = toWeekKey();
+  const season = getSeasonId();
+  // Dönem değişince o dönemin sayacı sıfırdan sayılır; toplam hiç sıfırlanmaz.
+  const daily = data.dayKey === today ? Number(data.dailyContribution) || 0 : 0;
+  // Hafta bugünü, dönem de haftayı kapsar: sayaçlar bu tabanın altına düşemez.
+  // Yeni sayaçlar eklenmeden önceki kayıtlar da böylece tutarlı görünür.
+  const weekly = Math.max(data.weekKey === week ? Number(data.weeklyContribution) || 0 : 0, daily);
+  const seasonal = Math.max(data.seasonId === season ? Number(data.seasonContribution) || 0 : 0, weekly);
+
   return {
     totalContribution: Number(data.totalContribution) || 0,
-    // Gün değiştiyse dünün toplamı bugünün ruh hâlini etkilemesin.
-    dailyContribution: data.dayKey === today ? Number(data.dailyContribution) || 0 : 0,
+    dailyContribution: daily,
+    weeklyContribution: weekly,
+    seasonContribution: seasonal,
     dayKey: data.dayKey || today,
-    seasonId: data.seasonId || getSeasonId(),
+    weekKey: data.weekKey || week,
+    seasonId: data.seasonId || season,
     updatedAt: data.updatedAt || null
   };
 };
@@ -106,13 +118,19 @@ export const recordEffort = async (user, type, extra = {}, now = new Date()) => 
 
   if (award.value > 0) {
     const today = toDayKey(now);
+    const week = toWeekKey(now);
+    const season = getSeasonId(now);
     const cat = await fetchCollectiveCat();
+    // Gün, hafta ve dönem sayaçları kendi anahtarları değişince sıfırdan başlar;
+    // toplam katkı hiçbir zaman sıfırlanmaz.
     await setDoc(doc(db, ...COLLECTIVE_CAT_PATH), {
       totalContribution: increment(award.value),
-      // Günlük toplam yalnızca kedinin hâli için; gün dönünce sıfırlanır.
       dailyContribution: cat.dayKey === today ? increment(award.value) : award.value,
+      weeklyContribution: cat.weekKey === week ? increment(award.value) : award.value,
+      seasonContribution: cat.seasonId === season ? increment(award.value) : award.value,
       dayKey: today,
-      seasonId: getSeasonId(now),
+      weekKey: week,
+      seasonId: season,
       updatedAt: serverTimestamp()
     }, { merge: true });
 

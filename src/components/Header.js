@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from '../hooks/useTranslation';
 import { safeProfilePhoto } from '../profilePhoto';
 import LanguageSelector from './LanguageSelector';
+import Icon from './Icon';
 
 const Header = ({
   user,
@@ -207,7 +208,7 @@ const Header = ({
         aria-label={t(isMenuOpen ? 'header.closeMenu' : 'header.openMenu')}
         onClick={() => setIsMenuOpen(open => !open)}
       >
-        <span aria-hidden="true">{isMenuOpen ? '✕' : '☰'}</span>
+        <Icon name={isMenuOpen ? 'close' : 'menu'} size={22} />
       </button>
     </header>
 
@@ -219,10 +220,10 @@ const Header = ({
     {!isRoomPage && (
         <nav className="mobile-tabbar" aria-label={t('nav.tabbar')}>
           {[
-            { path: '/', icon: '◷', label: t('nav.timer') },
-            { path: '/todo', icon: '✓', label: t('header.todo'), needsUser: true },
-            { path: '/reflections', icon: '✎', label: t('header.reflections') },
-            { path: '/cat', icon: '🐈', label: t('header.catRoom') }
+            { path: '/', icon: 'timer', label: t('nav.timer') },
+            { path: '/todo', icon: 'check', label: t('header.todo'), needsUser: true },
+            { path: '/reflections', icon: 'pencil', label: t('header.reflections') },
+            { path: '/cat', icon: 'cat', label: t('header.catRoom') }
           ].map(tab => (
             <button
               key={tab.path}
@@ -238,7 +239,7 @@ const Header = ({
                 navigate(tab.path);
               }}
             >
-              <span className="mobile-tab-icon" aria-hidden="true">{tab.icon}</span>
+              <span className="mobile-tab-icon"><Icon name={tab.icon} size={20} /></span>
               <span className="mobile-tab-label">{tab.label}</span>
             </button>
           ))}
@@ -252,7 +253,7 @@ const Header = ({
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           >
-            <span className="mobile-tab-icon" aria-hidden="true">☰</span>
+            <span className="mobile-tab-icon"><Icon name="menu" size={20} /></span>
             <span className="mobile-tab-label">{t('nav.more')}</span>
           </button>
       </nav>

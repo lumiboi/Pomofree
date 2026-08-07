@@ -77,13 +77,20 @@ service cloud.firestore {
     match /collectiveCat/current {
       function validCatFields() {
         return request.resource.data.keys().hasOnly([
-            'totalContribution', 'dailyContribution', 'dayKey', 'seasonId', 'updatedAt'
+            'totalContribution', 'dailyContribution', 'weeklyContribution',
+            'seasonContribution', 'dayKey', 'weekKey', 'seasonId', 'updatedAt'
           ])
           && request.resource.data.totalContribution is int
           && request.resource.data.dailyContribution is int
           && request.resource.data.dailyContribution >= 0
+          && request.resource.data.weeklyContribution is int
+          && request.resource.data.weeklyContribution >= 0
+          && request.resource.data.seasonContribution is int
+          && request.resource.data.seasonContribution >= 0
           && request.resource.data.dayKey is string
           && request.resource.data.dayKey.size() <= 10
+          && request.resource.data.weekKey is string
+          && request.resource.data.weekKey.size() <= 10
           && request.resource.data.seasonId is string
           && request.resource.data.seasonId.size() <= 7;
       }
