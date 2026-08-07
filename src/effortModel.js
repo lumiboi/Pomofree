@@ -1,5 +1,6 @@
 // Kolektif kedi ve azim sistemi (plan §4, §5, §6, §9, §14).
 // Buradaki her şey saf fonksiyon: Firestore'a yazılan değerler bu dosyadan çıkar.
+import { cleanSocialText, maskDisplayName } from './socialModel';
 
 export const EFFORT_CONTRIBUTION = {
   focus_started: 1,
@@ -171,6 +172,15 @@ export const getUnlockedItems = (totalContribution = 0) => {
 export const getSeasonId = (now = new Date()) => {
   const date = toDate(now) || new Date();
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+};
+
+/**
+ * Katkı listesinde görünecek ad. Profili herkese açık olmayan kullanıcının
+ * tam adı hiç yazılmaz; maskesi kaydedilir, böylece belgeyi okuyan da göremez.
+ */
+export const contributorName = (displayName, publicProfile) => {
+  const clean = cleanSocialText(displayName, 50) || 'Pomofree kullanıcısı';
+  return publicProfile ? clean : maskDisplayName(clean);
 };
 
 /**

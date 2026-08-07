@@ -88,6 +88,7 @@ const ReflectionsPage = () => {
   const [restedToday, setRestedToday] = useState(false);
   const [weeklyReviewDue, setWeeklyReviewDue] = useState(false);
   const [gamificationEnabled, setGamificationEnabled] = useState(true);
+  const [socialProfilePublic, setSocialProfilePublic] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async currentUser => {
@@ -104,6 +105,7 @@ const ReflectionsPage = () => {
         setHiddenIds(data.hiddenReflectionIds || []);
         setHiddenAuthorIds(data.hiddenAuthorIds || []);
         setGamificationEnabled(data.settings?.gamification !== false);
+        setSocialProfilePublic(data.settings?.socialProfilePublic === true);
         setWeeklyReviewDue(isWeeklyReviewDue(data.lastWeeklyReviewAt));
         setOwnedIds(owned);
         if (checkInSnap.exists()) {
@@ -184,9 +186,13 @@ const ReflectionsPage = () => {
 
   const logEffort = useCallback(async (type, extra = {}) => {
     if (!user) return;
-    await recordEffort(user, type, { ...extra, gamificationEnabled })
-      .catch(effortError => console.error('Katkı yazılamadı:', effortError));
-  }, [gamificationEnabled, user]);
+    await recordEffort(user, type, {
+      ...extra,
+      gamificationEnabled,
+      displayName: user.displayName,
+      publicProfile: socialProfilePublic
+    }).catch(effortError => console.error('Katkı yazılamadı:', effortError));
+  }, [gamificationEnabled, socialProfilePublic, user]);
 
   const publish = async () => {
     if (!user || saving || !isPublishable(body) || needsSensitiveConfirm) return;

@@ -8,6 +8,7 @@ import {
   increment,
   limit,
   onSnapshot,
+  orderBy,
   query,
   serverTimestamp,
   setDoc,
@@ -15,12 +16,29 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import {
+  contributorName,
   createEffortEvent,
   getEffortAward,
   getSeasonId,
   getThrottleMinutes,
   toDayKey
 } from './effortModel';
+
+export const CONTRIBUTORS_LIMIT = 40;
+
+/**
+ * Katkı verenler herkese açık okunur; kimse kimseyi sıralamaz, yalnızca
+ * "kim dokundu" görünür (plan §10: sıralama yok).
+ */
+export const subscribeContributors = (onChange, onError) => onSnapshot(
+  query(
+    collection(db, 'catContributors'),
+    orderBy('lastContributionAt', 'desc'),
+    limit(CONTRIBUTORS_LIMIT)
+  ),
+  snapshot => onChange(snapshot.docs.map(item => ({ id: item.id, ...item.data() }))),
+  onError
+);
 
 export const COLLECTIVE_CAT_PATH = ['collectiveCat', 'current'];
 
@@ -97,6 +115,15 @@ export const recordEffort = async (user, type, extra = {}, now = new Date()) => 
       seasonId: getSeasonId(now),
       updatedAt: serverTimestamp()
     }, { merge: true });
+
+    // Odadaki "kim dokundu" listesi. Profili gizli olanın adı maskeli yazılır.
+    await setDoc(doc(db, 'catContributors', user.uid), {
+      userId: user.uid,
+      displayName: contributorName(extra.displayName || user.displayName, extra.publicProfile === true),
+      publicProfile: extra.publicProfile === true,
+      totalContribution: increment(award.value),
+      lastContributionAt: serverTimestamp()
+    }, { merge: true }).catch(error => console.error('Katkı listesi güncellenemedi:', error));
   }
 
   return award;

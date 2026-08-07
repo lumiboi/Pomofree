@@ -1,5 +1,6 @@
 import {
   CAT_STAGES,
+  contributorName,
   DAILY_CONTRIBUTION_CAP,
   getCatMood,
   getCatStage,
@@ -107,4 +108,10 @@ it('unlocks room items as stages are reached and never takes them back', () => {
   expect(getUnlockedItems(400)).toEqual(['kitten', 'bowl', 'cushion']);
   expect(getUnlockedItems(999999)).toHaveLength(CAT_STAGES.length);
   expect(getSeasonId(at('2026-08-06T10:00:00'))).toBe('2026-08');
+});
+
+it('never publishes a full name unless the profile is public', () => {
+  expect(contributorName('Mert Ergun', true)).toBe('Mert Ergun');
+  expect(contributorName('Mert Ergun', false)).toBe('M*** E****');
+  expect(contributorName('', false)).toBe('P******* K**********');
 });

@@ -90,6 +90,21 @@ await check('anonim gönderinin sahiplik kaydı yazılır', assertSucceeds(setDo
 await check('yabancı anonim gönderiyi silemez', assertFails(deleteDoc(doc(carol, 'reflections', 'p2'))));
 await check('sahibi anonim gönderisini silebilir', assertSucceeds(deleteDoc(doc(alice, 'reflections', 'p2'))));
 
+// --- Katkı verenler listesi ---
+await check('katkı satırı sahibi tarafından yazılır', assertSucceeds(setDoc(doc(alice, 'catContributors', 'alice'), {
+  userId: 'alice', displayName: 'M*** E****', publicProfile: false, totalContribution: 4, lastContributionAt: serverTimestamp()
+})));
+await check('katkı listesi herkese açık okunur', assertSucceeds(getDoc(doc(guest, 'catContributors', 'alice'))));
+await check('başkasının katkı satırı yazılamaz', assertFails(setDoc(doc(bob, 'catContributors', 'alice'), {
+  userId: 'alice', displayName: 'Sahte', publicProfile: true, totalContribution: 99, lastContributionAt: serverTimestamp()
+})));
+await check('katkı satırı tavanı aşamaz', assertFails(setDoc(doc(alice, 'catContributors', 'alice'), {
+  userId: 'alice', displayName: 'M*** E****', publicProfile: false, totalContribution: increment(40), lastContributionAt: serverTimestamp()
+}, { merge: true })));
+await check('katkı satırı geriye gidemez', assertFails(setDoc(doc(alice, 'catContributors', 'alice'), {
+  userId: 'alice', displayName: 'M*** E****', publicProfile: false, totalContribution: increment(-1), lastContributionAt: serverTimestamp()
+}, { merge: true })));
+
 // --- Raporlar ve moderasyon ---
 await check('rapor yazılabilir', assertSucceeds(addDoc(collection(alice, 'reports'), {
   reflectionId: 'p1', reporterId: 'alice', reason: 'spam', createdAt: new Date()

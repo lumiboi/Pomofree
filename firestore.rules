@@ -97,6 +97,29 @@ service cloud.firestore {
         && request.resource.data.totalContribution <= resource.data.totalContribution + 12;
     }
 
+    // Kediye dokunanlar listesi: herkes okur, herkes yalnızca kendi satırını
+    // yazar ve tek yazımda günlük tavandan fazlası eklenemez.
+    match /catContributors/{userId} {
+      function validContributor() {
+        return request.resource.data.keys().hasOnly([
+            'userId', 'displayName', 'publicProfile', 'totalContribution', 'lastContributionAt'
+          ])
+          && request.resource.data.userId == userId
+          && validText(request.resource.data.displayName, 50)
+          && request.resource.data.publicProfile is bool
+          && request.resource.data.totalContribution is int;
+      }
+
+      allow read: if true;
+      allow create: if ownsUserData(userId) && validContributor()
+        && request.resource.data.totalContribution > 0
+        && request.resource.data.totalContribution <= 12;
+      allow update: if ownsUserData(userId) && validContributor()
+        && request.resource.data.totalContribution > resource.data.totalContribution
+        && request.resource.data.totalContribution <= resource.data.totalContribution + 12;
+      allow delete: if ownsUserData(userId);
+    }
+
     match /moderators/{userId} {
       // Moderatör listesi konsoldan yönetilir; istemci yalnızca okuyabilir.
       allow read: if signedIn();

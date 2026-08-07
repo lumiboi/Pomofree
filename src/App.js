@@ -564,7 +564,9 @@ function AppContent() {
         try {
             const award = await recordEffort(currentUser, type, {
                 ...extra,
-                gamificationEnabled: userSettings.gamification !== false
+                gamificationEnabled: userSettings.gamification !== false,
+                displayName: currentUser.displayName,
+                publicProfile: userSettings.socialProfilePublic === true
             });
             if (award.value > 0) setTodayContribution(current => current + award.value);
         } catch (error) {
