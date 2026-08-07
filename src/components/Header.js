@@ -117,6 +117,7 @@ const Header = ({
   );
 
   return (
+    <>
     <header className="header-container">
       <button
         type="button"
@@ -183,6 +184,14 @@ const Header = ({
               </>
             )}
             
+            {/* Telefonda yüzen kısayol yerine çalar menüden açılıyor. */}
+            <button
+              type="button"
+              className="btn btn-secondary mobile-only-item"
+              onClick={() => window.dispatchEvent(new CustomEvent('pomofree:open-music'))}
+            >
+              {t('musicPlayer.title')}
+            </button>
             {user ? userMenu : (
               <button onClick={() => openModal('login')} className="btn btn-primary">{t('header.login')}</button>
             )}
@@ -200,9 +209,14 @@ const Header = ({
       >
         <span aria-hidden="true">{isMenuOpen ? '✕' : '☰'}</span>
       </button>
+    </header>
 
-      {/* Telefonda alt sekme çubuğu: uygulama gezinmesi başparmağın altında. */}
-      {!isRoomPage && (
+    {/*
+      Alt sekme çubuğu başlığın dışında duruyor: başlıktaki backdrop-filter,
+      içindeki position:fixed öğeler için yeni bir referans kutusu yaratıp
+      çubuğu başlığın üstüne bindiriyordu.
+    */}
+    {!isRoomPage && (
         <nav className="mobile-tabbar" aria-label={t('nav.tabbar')}>
           {[
             { path: '/', icon: '◷', label: t('nav.timer') },
@@ -241,9 +255,9 @@ const Header = ({
             <span className="mobile-tab-icon" aria-hidden="true">☰</span>
             <span className="mobile-tab-label">{t('nav.more')}</span>
           </button>
-        </nav>
-      )}
-    </header>
+      </nav>
+    )}
+    </>
   );
 };
 

@@ -461,6 +461,16 @@ const MusicPlayer = () => {
     }
   }, [shortcutPosition]);
 
+  // Telefonda yüzen kısayol gizli; çalar başlıktaki menüden açılıyor.
+  useEffect(() => {
+    const open = () => {
+      setIsMinimized(false);
+      setIsVisible(true);
+    };
+    window.addEventListener('pomofree:open-music', open);
+    return () => window.removeEventListener('pomofree:open-music', open);
+  }, []);
+
   // Kısayoldan açılan çalar tam boyda gelir, simge durumunda değil.
   const openPlayer = () => {
     setIsMinimized(false);

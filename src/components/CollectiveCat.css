@@ -27,8 +27,9 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.4rem 0.6rem;
-  background: var(--primary-accent, rgba(0, 0, 0, 0.35));
-  color: #ffffff;
+  /* --primary-accent bazı temalarda beyaz; başlık okunmaz oluyordu. */
+  background: color-mix(in srgb, var(--progress-active-color, #4ECDC4) 26%, var(--card-bg, rgba(20, 20, 20, 0.92)));
+  color: var(--text-color, #ffffff);
   cursor: move;
   touch-action: none;
   user-select: none;
@@ -46,21 +47,21 @@
 }
 
 .cat-panel-controls button {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   font: inherit;
   font-size: 0.8rem;
   line-height: 1;
-  color: #ffffff;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  background: color-mix(in srgb, currentColor 12%, transparent);
   cursor: pointer;
 }
 
 .cat-panel-controls button:hover {
-  background: rgba(255, 255, 255, 0.34);
+  background: color-mix(in srgb, currentColor 24%, transparent);
 }
 
 .cat-panel-body {

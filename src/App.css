@@ -2126,3 +2126,149 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
 @media (max-width: 768px) and (prefers-reduced-motion: reduce) {
   .btn:active, .mobile-tab:active, .header-burger:active { transform: none; }
 }
+
+/* Mobil düzeltmeler: tek sütun menü, taşma yok, çalar tam genişlik sayfa */
+.mobile-only-item { display: none; }
+
+@media (max-width: 768px) {
+  /* Menü her temada tek sütun; tema kuralları satır düzenini bozmasın. */
+  .header-container .header-buttons,
+  .theme-wired .header-container .header-buttons {
+    display: none;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .header-container .header-buttons.is-open,
+  .theme-wired .header-container .header-buttons.is-open {
+    display: flex;
+  }
+
+  .header-container .header-buttons > *,
+  .header-container .header-buttons .btn,
+  .header-container .header-buttons .user-menu,
+  .header-container .header-buttons .user-menu-trigger,
+  .header-container .header-buttons .language-selector,
+  .header-container .header-buttons select {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .mobile-only-item { display: block; }
+
+  /* Marka ve hamburger tek satırda, üst üste binmeden. */
+  .header-container {
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 0.5rem;
+  }
+
+  .header-brand { flex: 1 1 auto; min-width: 0; }
+  .header-brand h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .header-burger { flex: 0 0 auto; }
+
+  /* Sayaç kartındaki hızlı ayar düğmesi mod düğmelerinin üstüne binmesin. */
+  .timer-card { padding-top: 3.25rem; }
+  .timer-quick-settings { top: 0.75rem; right: 0.75rem; }
+
+  /* Yüzen masaüstü kısayolu telefonda yok; çalar alttan açılan sayfa gibi. */
+  .music-shortcut { display: none !important; }
+
+  .music-player {
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    top: auto !important;
+    bottom: calc(4.9rem + env(safe-area-inset-bottom)) !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 70vh;
+    overflow-y: auto;
+    border-radius: 14px;
+    cursor: default;
+  }
+
+  .music-player-header { cursor: default; }
+
+  /* Genel taşma güvenliği */
+  .card, .modal-content, .reflection-item { max-width: 100%; overflow-wrap: anywhere; }
+  img, video, canvas { max-width: 100%; height: auto; }
+  .main-content { width: 100%; }
+}
+
+/* Mobil ince ayar: segment kontrolü, üst üste binmeler, sıkışık başlıklar */
+@media (max-width: 768px) {
+  /* Mod seçimi native segmented control gibi tek satır */
+  .timer-modes {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    padding: 0.25rem;
+    border-radius: 12px;
+    background: var(--progress-bg-color, rgba(255, 255, 255, 0.08));
+  }
+
+  .timer-modes .mode-btn {
+    flex: none !important;
+    width: 100%;
+    min-height: 40px;
+    padding: 0.4rem 0.2rem;
+    font-size: 0.82rem;
+    border-radius: 9px;
+  }
+
+  .timer-card { padding-top: 2.9rem; }
+  .timer-quick-settings { top: 0.6rem; right: 0.6rem; width: 36px; height: 36px; }
+  .timer-display h2 { margin: 0.5rem 0; }
+
+  /* Alt çubukla çakışan yüzen düğmeler */
+  .footer-toggle-btn { bottom: calc(env(safe-area-inset-bottom, 0px) + 5.3rem) !important; }
+
+  /* Duyuru kartı daha derli toplu */
+  .domain-notice { padding: 0.85rem 1rem; font-size: 0.92rem; }
+  .domain-notice p { margin: 0.35rem 0 0; }
+
+  /* Kedi paneli küçükken sadece başlık şeridi kalır */
+  .cat-panel.is-minimized .cat-panel-header { padding: 0.5rem 0.7rem; }
+}
+
+@media (max-width: 420px) {
+  .timer-modes .mode-btn { flex: none !important; font-size: 0.76rem; }
+}
+
+@media (max-width: 768px) {
+  /* Sayaç rakamları tek satırda kalsın */
+  .timer-display h2 {
+    font-size: clamp(2.75rem, 15vw, 4.5rem);
+    white-space: nowrap;
+  }
+
+  /* Küçültülmüş kedi paneli tam genişlik şerit yerine küçük bir rozet */
+  .cat-panel.is-minimized {
+    left: 0.75rem !important;
+    right: auto;
+    width: auto;
+    max-width: 60vw;
+  }
+
+  .cat-panel.is-minimized .cat-panel-header h2 {
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cat-panel.is-minimized .cat-panel-header::before {
+    content: '🐈';
+    font-size: 1rem;
+  }
+}
