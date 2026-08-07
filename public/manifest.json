@@ -3,21 +3,54 @@
   "name": "Pomofree | Pomodoro Zamanlayıcı",
   "description": "Ücretsiz Pomodoro zamanlayıcı, görev ve odak takibi.",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "icons": [
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
   "theme_color": "#2A3D66",
-  "background_color": "#ffffff"
+  "background_color": "#2A3D66",
+  "categories": ["productivity", "lifestyle"],
+  "lang": "tr",
+  "dir": "ltr",
+  "shortcuts": [
+    {
+      "name": "İç Döküm",
+      "short_name": "İç Döküm",
+      "url": "/reflections",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Kedi Odası",
+      "short_name": "Kedi",
+      "url": "/cat",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Görevler",
+      "short_name": "Todo",
+      "url": "/todo",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    }
+  ]
 }

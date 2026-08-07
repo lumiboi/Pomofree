@@ -6,7 +6,7 @@ const mockUser = { uid: 'user-a', displayName: 'Hesap A' };
 const mockSnapshotListeners = {};
 
 jest.mock('../firebase', () => ({ auth: {}, db: {} }));
-jest.mock('react-router-dom', () => ({ useNavigate: () => jest.fn() }));
+jest.mock('react-router-dom', () => ({ useNavigate: () => jest.fn(), useLocation: () => ({ pathname: '/' }) }));
 jest.mock('firebase/auth', () => ({
   onAuthStateChanged: (auth, callback) => {
     callback(mockUser);

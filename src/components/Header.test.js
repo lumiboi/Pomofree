@@ -1,10 +1,10 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { LanguageProvider } from '../contexts/LanguageContext';
 import Header from './Header';
 
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate }));
+jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate, useLocation: () => ({ pathname: '/' }) }));
 
 beforeEach(() => mockNavigate.mockClear());
 
@@ -84,7 +84,7 @@ test('mobil menü açılır, seçim yapınca ve Escape ile kapanır', () => {
   expect(nav).toHaveClass('is-open');
 
   // Menüden bir sayfaya gidince çekmece kapanmalı.
-  fireEvent.click(screen.getByRole('button', { name: 'Kedi Odası' }));
+  fireEvent.click(within(nav).getByRole('button', { name: 'Kedi Odası' }));
   expect(mockNavigate).toHaveBeenCalledWith('/cat');
   expect(nav).not.toHaveClass('is-open');
 
@@ -92,4 +92,24 @@ test('mobil menü açılır, seçim yapınca ve Escape ile kapanır', () => {
   expect(nav).toHaveClass('is-open');
   fireEvent.keyDown(document, { key: 'Escape' });
   expect(nav).not.toHaveClass('is-open');
+});
+
+test('alt sekme çubuğu gezinir ve giriş gerektiren sekmeyi korur', () => {
+  window.alert = jest.fn();
+  render(
+    <LanguageProvider>
+      <Header user={null} openModal={jest.fn()} handleLogout={jest.fn()} />
+    </LanguageProvider>
+  );
+
+  const tabbar = screen.getByRole('navigation', { name: 'Hızlı gezinme' });
+  expect(within(tabbar).getByRole('button', { name: /Sayaç/ })).toHaveAttribute('aria-current', 'page');
+
+  fireEvent.click(within(tabbar).getByRole('button', { name: /İç Döküm/ }));
+  expect(mockNavigate).toHaveBeenCalledWith('/reflections');
+
+  // Todo giriş ister; hesap yokken yönlendirme yapılmaz.
+  fireEvent.click(within(tabbar).getByRole('button', { name: /Todo/ }));
+  expect(mockNavigate).not.toHaveBeenCalledWith('/todo');
+  expect(window.alert).toHaveBeenCalled();
 });

@@ -5,7 +5,7 @@ import CollectiveCat from './CollectiveCat';
 
 const mockCat = { total: 0 };
 
-jest.mock('react-router-dom', () => ({ useNavigate: () => jest.fn() }));
+jest.mock('react-router-dom', () => ({ useNavigate: () => jest.fn(), useLocation: () => ({ pathname: '/' }) }));
 jest.mock('../catService', () => ({
   subscribeCollectiveCat: onChange => {
     onChange({ totalContribution: mockCat.total, updatedAt: null });

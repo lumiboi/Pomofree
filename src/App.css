@@ -2031,3 +2031,98 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   .reflection-support-btn { flex: 1 1 100%; }
   .timer-modes .mode-btn { flex: 1 1 100%; }
 }
+
+/* Alt sekme çubuğu ve dokunma hissi */
+.mobile-tabbar { display: none; }
+
+@media (max-width: 768px) {
+  * { -webkit-tap-highlight-color: transparent; }
+  button, a, [role="button"], input, select, textarea { touch-action: manipulation; }
+  body { overscroll-behavior-y: contain; }
+
+  .btn:active,
+  .mobile-tab:active,
+  .header-burger:active,
+  .daily-checkin-option:active,
+  .reflections-tab:active,
+  .reflection-support-btn:active {
+    transform: scale(0.97);
+  }
+
+  .app-container {
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  }
+
+  .mobile-tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 960;
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    gap: 0.15rem;
+    padding: 0.3rem 0.4rem;
+    padding-bottom: max(0.3rem, env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--card-bg) 94%, var(--bg-color-pomodoro));
+    border-top: 1px solid var(--card-border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.18);
+  }
+
+  .mobile-tab {
+    flex: 1 1 0;
+    display: grid;
+    justify-items: center;
+    gap: 0.1rem;
+    min-height: 48px;
+    padding: 0.3rem 0.1rem;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  }
+
+  .mobile-tab.is-active {
+    opacity: 1;
+    background: var(--progress-bg-color, rgba(255, 255, 255, 0.12));
+    color: var(--progress-active-color, inherit);
+  }
+
+  .mobile-tab-icon { font-size: 1.15rem; line-height: 1; }
+  .mobile-tab-label { font-size: 0.66rem; letter-spacing: 0.01em; }
+
+  /* Yüzen pencereler sekme çubuğunun üstünde kalsın */
+  .cat-panel { bottom: calc(4.9rem + env(safe-area-inset-bottom)) !important; }
+  .cat-panel-reopen { bottom: calc(5.2rem + env(safe-area-inset-bottom)); }
+  .music-player { bottom: calc(5rem + env(safe-area-inset-bottom)) !important; }
+
+  /* Alttan açılan sayfalarda tutamak çizgisi */
+  .modal-content::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    margin: -0.5rem auto 0.9rem;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.25;
+  }
+
+  .modal-content,
+  .header-buttons,
+  .cat-panel-body,
+  .reflections-tabs {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .btn:active, .mobile-tab:active, .header-burger:active { transform: none; }
+}
