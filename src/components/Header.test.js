@@ -65,3 +65,31 @@ test('Pomofree markası ana sayfaya götürür', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Pomofree' }));
   expect(mockNavigate).toHaveBeenCalledWith('/');
 });
+
+test('mobil menü açılır, seçim yapınca ve Escape ile kapanır', () => {
+  render(
+    <LanguageProvider>
+      <Header user={null} openModal={jest.fn()} handleLogout={jest.fn()} />
+    </LanguageProvider>
+  );
+
+  const burger = screen.getByRole('button', { name: 'Menüyü aç' });
+  const nav = document.getElementById('header-nav');
+
+  expect(burger).toHaveAttribute('aria-expanded', 'false');
+  expect(nav).not.toHaveClass('is-open');
+
+  fireEvent.click(burger);
+  expect(screen.getByRole('button', { name: 'Menüyü kapat' })).toHaveAttribute('aria-expanded', 'true');
+  expect(nav).toHaveClass('is-open');
+
+  // Menüden bir sayfaya gidince çekmece kapanmalı.
+  fireEvent.click(screen.getByRole('button', { name: 'Kedi Odası' }));
+  expect(mockNavigate).toHaveBeenCalledWith('/cat');
+  expect(nav).not.toHaveClass('is-open');
+
+  fireEvent.click(screen.getByRole('button', { name: 'Menüyü aç' }));
+  expect(nav).toHaveClass('is-open');
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(nav).not.toHaveClass('is-open');
+});

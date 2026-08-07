@@ -19,7 +19,9 @@ const Header = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const [isPomocatAnimated, setIsPomocatAnimated] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navRef = useRef(null);
   const displayName = user && (user.displayName || user.email.split('@')[0]);
   const profileSrc = safeProfilePhoto(profilePhoto !== undefined ? profilePhoto : user?.photoURL);
 
@@ -62,6 +64,25 @@ const Header = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isDropdownOpen]);
+
+  // Mobil menü: dışarı tıklayınca ve Escape ile kapanır.
+  useEffect(() => {
+    if (!isMenuOpen) return undefined;
+    const close = event => {
+      if (!navRef.current?.contains(event.target) && !event.target.closest('.header-burger')) {
+        setIsMenuOpen(false);
+      }
+    };
+    const onKeyDown = event => {
+      if (event.key === 'Escape') setIsMenuOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isMenuOpen]);
 
   const userMenu = user && (
     <div className="user-menu" ref={dropdownRef}>
@@ -113,7 +134,17 @@ const Header = ({
         />
         <h1>{t('general.appName')}</h1>
       </button>
-      <div className="header-buttons">
+      <nav
+        id="header-nav"
+        ref={navRef}
+        className={`header-buttons${isMenuOpen ? ' is-open' : ''}`}
+        // Menüden bir seçim yapılınca mobil çekmece kendiliğinden kapanır.
+        onClick={event => {
+          if (event.target.closest('button') && !event.target.closest('.user-menu')) {
+            setIsMenuOpen(false);
+          }
+        }}
+      >
         {isRoomPage ? (
           // Room page - show language selector and leave room button
           <>
@@ -156,7 +187,18 @@ const Header = ({
             )}
           </>
         )}
-      </div>
+      </nav>
+
+      <button
+        type="button"
+        className="header-burger"
+        aria-expanded={isMenuOpen}
+        aria-controls="header-nav"
+        aria-label={t(isMenuOpen ? 'header.closeMenu' : 'header.openMenu')}
+        onClick={() => setIsMenuOpen(open => !open)}
+      >
+        <span aria-hidden="true">{isMenuOpen ? '✕' : '☰'}</span>
+      </button>
     </header>
   );
 };

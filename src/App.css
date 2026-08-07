@@ -1905,3 +1905,129 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
 .app-error p { margin: 0; opacity: 0.85; }
 .app-error-detail { white-space: pre-wrap; word-break: break-word; font-size: 0.78rem; opacity: 0.85; max-width: 100%; margin: 0; }
 .app-error-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* ---------------------------------------------------------------
+   MOBİL GÖRÜNÜM
+   Hepsi dar ekrana kilitli; masaüstü görünümü olduğu gibi kalır.
+   --------------------------------------------------------------- */
+.header-burger { display: none; }
+
+@media (max-width: 768px) {
+  html { -webkit-text-size-adjust: 100%; }
+  body { overflow-x: hidden; }
+
+  .app-container {
+    padding: 0.75rem;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  /* Başlık: marka + hamburger sabit kalır, gezinme çekmeceye iner. */
+  .header-container {
+    position: sticky;
+    top: 0;
+    z-index: 950;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    margin: -0.25rem -0.25rem 0.5rem;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--card-bg) 92%, var(--bg-color-pomodoro));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .header-brand h1 { font-size: 1.15rem; }
+  .pomocat-logo { width: 2.6rem; height: 2.6rem; }
+
+  .header-burger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    margin-left: auto;
+    padding: 0;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: inherit;
+    cursor: pointer;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+  }
+
+  .header-buttons {
+    order: 3;
+    flex-basis: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+    max-height: min(70vh, 480px);
+    overflow-y: auto;
+    padding: 0.6rem;
+    border-radius: 14px;
+    border: 1px solid var(--card-border);
+    background: color-mix(in srgb, var(--card-bg) 94%, var(--bg-color-pomodoro));
+    box-shadow: var(--soft-shadow);
+  }
+
+  .header-buttons.is-open { display: flex; }
+
+  .header-buttons .btn,
+  .header-buttons .user-menu-trigger {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .header-buttons .user-menu { width: 100%; }
+  .header-buttons .dropdown-menu { position: static; width: 100%; margin-top: 0.4rem; }
+  .header-buttons .language-selector,
+  .header-buttons select { width: 100%; }
+
+  /* Genel dokunma hedefleri ve kart yoğunluğu */
+  .btn { min-height: 44px; }
+  .card { padding: 1rem; border-radius: 14px; }
+  .main-content { gap: 1rem; margin: 0.75rem auto; }
+
+  input, select, textarea { font-size: 16px; } /* iOS odaklanınca yakınlaştırmasın */
+
+  /* Modal'lar alttan açılan sayfa gibi davransın */
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal-content {
+    width: 100%;
+    max-width: none;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  /* Sayaç */
+  .timer-modes { flex-wrap: wrap; }
+  .timer-modes .mode-btn { flex: 1 1 30%; }
+  .timer-durations { gap: 0.3rem; }
+  .timer-duration { min-height: 36px; }
+
+  /* İç döküm ve kedi odası */
+  .reflections-page, .cat-room { padding: 0 0.25rem; margin-top: 0.75rem; }
+  .reflections-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 0.25rem;
+  }
+  .reflections-tabs::-webkit-scrollbar { display: none; }
+  .reflections-tab { white-space: nowrap; }
+  .reflection-item header { flex-wrap: wrap; gap: 0.35rem; }
+  .reflection-support-btn { flex: 1 1 45%; justify-content: center; }
+  .daily-checkin-option { flex: 1 1 45%; }
+  .stop-notice-actions .btn { flex: 1 1 100%; }
+}
+
+@media (max-width: 420px) {
+  .header-brand h1 { font-size: 1rem; }
+  .reflection-support-btn { flex: 1 1 100%; }
+  .timer-modes .mode-btn { flex: 1 1 100%; }
+}
