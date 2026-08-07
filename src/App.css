@@ -2520,15 +2520,15 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   inset: -25%;
   z-index: 9998;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.4;
   /*
-    Gürültü nötr griye ortalanıp overlay ile bindiriliyor: doku görünür ama
-    ortalama parlaklık kaymıyor (ölçüm: 232.0 → 231.6, stddev 0 → 6.0).
+    Gürültü nötr griye ortalanıp overlay ile bindiriliyor: ortalama parlaklık
+    kaymadan ince bir doku kalıyor (kart üzerinde stddev 6.4 → 6.9).
   */
   mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2' intercept='-0.75'/%3E%3CfeFuncG type='linear' slope='2' intercept='-0.75'/%3E%3CfeFuncB type='linear' slope='2' intercept='-0.75'/%3E%3CfeFuncA type='table' tableValues='1 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.6' intercept='-0.55'/%3E%3CfeFuncG type='linear' slope='1.6' intercept='-0.55'/%3E%3CfeFuncB type='linear' slope='1.6' intercept='-0.55'/%3E%3CfeFuncA type='table' tableValues='1 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px 180px;
-  animation: dreamcore-grain 900ms steps(1) infinite;
+  animation: dreamcore-grain 1400ms steps(1) infinite;
   will-change: transform;
 }
 
