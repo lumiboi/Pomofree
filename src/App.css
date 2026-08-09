@@ -2625,3 +2625,36 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
 .theme-dreamcore .cat-panel {
   isolation: isolate;
 }
+
+.stop-notice-modal { position: relative; }
+
+.stop-notice-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: inherit;
+  cursor: pointer;
+}
+
+.stop-notice-close:hover { background: color-mix(in srgb, currentColor 18%, transparent); }
+
+.stop-notice-text { margin: 0.4rem 2.2rem 0 0; line-height: 1.5; }
+
+.stop-notice-mute {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+.stop-notice-mute input { width: 16px; height: 16px; }

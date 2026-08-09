@@ -73,6 +73,7 @@ import { createCheckIn, isReturnAfterBreak, toDayKey } from './effortModel';
 import { readTodayContribution, recordEffort, saveCheckIn } from './catService';
 import CollectiveCat from './components/CollectiveCat';
 import ErrorBoundary from './components/ErrorBoundary';
+import Icon from './components/Icon';
 
 // Açılışta gerekmeyen ekranlar ayrı parçalara bölündü (chart.js dahil).
 const AdvancedReports = lazy(() => import('./components/AdvancedReports'));
@@ -89,6 +90,7 @@ const ModerationPage = lazy(() => import('./components/ModerationPage'));
 const ALL_THEME_COLOR_KEYS = [...new Set(Object.values(themes).flatMap(theme => Object.keys(theme.colors)))];
 
 const SESSION_STORAGE_KEY = 'pomofree_active_session_v2';
+const STOP_NOTICE_STORAGE_KEY = 'pomofree_stop_notice_muted_v1';
 const FOCUS_FLOW_STORAGE_KEY = 'pomofree_focus_flow_v1';
 
 const emptyFocusSession = () => ({
@@ -198,6 +200,15 @@ function AppContent() {
     const [profilePhotoError, setProfilePhotoError] = useState('');
     const [capacity, setCapacity] = useState('');
     const [stopNotice, setStopNotice] = useState(false);
+    // "Bir daha gösterme" işaretlenirse yarım bırakma penceresi bir daha açılmaz.
+    const [stopNoticeMuted, setStopNoticeMuted] = useState(() => {
+        try {
+            return localStorage.getItem(STOP_NOTICE_STORAGE_KEY) === 'hidden';
+        } catch {
+            return false;
+        }
+    });
+    const [muteStopNotice, setMuteStopNotice] = useState(false);
     const [todayContribution, setTodayContribution] = useState(0);
     const [restedToday, setRestedToday] = useState(false);
     // Yarım bırakılan bir seansın ardından tekrar başlamak "geri dönüş azmi" sayılır.
@@ -587,6 +598,23 @@ function AppContent() {
         await logEffort('rest_chosen');
     };
 
+    /**
+     * Pencereyi kapatır; "bir daha gösterme" işaretliyse tercihi saklar.
+     * Seçilen eylem varsa kapanıştan sonra çalıştırılır.
+     */
+    const dismissStopNotice = (action) => {
+        if (muteStopNotice) {
+            setStopNoticeMuted(true);
+            try {
+                localStorage.setItem(STOP_NOTICE_STORAGE_KEY, 'hidden');
+            } catch {
+                // Tercih saklanamazsa pencere yine kapanır.
+            }
+        }
+        setStopNotice(false);
+        if (typeof action === 'function') action();
+    };
+
     // Yarım bırakma akışı (plan §9.4): daha kısa seans, mola, iç döküm veya günü kapatmak.
     const handleShorterSession = minutes => {
         setStopNotice(false);
@@ -942,7 +970,7 @@ function AppContent() {
             stoppedFocusRef.current = false;
         } else if (isTimerActive && mode === 'pomodoro' && time > 0) {
             stoppedFocusRef.current = true;
-            setStopNotice(true);
+            if (!stopNoticeMuted) setStopNotice(true);
             logEffort('focus_stopped');
         }
         // Normal başlat/durdur
@@ -1221,7 +1249,7 @@ function AppContent() {
               görevlerin arasına hiçbir zaman bir şey girmez.
             */}
             {stopNotice && (
-                <div className="modal-overlay" onClick={() => setStopNotice(false)}>
+                <div className="modal-overlay" onClick={dismissStopNotice}>
                     <div
                         className="modal-content stop-notice-modal"
                         role="dialog"
@@ -1229,26 +1257,43 @@ function AppContent() {
                         aria-label={t('focus.halfStopIsOkay')}
                         onClick={event => event.stopPropagation()}
                     >
+                        <button
+                            type="button"
+                            className="stop-notice-close"
+                            aria-label={t('general.close')}
+                            title={t('general.close')}
+                            onClick={dismissStopNotice}
+                        >
+                            <Icon name="close" size={18} />
+                        </button>
+
                         <p className="stop-notice-text">{t('focus.halfStopIsOkay')}</p>
+
                         <div className="stop-notice-actions">
-                            <button type="button" className="btn btn-secondary" onClick={() => handleShorterSession(10)}>
+                            <button type="button" className="btn btn-secondary" onClick={() => dismissStopNotice(() => handleShorterSession(10))}>
                                 {t('focus.tryShorter')}
                             </button>
-                            <button type="button" className="btn btn-secondary" onClick={() => { setStopNotice(false); switchMode('short'); }}>
+                            <button type="button" className="btn btn-secondary" onClick={() => dismissStopNotice(() => switchMode('short'))}>
                                 {t('focus.takeBreak')}
                             </button>
-                            <button type="button" className="btn btn-secondary" onClick={() => navigate('/reflections')}>
+                            <button type="button" className="btn btn-secondary" onClick={() => dismissStopNotice(() => navigate('/reflections'))}>
                                 {t('focus.writeInstead')}
                             </button>
                             {user && (
-                                <button type="button" className="btn btn-secondary" onClick={handleChooseRest}>
+                                <button type="button" className="btn btn-secondary" onClick={() => dismissStopNotice(handleChooseRest)}>
                                     {t('focus.closeTheDay')}
                                 </button>
                             )}
-                            <button type="button" className="btn btn-primary" onClick={() => setStopNotice(false)}>
-                                {t('general.close')}
-                            </button>
                         </div>
+
+                        <label className="stop-notice-mute">
+                            <input
+                                type="checkbox"
+                                checked={muteStopNotice}
+                                onChange={event => setMuteStopNotice(event.target.checked)}
+                            />
+                            {t('focus.dontShowAgain')}
+                        </label>
                     </div>
                 </div>
             )}
