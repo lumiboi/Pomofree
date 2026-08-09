@@ -2522,14 +2522,14 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   pointer-events: none;
   opacity: 0.4;
   /*
-    Gürültü nötr griye ortalanıp overlay ile bindiriliyor: ortalama parlaklık
-    kaymadan ince bir doku kalıyor (kart üzerinde stddev 6.4 → 6.9).
+    Harman modu (overlay), backdrop-filter'lı kartlarla birlikte Chrome'da
+    beyaz bloklar üretiyordu; animasyon + will-change de blend edilen katmanı
+    sürekli yeniden rasterize ediyordu. Artık düz kompozit ve sabit bir katman:
+    gürültünün alfası V biçimli, yani hem açık hem koyu benekler var ve
+    ortalama parlaklık neredeyse sabit (düz yüzeyde 232.0 → 228.4, stddev 3.8).
   */
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.6' intercept='-0.55'/%3E%3CfeFuncG type='linear' slope='1.6' intercept='-0.55'/%3E%3CfeFuncB type='linear' slope='1.6' intercept='-0.55'/%3E%3CfeFuncA type='table' tableValues='1 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.6' intercept='-0.3'/%3E%3CfeFuncG type='linear' slope='1.6' intercept='-0.3'/%3E%3CfeFuncB type='linear' slope='1.6' intercept='-0.3'/%3E%3CfeFuncA type='table' tableValues='1 0 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px 180px;
-  animation: dreamcore-grain 1400ms steps(1) infinite;
-  will-change: transform;
 }
 
 .app-container.theme-dreamcore::before {
@@ -2541,19 +2541,6 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   background:
     radial-gradient(120% 90% at 50% 45%, transparent 45%, rgba(120, 95, 160, 0.18) 100%),
     linear-gradient(180deg, rgba(255, 235, 250, 0.1), transparent 40%);
-}
-
-@keyframes dreamcore-grain {
-  0%   { transform: translate(0, 0); }
-  20%  { transform: translate(-3%, 2%); }
-  40%  { transform: translate(2%, -3%); }
-  60%  { transform: translate(-2%, -2%); }
-  80%  { transform: translate(3%, 1%); }
-  100% { transform: translate(0, 0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .app-container.theme-dreamcore::after { animation: none; }
 }
 
 /* Dreamcore: grain üstündeyken yazılar okunaklı kalsın */
@@ -2619,13 +2606,6 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
   color: #7a7296;
 }
 
-/* Kartların kendi zemini var; grain onların üstünde daha zayıf dursun */
-.theme-dreamcore .card,
-.theme-dreamcore .modal-content,
-.theme-dreamcore .cat-panel {
-  isolation: isolate;
-}
-
 .stop-notice-modal { position: relative; }
 
 .stop-notice-close {
@@ -2658,3 +2638,23 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
 }
 
 .stop-notice-mute input { width: 16px; height: 16px; }
+
+/* Profil alt menüsü: ayarlar + dil + çıkış */
+.dropdown-menu { width: 210px; }
+
+.dropdown-item-language {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  cursor: default;
+}
+
+.dropdown-item-language .language-selector {
+  padding: 0.3rem 0.6rem;
+  min-height: 0;
+  font-size: 0.85rem;
+}
+
+/* Onay kutusu üstteki düğmeye yapışmasın */
+.stop-notice-mute { margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--card-border); }

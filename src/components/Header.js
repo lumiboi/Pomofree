@@ -109,6 +109,20 @@ const Header = ({
 
       {isDropdownOpen && (
         <div className="dropdown-menu">
+          {/* Ayarlar ve dil, üst çubuğu şişirmesin diye profilin altında. */}
+          <button
+            onClick={() => {
+              setIsDropdownOpen(false);
+              openModal('settings');
+            }}
+            className="dropdown-item"
+          >
+            {t('header.settings')}
+          </button>
+          <div className="dropdown-item dropdown-item-language">
+            <span>{t('header.language')}</span>
+            <LanguageSelector />
+          </div>
           <button onClick={handleLogout} className="dropdown-item">
             {t('header.logout')}
           </button>
@@ -160,7 +174,7 @@ const Header = ({
         ) : (
           // Normal page - show all menu items
           <>
-            <LanguageSelector />
+            {!user && <LanguageSelector />}
             {(isTodoPage || isSocialPage) && (
               <button onClick={() => navigate('/')} className="btn btn-secondary">{t('header.home')}</button>
             )}
@@ -181,7 +195,9 @@ const Header = ({
                 <button onClick={handleDashboardClick} className="btn btn-secondary">{t('header.dashboard')}</button>
                 <button onClick={handleAdvancedReportsClick} className="btn btn-secondary">{t('header.advancedReports')}</button>
                 <button onClick={() => openModal('report')} className="btn btn-secondary">{t('header.report')}</button>
-                <button onClick={() => openModal('settings')} className="btn btn-secondary">{t('header.settings')}</button>
+                {!user && (
+                  <button onClick={() => openModal('settings')} className="btn btn-secondary">{t('header.settings')}</button>
+                )}
               </>
             )}
             
