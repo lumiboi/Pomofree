@@ -2555,3 +2555,73 @@ body[data-color-vision="tritanopia"] { --progress-active-color: #e04b8a; --progr
 @media (prefers-reduced-motion: reduce) {
   .app-container.theme-dreamcore::after { animation: none; }
 }
+
+/* Dreamcore: grain üstündeyken yazılar okunaklı kalsın */
+.theme-dreamcore,
+.theme-dreamcore .card,
+.theme-dreamcore .modal-content,
+.theme-dreamcore .cat-panel,
+.theme-dreamcore .focus-tools {
+  color: #3b3252;
+}
+
+.theme-dreamcore .card,
+.theme-dreamcore .focus-tools,
+.theme-dreamcore .focus-stats-container,
+.theme-dreamcore .patreon-support,
+.theme-dreamcore .todo-shell,
+.theme-dreamcore .modal-content,
+.theme-dreamcore .domain-notice {
+  /* Grain kartın üstünden geçtiği için zemini biraz daha kapatıyoruz. */
+  background: linear-gradient(150deg, rgba(252, 249, 255, 0.94), rgba(246, 241, 252, 0.9));
+}
+
+/* Soluk ikincil metinler grain ile birlikte kayboluyordu: opaklık yerine renk */
+.theme-dreamcore .cat-panel-note,
+.theme-dreamcore .cat-panel-hint,
+.theme-dreamcore .cat-room-note,
+.theme-dreamcore .cat-room-goal,
+.theme-dreamcore .cat-room-sync,
+.theme-dreamcore .cat-room-intro,
+.theme-dreamcore .reflections-crisis,
+.theme-dreamcore .reflections-privacy,
+.theme-dreamcore .daily-checkin-note,
+.theme-dreamcore .settings-helper,
+.theme-dreamcore .reflections-counter,
+.theme-dreamcore .reflection-footer,
+.theme-dreamcore .cat-room-item-state,
+.theme-dreamcore .cat-room-stats span,
+.theme-dreamcore .cat-room-contributor-time {
+  color: #544b73;
+  opacity: 1;
+}
+
+/* Sayaç etiketi ve ana düğme yazısı ölçümde 4.5 altında kaldı */
+.theme-dreamcore .timer-session-goal span {
+  color: #453c60;
+  opacity: 1;
+}
+
+.theme-dreamcore .btn-start,
+.theme-dreamcore .timer-primary-actions .btn-start {
+  color: #2f3d24;
+}
+
+.theme-dreamcore .cat-panel-mood,
+.theme-dreamcore .cat-room-mood,
+.theme-dreamcore .reflection-kind {
+  color: #4a4066;
+  opacity: 1;
+}
+
+.theme-dreamcore input::placeholder,
+.theme-dreamcore textarea::placeholder {
+  color: #7a7296;
+}
+
+/* Kartların kendi zemini var; grain onların üstünde daha zayıf dursun */
+.theme-dreamcore .card,
+.theme-dreamcore .modal-content,
+.theme-dreamcore .cat-panel {
+  isolation: isolate;
+}

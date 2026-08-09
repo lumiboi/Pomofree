@@ -1150,30 +1150,6 @@ function AppContent() {
                     onRejectSuggestion={handleRejectAdaptiveSuggestion}
                     onOpenSettings={() => openModal('timer-settings')}
                 />
-                {stopNotice && (
-                    <section className="stop-notice card" role="status">
-                        <p>{t('focus.halfStopIsOkay')}</p>
-                        <div className="stop-notice-actions">
-                            <button type="button" className="btn btn-secondary" onClick={() => handleShorterSession(10)}>
-                                {t('focus.tryShorter')}
-                            </button>
-                            <button type="button" className="btn btn-secondary" onClick={() => { setStopNotice(false); switchMode('short'); }}>
-                                {t('focus.takeBreak')}
-                            </button>
-                            <button type="button" className="btn btn-secondary" onClick={() => navigate('/reflections')}>
-                                {t('focus.writeInstead')}
-                            </button>
-                            {user && (
-                                <button type="button" className="btn btn-secondary" onClick={handleChooseRest}>
-                                    {t('focus.closeTheDay')}
-                                </button>
-                            )}
-                            <button type="button" className="btn btn-secondary" onClick={() => setStopNotice(false)}>
-                                {t('general.close')}
-                            </button>
-                        </div>
-                    </section>
-                )}
                 {user && activeProjectId && (<Tasks tasks={tasks.filter(isFocusTask)} projects={projects} activeProjectId={activeProjectId} setActiveProjectId={setActiveProjectId} handleAddProject={handleAddProject} handleCompleteProject={handleCompleteProject} handleDeleteProject={handleDeleteProject} taskInput={taskInput} setTaskInput={setTaskInput} handleAddTask={handleAddTask} handleDeleteTask={handleDeleteTask} activeTaskId={activeTaskId} setActiveTaskId={setActiveTaskId} userSettings={userSettings} />)}
             </div>
             {userSettings.gamification !== false && userSettings.showCollectiveCat !== false && (
@@ -1240,6 +1216,42 @@ function AppContent() {
                 {modalOpen === 'advanced-reports' && <AdvancedReports user={user} closeModal={closeModal} />}
                 {modalOpen === 'dashboard' && <ProductivityDashboard user={user} closeModal={closeModal} />}
             </Suspense>
+            {/*
+              Yarım bırakma seçenekleri modal olarak açılır: sayaç ile aktif
+              görevlerin arasına hiçbir zaman bir şey girmez.
+            */}
+            {stopNotice && (
+                <div className="modal-overlay" onClick={() => setStopNotice(false)}>
+                    <div
+                        className="modal-content stop-notice-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={t('focus.halfStopIsOkay')}
+                        onClick={event => event.stopPropagation()}
+                    >
+                        <p className="stop-notice-text">{t('focus.halfStopIsOkay')}</p>
+                        <div className="stop-notice-actions">
+                            <button type="button" className="btn btn-secondary" onClick={() => handleShorterSession(10)}>
+                                {t('focus.tryShorter')}
+                            </button>
+                            <button type="button" className="btn btn-secondary" onClick={() => { setStopNotice(false); switchMode('short'); }}>
+                                {t('focus.takeBreak')}
+                            </button>
+                            <button type="button" className="btn btn-secondary" onClick={() => navigate('/reflections')}>
+                                {t('focus.writeInstead')}
+                            </button>
+                            {user && (
+                                <button type="button" className="btn btn-secondary" onClick={handleChooseRest}>
+                                    {t('focus.closeTheDay')}
+                                </button>
+                            )}
+                            <button type="button" className="btn btn-primary" onClick={() => setStopNotice(false)}>
+                                {t('general.close')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {showCelebration && <Celebration onComplete={handleCelebrationComplete} />}
             {pendingReview && (
                 <SessionReviewModal
